@@ -5,7 +5,7 @@ const DEBUG = false;
 
 if (DEBUG) {
   //Dummy state
-  let state = {
+  var state = {
     stats: [],
     dice: 20,
     startingLevel: 1,
@@ -70,6 +70,15 @@ if (DEBUG) {
     return Math.floor(Math.random() * maxValue) + 1;
   };
 
+  const CharToString = (character) => {
+    let temp = "";
+    for (let key in character) {
+      const value = character[key];
+      temp += `${key}: ${value.level}, `;
+    }
+    return temp.substring(0, temp.length - 2);
+  };
+
   //!End of shared library
 
   //dummy character
@@ -100,8 +109,19 @@ const CustomDifficulties = (values) => {
   return temp.substring(0, temp.length - 1);
 };
 
+const SetupState = () => {
+  if (state !== undefined && state !== null) {
+    state.stats = state.stats === undefined ? [] : state.stats;
+    state.dice = state.dice === undefined ? 20 : state.dice;
+    state.startingLevel =
+      state.startingLevel === undefined ? 1 : state.startingLevel;
+    state.characters = state.characters === undefined ? {} : state.characters;
+  }
+};
+
 //Main function
 const modifier = (text) => {
+  SetupState();
   //Resets values
   state.out = state.ctxt = "";
   let modifiedText = text;
@@ -137,7 +157,7 @@ const modifier = (text) => {
       "!skillcheck\\(" +
         statsExp +
         ", (?<character>(?:\\w|\\s|')+), (?:(?<thresholds1>\\d+)|(?<thresholds2>\\d+ *: *\\d+)|(?<thresholds3>\\d+ *: *\\d+ *: *\\d+)|(?<thresholds4>\\d+ *: *\\d+ *: *\\d+ *: *\\d+)|(?<thresholdsC>\\d+ *= *\\w(?:\\w|\\s|\\.)*(?: *: *\\d+ *= *\\w(?:\\w| |\\.)*)+))\\)",
-      "di"
+      "i"
     );
 
     //console.log(skillcheckExp);
@@ -170,7 +190,10 @@ const modifier = (text) => {
       for (key in match.groups) {
         //Grabbing necessary info
         let value = match.groups[key];
-        let currIndices = match.indices[0];
+        const currIndices = [
+          modifiedText.indexOf(match[0]),
+          modifiedText.indexOf(match[0]) + match[0].length,
+        ];
 
         //null check
         if (
@@ -246,11 +269,11 @@ const modifier = (text) => {
               if (score >= value[2]) {
                 outcome = "critical success.";
               } else if (score >= value[1]) {
-                outcome = "success";
+                outcome = "success.";
               } else if (score >= value[0]) {
-                outcome = "failure";
+                outcome = "failure.";
               } else {
-                outcome = "critical failure";
+                outcome = "critical failure.";
               }
               state.ctxt =
                 modifiedText.substring(0, currIndices[0]) +
@@ -276,15 +299,15 @@ const modifier = (text) => {
               )} Outcome: `;
 
               if (score >= value[3]) {
-                outcome = "critical success";
+                outcome = "critical success.";
               } else if (score >= value[2]) {
-                outcome = "success";
+                outcome = "success.";
               } else if (score >= value[1]) {
                 outcome = "nothing happens.";
               } else if (score >= value[0]) {
                 outcome = "failure.";
               } else {
-                outcome = "critical failure";
+                outcome = "critical failure.";
               }
               state.ctxt =
                 modifiedText.substring(0, currIndices[0]) +
@@ -346,7 +369,7 @@ const modifier = (text) => {
     //Looks for pattern !addCharacter(name) or !addCharacter(name, stat1=value, stat2=value, ..., statN=value)
     const exp = new RegExp(
       `!addCharacter\\((?<character>[\\w\\s'\`]+)(?<startingStats>(?:, \\w+ *= *\\d+)*)\\)`,
-      "di"
+      "i"
     );
 
     //Matches the RegEx
@@ -356,6 +379,10 @@ const modifier = (text) => {
     if (match !== null) {
       //Grabbing info
       const char = match.groups.character;
+      const currIndices = [
+        modifiedText.indexOf(match[0]),
+        modifiedText.indexOf(match[0]) + match[0].length,
+      ];
 
       //Converts values to format [[stat, val], [stat2, val], ... [statN, val]]
       let values = match.groups.startingStats
@@ -375,11 +402,11 @@ const modifier = (text) => {
       //Changing output
       state.ctxt =
         state.ctxt !== ""
-          ? state.ctxt.substring(0, match.indices[0][0]) +
-            state.ctxt.substring(match.indices[0][1], state.ctxt.length)
-          : modifiedText.substring(0, match.indices[0][0]) +
-            modifiedText.substring(match.indices[0][1], modifiedText.length);
-      state.out = `Character ${char} has been created with stats ${state.characters[char]}.`;
+          ? state.ctxt.substring(0, currIndices[0]) +
+            state.ctxt.substring(currIndices[1], state.ctxt.length)
+          : modifiedText.substring(0, currIndices[0]) +
+            modifiedText.substring(currIndices[1], modifiedText.length);
+      state.out = `\nCharacter ${char} has been created with stats ${state.characters[char]}.`;
     }
   }
   //#endregion addCharacter
@@ -389,7 +416,7 @@ const modifier = (text) => {
     //Looks for pattern !addCharacter(name) or !addCharacter(name, stat1=value, stat2=value, ..., statN=value)
     const exp = new RegExp(
       `!setStats\\(${charactersExp}(?<stats>(?:, \\w+ *= *\\d+)+)\\)`,
-      "di"
+      "i"
     );
 
     //Matches the RegEx
@@ -397,6 +424,10 @@ const modifier = (text) => {
 
     //Null check
     if (match !== null) {
+      const currIndices = [
+        modifiedText.indexOf(match[0]),
+        modifiedText.indexOf(match[0]) + match[0].length,
+      ];
       //Grabbing info
       const char = match.groups.character;
       let character = state.characters[char];
@@ -414,7 +445,7 @@ const modifier = (text) => {
       }
 
       //Caches old stats to show
-      oldStats = character.toString();
+      oldStats = CharToString(character);
 
       //Changes stats
       values.forEach((el) => {
@@ -426,11 +457,13 @@ const modifier = (text) => {
       //Changing output
       state.ctxt =
         state.ctxt !== ""
-          ? state.ctxt.substring(0, match.indices[0][0]) +
-            state.ctxt.substring(match.indices[0][1], state.ctxt.length)
-          : modifiedText.substring(0, match.indices[0][0]) +
-            modifiedText.substring(match.indices[0][1], modifiedText.length);
-      state.out = `${char}'s stats has been changed\nfrom ${oldStats}\nto ${character}.`;
+          ? state.ctxt.substring(0, currIndices[0]) +
+            state.ctxt.substring(currIndices[1], state.ctxt.length)
+          : modifiedText.substring(0, currIndices[0]) +
+            modifiedText.substring(currIndices[1], modifiedText.length);
+      state.out = `\n${char}'s stats has been changed\nfrom ${oldStats}\nto ${CharToString(
+        character
+      )}.`;
     }
   }
   //#endregion setStats
@@ -438,24 +471,28 @@ const modifier = (text) => {
   //#region showStats
   {
     //Looks for pattern !showStats(already-created-character)
-    const exp = new RegExp(`!showStats\\(${charactersExp}\\)`, "di");
+    const exp = new RegExp(`!showStats\\(${charactersExp}\\)`, "i");
     match = text.match(exp);
     //Null check
     if (match !== null) {
       //Grabbing info
       const char = match.groups.character;
       const character = state.characters[char];
+      const currIndices = [
+        modifiedText.indexOf(match[0]),
+        modifiedText.indexOf(match[0]) + match[0].length,
+      ];
 
       //Changing output
       state.ctxt =
         state.ctxt !== ""
-          ? state.ctxt.substring(0, match.indices[0][0]) +
-            state.ctxt.substring(match.indices[0][1], state.ctxt.length)
-          : modifiedText.substring(0, match.indices[0][0]) +
-            modifiedText.substring(match.indices[0][1], modifiedText.length);
+          ? state.ctxt.substring(0, currIndices[0]) +
+            state.ctxt.substring(currIndices[1], state.ctxt.length)
+          : modifiedText.substring(0, currIndices[0]) +
+            modifiedText.substring(currIndices[1], modifiedText.length);
 
       //Sets info to print out
-      state.out = `${char}'s current stats are: ${character}`;
+      state.out = `\n${char}'s current stats are: ${CharToString(character)}`;
     }
   }
   //#endregion showStats
@@ -463,20 +500,25 @@ const modifier = (text) => {
   //#region getState
   {
     //Looks for pattern !getState()
-    const exp = new RegExp("!getState\\(\\)", "di");
+    const exp = new RegExp("!getState\\(\\)", "i");
     match = text.match(exp);
     //Null check
     if (match !== null) {
       //Cutting command off text
+      const currIndices = [
+        modifiedText.indexOf(match[0]),
+        modifiedText.indexOf(match[0]) + match[0].length,
+      ];
+
       state.ctxt =
         state.ctxt !== ""
-          ? state.ctxt.substring(0, match.indices[0][0]) +
-            state.ctxt.substring(match.indices[0][1], state.ctxt.length)
-          : modifiedText.substring(0, match.indices[0][0]) +
-            modifiedText.substring(match.indices[0][1], modifiedText.length);
+          ? state.ctxt.substring(0, currIndices[0]) +
+            state.ctxt.substring(currIndices[1], state.ctxt.length)
+          : modifiedText.substring(0, currIndices[0]) +
+            modifiedText.substring(currIndices[1], modifiedText.length);
 
       //Sets data to print out
-      state.out = JSON.stringify(state);
+      state.out = "\n----------\n\n" + JSON.stringify(state) + "\n\n----------";
     }
   }
   //#endregion getState
@@ -484,18 +526,22 @@ const modifier = (text) => {
   //#region setState
   {
     //Looks for pattern !setState(anything)
-    const exp = new RegExp("!setState\\((?<json>.*)\\)", "di");
+    const exp = new RegExp("!setState\\((?<json>.*)\\)", "i");
     match = text.match(exp);
 
     //Null check
     if (match !== null) {
       //Cutting the match out
+      const currIndices = [
+        modifiedText.indexOf(match[0]),
+        modifiedText.indexOf(match[0]) + match[0].length,
+      ];
       state.ctxt =
         state.ctxt !== ""
-          ? state.ctxt.substring(0, match.indices[0][0]) +
-            state.ctxt.substring(match.indices[0][1], state.ctxt.length)
-          : modifiedText.substring(0, match.indices[0][0]) +
-            modifiedText.substring(match.indices[0][1], modifiedText.length);
+          ? state.ctxt.substring(0, currIndices[0]) +
+            state.ctxt.substring(currIndices[1], state.ctxt.length)
+          : modifiedText.substring(0, currIndices[0]) +
+            modifiedText.substring(currIndices[1], modifiedText.length);
 
       //Ensuring data won't be accidentally purged along with error handling
       let cache;
@@ -503,19 +549,24 @@ const modifier = (text) => {
         cache = JSON.parse(match.groups.json);
       } catch (SyntaxError) {
         cache = state;
-        state.message = "Invalid JSON state.";
+        state.out = "Invalid JSON state.";
       }
-      state = cache;
+
+      if (cache !== null && cache !== undefined) {
+        for (let key in cache) {
+          state[key] = cache[key];
+        }
+      }
     }
   }
   //#endregion setState
 
   //!Debug info, uncomment when you need
   if (DEBUG) {
-    //console.log(`In: ${modifiedText}`);
-    //console.log(`Context: ${state.ctxt}`);
-    //console.log(`Out: ${state.out}`);
-    //console.log("------------");
+    console.log(`In: ${modifiedText}`);
+    console.log(`Context: ${state.ctxt}`);
+    console.log(`Out: ${state.out}`);
+    console.log("------------");
     //console.log(state["message"]);
     //console.log(state);
   }
@@ -528,8 +579,10 @@ if (!DEBUG) {
   modifier(text);
 } else {
   //!tests
-  modifier("!addCharacter(Miguel, str = 1, dex = 10, int = 5");
-  modifier("!skillcheck(dex, Miguel, 3)");
+  modifier("!addCharacter(Miguel, str = 1, dex = 10, int = 5)");
+  modifier(
+    "Miguel tries to evade an arrow. !skillcheck(dex, Miguel, 3) Is he blind?"
+  );
   modifier("!skillcheck(int, Miguel, 5000)");
   modifier("!skillcheck(str, Miguel, 5 : 11)");
   modifier("!skillcheck(str, Miguel, 25 : 14 : 22)");

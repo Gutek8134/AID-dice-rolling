@@ -52,3 +52,12 @@ const isInStats = (name) => {
 const diceRoll = (maxValue) => {
   return Math.floor(Math.random() * maxValue) + 1;
 };
+
+const CharToString = (character) => {
+  let temp = "";
+  for (let key in character) {
+    const value = character[key];
+    temp += `${key}: ${value.level}, `;
+  }
+  return temp.substring(0, temp.length - 2);
+};
