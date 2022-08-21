@@ -5,6 +5,7 @@ This project gives you tools to play AI Dungeon like an RPG loosely based on Dun
 
 # COMMANDS
 
+At the moment, it looks like the commands won't work if they are written at the very beggining of the line. Adding a space or any other character seems to fix the problem.
 (Please avoid using more than one command per input, as the script will become unpredictable.)
 
 ## !addCharacter
