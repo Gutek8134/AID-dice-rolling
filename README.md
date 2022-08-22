@@ -1,11 +1,12 @@
 ## Description
 
 This project gives you tools to play AI Dungeon like an RPG loosely based on Dungeons&Dragons.<br>
-[Installation Guide](https://github.com/Gutek8134/AID-dice-rolling#installation).
+[Installation Guide](#installation).
 
 # COMMANDS
 
 Since commands are deleted from AI's view (called "context") you need to add any character (preferably space) for it to make custom outputs.<br>
+Temporary fix has been applied.<br>
 (Please avoid using more than one command per input, as the script will become unpredictable.)
 
 ## !addCharacter
@@ -144,9 +145,17 @@ will leave it as is.<br>
 
 ---
 
+# Feature roadmap
+
+<iframe src="https://drive.google.com/file/d/1htVRoiBB6ETbITN2iZYU9tSrU-LwVOae/preview" width="640" height="480" allow="autoplay"></iframe>
+
+You can vote on what do you want me to do next [here](https://forms.gle/8zgA86jpnGWa97rB8)
+
+---
+
 # Installation
 
 1. Create a scenario.
 2. Get into Scripts menu.
-3. Copy files contents to corresponding fragments: sharedLibrary.js to Shared Library, inputModifier to Input Modifier and so on.
+3. Copy files contents to corresponding fragments: sharedLibrary.js to Shared Library, inputModifier.js to Input Modifier and so on.
 4. Play the created scenario. You should now be able to use the commands.

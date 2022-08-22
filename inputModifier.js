@@ -403,8 +403,10 @@ const modifier = (text) => {
       state.ctxt =
         state.ctxt !== ""
           ? state.ctxt.substring(0, currIndices[0]) +
+            " " +
             state.ctxt.substring(currIndices[1], state.ctxt.length)
           : modifiedText.substring(0, currIndices[0]) +
+            " " +
             modifiedText.substring(currIndices[1], modifiedText.length);
       state.out = `\nCharacter ${char} has been created with stats ${state.characters[char]}.`;
     }
@@ -458,8 +460,10 @@ const modifier = (text) => {
       state.ctxt =
         state.ctxt !== ""
           ? state.ctxt.substring(0, currIndices[0]) +
+            " " +
             state.ctxt.substring(currIndices[1], state.ctxt.length)
           : modifiedText.substring(0, currIndices[0]) +
+            " " +
             modifiedText.substring(currIndices[1], modifiedText.length);
       state.out = `\n${char}'s stats has been changed\nfrom ${oldStats}\nto ${CharToString(
         character
@@ -487,8 +491,10 @@ const modifier = (text) => {
       state.ctxt =
         state.ctxt !== ""
           ? state.ctxt.substring(0, currIndices[0]) +
+            " " +
             state.ctxt.substring(currIndices[1], state.ctxt.length)
           : modifiedText.substring(0, currIndices[0]) +
+            " " +
             modifiedText.substring(currIndices[1], modifiedText.length);
 
       //Sets info to print out
@@ -513,12 +519,15 @@ const modifier = (text) => {
       state.ctxt =
         state.ctxt !== ""
           ? state.ctxt.substring(0, currIndices[0]) +
+            " " +
             state.ctxt.substring(currIndices[1], state.ctxt.length)
           : modifiedText.substring(0, currIndices[0]) +
+            " " +
             modifiedText.substring(currIndices[1], modifiedText.length);
 
       //Sets data to print out
-      state.out = "\n----------\n\n" + JSON.stringify(state) + "\n\n----------";
+      state.out =
+        "\n----------\n\n" + JSON.stringify(state) + "\n\n----------\n";
     }
   }
   //#endregion getState
@@ -539,8 +548,10 @@ const modifier = (text) => {
       state.ctxt =
         state.ctxt !== ""
           ? state.ctxt.substring(0, currIndices[0]) +
+            " " +
             state.ctxt.substring(currIndices[1], state.ctxt.length)
           : modifiedText.substring(0, currIndices[0]) +
+            " " +
             modifiedText.substring(currIndices[1], modifiedText.length);
 
       //Ensuring data won't be accidentally purged along with error handling
@@ -563,10 +574,10 @@ const modifier = (text) => {
 
   //!Debug info, uncomment when you need
   if (DEBUG) {
-    console.log(`In: ${modifiedText}`);
-    console.log(`Context: ${state.ctxt}`);
-    console.log(`Out: ${state.out}`);
-    console.log("------------");
+    //console.log(`In: ${modifiedText}`);
+    //console.log(`Context: ${state.ctxt}`);
+    //console.log(`Out: ${state.out}`);
+    //console.log("------------");
     //console.log(state["message"]);
     //console.log(state);
   }
