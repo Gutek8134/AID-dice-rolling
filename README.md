@@ -147,7 +147,7 @@ will leave it as is.<br>
 
 # Feature roadmap
 
-<iframe src="https://drive.google.com/file/d/1htVRoiBB6ETbITN2iZYU9tSrU-LwVOae/preview" width="640" height="480" allow="autoplay"></iframe>
+![Roadmap](images/roadmap.png "Roadmap")
 
 You can vote on what do you want me to do next [here](https://forms.gle/8zgA86jpnGWa97rB8)
 
