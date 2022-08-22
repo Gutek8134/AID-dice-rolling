@@ -5,7 +5,7 @@ const DEBUG = false;
 
 if (DEBUG) {
   //Dummy state
-  var state = {
+  let state = {
     stats: [],
     dice: 20,
     startingLevel: 1,
@@ -82,6 +82,7 @@ if (DEBUG) {
   //!End of shared library
 
   //dummy character
+
   state.characters.Miguel = new Character();
   state.characters.Miguel.str = new Stat("str");
   state.characters.Miguel.dex = new Stat("dex", 10);
@@ -119,458 +120,586 @@ const SetupState = () => {
   }
 };
 
+const ElementInArray = (element, array) => {
+  ret = false;
+  if (element !== undefined && typeof array === "object") {
+    for (const el of array) {
+      if (el === element) {
+        ret = true;
+        break;
+      }
+    }
+  }
+  return ret;
+};
+
+//#region skillcheck
+const skillcheck = (arguments) => {
+  //Error checking
+  if (arguments === undefined || arguments === null || arguments === "") {
+    state.message = "No arguments found.";
+    //Changing output
+    state.ctxt =
+      state.ctxt !== ""
+        ? state.ctxt.substring(0, currIndices[0]) +
+          " " +
+          state.ctxt.substring(currIndices[1], state.ctxt.length)
+        : modifiedText.substring(0, currIndices[0]) +
+          " " +
+          modifiedText.substring(currIndices[1], modifiedText.length);
+    return;
+  }
+
+  //Checks for format stat, character, thresholds , outputs groups character and thresholds, that are matched later
+  const exp = /(?<stat>\w+), (?<character>[\w\s']+), (?<thresholds>.+)/i;
+
+  //Checks for thresholds type
+  const thresholdCheck =
+    /(?<thresholdsC>\d+ *= *\w[\w\s\.]*(?: *: *\d+ *= *\w[\w\s\.]*)+)|(?<thresholds4>\d+ *: *\d+ *: *\d+ *: *\d+)|(?<thresholds3>\d+ *: *\d+ *: *\d+)|(?<thresholds2>\d+ *: *\d+)|(?<thresholds1>\d+)/i;
+
+  const match = arguments.match(exp);
+  //console.log(match);
+
+  //Firstly, checks if something matched
+  if (match !== null) {
+    //Regex matched, so program is rolling the dice
+    const roll = diceRoll(state.dice);
+
+    //Grabbing necessary info
+    const stat = match.groups["stat"];
+    const char = match.groups["character"];
+
+    //Testing if stat exists, throwing error otherwise
+    if (!ElementInArray(stat, state.stats)) {
+      state.message = "Specified stat does not exist";
+      //Clearing the command from context
+      state.ctxt =
+        state.ctxt !== ""
+          ? state.ctxt.substring(0, currIndices[0]) +
+            " " +
+            state.ctxt.substring(currIndices[1], state.ctxt.length)
+          : modifiedText.substring(0, currIndices[0]) +
+            " " +
+            modifiedText.substring(currIndices[1], modifiedText.length);
+      return;
+    }
+
+    //Shortening access path to character object
+    let character = state.characters[char];
+
+    //If you didn't create a character earlier, they get all stats at starting level from state
+    if (character === undefined) {
+      state.characters[char] = new Character();
+      character = state.characters[char];
+    }
+
+    //Don't have a stat? No problem! You'll have a 0 instead! That's even worse than the default starting value!
+    const charStat = character[stat] !== undefined ? character[stat].level : 0;
+    //console.log(char + ", " + stat + ": "+ charStat);
+
+    //Grabs thresholds
+    const thresholds = arguments.match(thresholdCheck);
+    if (thresholds === null) {
+      state.message = "Thresholds are not in proper format";
+      //Clearing from memory
+      state.ctxt =
+        state.ctxt !== ""
+          ? state.ctxt.substring(0, currIndices[0]) +
+            " " +
+            state.ctxt.substring(currIndices[1], state.ctxt.length)
+          : modifiedText.substring(0, currIndices[0]) +
+            " " +
+            modifiedText.substring(currIndices[1], modifiedText.length);
+      return;
+    }
+
+    //Tricky part, checking every group for data
+    for (key in thresholds.groups) {
+      //Grabbing necessary info
+      let value = thresholds.groups[key];
+
+      //null check
+      if (
+        value !== undefined &&
+        currIndices !== undefined &&
+        character !== undefined
+      ) {
+        const score = roll + charStat;
+        let mess = `Skillcheck performed: ${char} with ${stat} ${charStat} rolled ${roll}. ${charStat} + ${roll} = ${score}. Difficulty: ${value} Outcome: `;
+
+        let outcome;
+        //Handling the skillcheck
+        switch (key) {
+          //One threshold means success or failure
+          case "thresholds1":
+            outcome = score >= Number(value.trim()) ? "success." : "failure.";
+
+            state.ctxt =
+              modifiedText.substring(0, currIndices[0]) +
+              "Outcome: " +
+              outcome +
+              modifiedText.substring(currIndices[1], modifiedText.length);
+
+            modifiedText =
+              modifiedText.substring(0, currIndices[0]) +
+              mess +
+              outcome +
+              modifiedText.substring(currIndices[1], modifiedText.length);
+            break;
+
+          //Two of them - success, nothing, failure
+          case "thresholds2":
+            value = value
+              .split(":")
+              .map((el) => Number(el.trim()))
+              .sort((a, b) => a - b);
+
+            mess = `Skillcheck performed: ${char} with ${stat} ${charStat} rolled ${roll}. ${charStat} + ${roll} = ${score}. Difficulty: ${value.join(
+              ", "
+            )} Outcome: `;
+
+            if (score >= value[1]) {
+              outcome = "success.";
+            } else if (score >= value[0]) {
+              outcome = "nothing happens.";
+            } else {
+              outcome = "failure.";
+            }
+            state.ctxt =
+              modifiedText.substring(0, currIndices[0]) +
+              "Outcome: " +
+              outcome +
+              modifiedText.substring(currIndices[1], modifiedText.length);
+
+            modifiedText =
+              modifiedText.substring(0, currIndices[0]) +
+              mess +
+              outcome +
+              modifiedText.substring(currIndices[1], modifiedText.length);
+            break;
+
+          //Three of them - critical success, success, failure or critical failure
+          case "thresholds3":
+            value = value
+              .split(":")
+              .map((el) => Number(el.trim()))
+              .sort((a, b) => a - b);
+
+            mess = `Skillcheck performed: ${char} with ${stat} ${charStat} rolled ${roll}. ${charStat} + ${roll} = ${score}. Difficulty: ${value.join(
+              ", "
+            )} Outcome: `;
+
+            if (score >= value[2]) {
+              outcome = "critical success.";
+            } else if (score >= value[1]) {
+              outcome = "success.";
+            } else if (score >= value[0]) {
+              outcome = "failure.";
+            } else {
+              outcome = "critical failure.";
+            }
+            state.ctxt =
+              modifiedText.substring(0, currIndices[0]) +
+              "Outcome: " +
+              outcome +
+              modifiedText.substring(currIndices[1], modifiedText.length);
+
+            modifiedText =
+              modifiedText.substring(0, currIndices[0]) +
+              mess +
+              outcome +
+              modifiedText.substring(currIndices[1], modifiedText.length);
+            break;
+
+          //Four of them - critical success, success, nothing, failure or critical failure
+          case "thresholds4":
+            value = value
+              .split(":")
+              .map((el) => Number(el.trim()))
+              .sort((a, b) => a - b);
+            mess = `Skillcheck performed: ${char} with ${stat} ${charStat} rolled ${roll}. ${charStat} + ${roll} = ${score}. Difficulty: ${value.join(
+              ", "
+            )} Outcome: `;
+
+            if (score >= value[3]) {
+              outcome = "critical success.";
+            } else if (score >= value[2]) {
+              outcome = "success.";
+            } else if (score >= value[1]) {
+              outcome = "nothing happens.";
+            } else if (score >= value[0]) {
+              outcome = "failure.";
+            } else {
+              outcome = "critical failure.";
+            }
+            state.ctxt =
+              modifiedText.substring(0, currIndices[0]) +
+              "Outcome: " +
+              outcome +
+              modifiedText.substring(currIndices[1], modifiedText.length);
+
+            modifiedText =
+              modifiedText.substring(0, currIndices[0]) +
+              mess +
+              outcome +
+              modifiedText.substring(currIndices[1], modifiedText.length);
+            break;
+
+          //Custom thresholds with outcomes
+          case "thresholdsC":
+            value = value.split(":").map((el) => {
+              const temp = el.split("=").map((el) => el.trim());
+              return [Number(temp[0]), temp[1]];
+            });
+
+            mess = `Skillcheck performed: ${char} with ${stat} ${charStat} rolled ${roll}. ${charStat} + ${roll} = ${score}. Difficulty: ${CustomDifficulties(
+              value
+            )} Outcome: `;
+
+            state.ctxt =
+              modifiedText.substring(0, currIndices[0]) +
+              CustomOutcome(score, value) +
+              modifiedText.substring(currIndices[1], modifiedText.length);
+
+            modifiedText =
+              modifiedText.substring(0, currIndices[0]) +
+              mess +
+              CustomOutcome(score, value) +
+              modifiedText.substring(currIndices[1], modifiedText.length);
+            break;
+
+          //Read message
+          default:
+            console.error("WTF is this?!");
+            state.message =
+              "An error has ocurred. Context: no group has been matched. \nIDK how did you make it, but think about creating an issue.";
+            break;
+        }
+      }
+    }
+  } else {
+    state.message = "No arguments found.";
+    //Changing output
+    state.ctxt =
+      state.ctxt !== ""
+        ? state.ctxt.substring(0, currIndices[0]) +
+          " " +
+          state.ctxt.substring(currIndices[1], state.ctxt.length)
+        : modifiedText.substring(0, currIndices[0]) +
+          " " +
+          modifiedText.substring(currIndices[1], modifiedText.length);
+    return;
+  }
+};
+//#endregion skillcheck
+
+//#region addCharacter
+addCharacter = (arguments) => {
+  //Looks for pattern !addCharacter(name) or !addCharacter(name, stat1=value, stat2=value, ..., statN=value)
+  const exp = /(?<character>[\w\s'`]+)(?<startingStats>(?:, \w+ *= *\d+)*)/i;
+
+  //Matches the RegEx
+  const match = arguments.match(exp);
+
+  //Null check
+  if (match !== null) {
+    //Grabbing info
+    const char = match.groups.character;
+
+    //Converts values to format [[stat, val], [stat2, val], ... [statN, val]]
+    let values = match.groups.startingStats
+      .substring(2, match.groups.startingStats.length)
+      .split(", ")
+      .map((el) => el.trim().split("="));
+
+    for (i in values) {
+      curr = values[i];
+      curr = [curr[0].trim(), Number(curr[1])];
+      values[i] = curr;
+    }
+    //End of conversion
+
+    //Creates the character with stats. If none were given, every created stat is at state.startingLevel
+    state.characters[char] =
+      values === [["", NaN]] ? new Character() : new Character(values);
+
+    //Changing output
+    state.ctxt =
+      state.ctxt !== ""
+        ? state.ctxt.substring(0, currIndices[0]) +
+          " " +
+          state.ctxt.substring(currIndices[1], state.ctxt.length)
+        : modifiedText.substring(0, currIndices[0]) +
+          " " +
+          modifiedText.substring(currIndices[1], modifiedText.length);
+    state.out = `\nCharacter ${char} has been created with stats ${state.characters[char]}.`;
+  }
+};
+//#endregion addCharacter
+
+//#region setStats
+setStats = (arguments) => {
+  //Looks for pattern !addCharacter(name) or !addCharacter(name, stat1=value, stat2=value, ..., statN=value)
+  const exp = /(?<character>[\w\s']+)(?<stats>(?:, \w+ *= *\d+)+)/i;
+
+  //Matches the RegEx
+  const match = arguments.match(exp);
+
+  //Null check
+  if (match !== null) {
+    //Grabbing info
+    const char = match.groups.character;
+    if (!ElementInArray(char, Object.keys(state.characters))) {
+      state.message =
+        "Character has not been created and its stats cannot be altered.";
+      //Removing command from context
+      state.ctxt =
+        state.ctxt !== ""
+          ? state.ctxt.substring(0, currIndices[0]) +
+            " " +
+            state.ctxt.substring(currIndices[1], state.ctxt.length)
+          : modifiedText.substring(0, currIndices[0]) +
+            " " +
+            modifiedText.substring(currIndices[1], modifiedText.length);
+      return;
+    }
+    let character = state.characters[char];
+
+    //Converts values to format [[stat, newVal], [stat2, newVal], ... [statN, newVal]]
+    let values = match.groups.stats
+      .substring(2, match.groups.stats.length)
+      .split(", ")
+      .map((el) => el.trim().split("="));
+
+    for (i in values) {
+      curr = values[i];
+      curr = [curr[0].trim(), Number(curr[1])];
+      values[i] = curr;
+    }
+
+    //Caches old stats to show
+    oldStats = CharToString(character);
+
+    //Changes stats
+    values.forEach((el) => {
+      character[el[0]] = new Stat(el[0], el[1]);
+    });
+
+    state.characters[char] = character;
+
+    //Changing output
+    state.ctxt =
+      state.ctxt !== ""
+        ? state.ctxt.substring(0, currIndices[0]) +
+          " " +
+          state.ctxt.substring(currIndices[1], state.ctxt.length)
+        : modifiedText.substring(0, currIndices[0]) +
+          " " +
+          modifiedText.substring(currIndices[1], modifiedText.length);
+
+    state.out = `\n${char}'s stats has been changed\nfrom ${oldStats}\nto ${CharToString(
+      character
+    )}.`;
+  } else {
+    state.message = "Invalid arguments.";
+    //Removing command from context
+    state.ctxt =
+      state.ctxt !== ""
+        ? state.ctxt.substring(0, currIndices[0]) +
+          " " +
+          state.ctxt.substring(currIndices[1], state.ctxt.length)
+        : modifiedText.substring(0, currIndices[0]) +
+          " " +
+          modifiedText.substring(currIndices[1], modifiedText.length);
+    return;
+  }
+};
+//#endregion setStats
+
+//#region showStats
+showStats = (arguments) => {
+  //Looks for pattern !showStats(already-created-character)
+  const exp = /(?<character>[\w\s']+)/i;
+  match = arguments.match(exp);
+  //Null check
+  if (match !== null) {
+    //Grabbing info
+    const char = match.groups.character;
+    if (!ElementInArray(char, Object.keys(state.characters))) {
+      state.message =
+        "Character has not been created and its stats cannot be shown.";
+      //Removing command from context
+      state.ctxt =
+        state.ctxt !== ""
+          ? state.ctxt.substring(0, currIndices[0]) +
+            " " +
+            state.ctxt.substring(currIndices[1], state.ctxt.length)
+          : modifiedText.substring(0, currIndices[0]) +
+            " " +
+            modifiedText.substring(currIndices[1], modifiedText.length);
+      return;
+    }
+    const character = state.characters[char];
+
+    //Changing output
+    state.ctxt =
+      state.ctxt !== ""
+        ? state.ctxt.substring(0, currIndices[0]) +
+          " " +
+          state.ctxt.substring(currIndices[1], state.ctxt.length)
+        : modifiedText.substring(0, currIndices[0]) +
+          " " +
+          modifiedText.substring(currIndices[1], modifiedText.length);
+
+    //Sets info to print out
+    state.out = `\n${char}'s current stats are: ${CharToString(character)}`;
+  }
+};
+//#endregion showStats
+
+//#region getState
+getState = (arguments) => {
+  if (arguments !== "") {
+    state.message = "getState command doesn't take any arguments.";
+    //Removing command from context
+    state.ctxt =
+      state.ctxt !== ""
+        ? state.ctxt.substring(0, currIndices[0]) +
+          " " +
+          state.ctxt.substring(currIndices[1], state.ctxt.length)
+        : modifiedText.substring(0, currIndices[0]) +
+          " " +
+          modifiedText.substring(currIndices[1], modifiedText.length);
+    return;
+  }
+  //Cutting command off text
+  state.ctxt =
+    state.ctxt !== ""
+      ? state.ctxt.substring(0, currIndices[0]) +
+        " " +
+        state.ctxt.substring(currIndices[1], state.ctxt.length)
+      : modifiedText.substring(0, currIndices[0]) +
+        " " +
+        modifiedText.substring(currIndices[1], modifiedText.length);
+
+  //Sets data to print out
+  state.out = "\n----------\n\n" + JSON.stringify(state) + "\n\n----------\n";
+};
+//#endregion getState
+
+//#region setState
+setState = (arguments) => {
+  //Looks for pattern !setState(anything)
+  const exp = /(?<json>.+)/i;
+  match = arguments.match(exp);
+
+  //Null check
+  if (match !== null) {
+    //Cutting the match out
+    const currIndices = [
+      modifiedText.indexOf(match[0]),
+      modifiedText.indexOf(match[0]) + match[0].length,
+    ];
+    state.ctxt =
+      state.ctxt !== ""
+        ? state.ctxt.substring(0, currIndices[0]) +
+          " " +
+          state.ctxt.substring(currIndices[1], state.ctxt.length)
+        : modifiedText.substring(0, currIndices[0]) +
+          " " +
+          modifiedText.substring(currIndices[1], modifiedText.length);
+
+    //Ensuring data won't be accidentally purged along with error handling
+    let cache;
+    try {
+      cache = JSON.parse(match.groups.json);
+    } catch (SyntaxError) {
+      cache = state;
+      state.message = "Invalid JSON state.";
+    }
+
+    if (cache !== null && cache !== undefined) {
+      for (let key in cache) {
+        state[key] = cache[key];
+      }
+    }
+  } else {
+    state.message = "You need to enter a parameter to setState command";
+    //Removing command from context
+    state.ctxt =
+      state.ctxt !== ""
+        ? state.ctxt.substring(0, currIndices[0]) +
+          " " +
+          state.ctxt.substring(currIndices[1], state.ctxt.length)
+        : modifiedText.substring(0, currIndices[0]) +
+          " " +
+          modifiedText.substring(currIndices[1], modifiedText.length);
+    return;
+  }
+};
+//#endregion setState
+
 //Main function
+let currIndices, modifiedText;
 const modifier = (text) => {
   SetupState();
   //Resets values
   state.out = state.ctxt = "";
-  let modifiedText = text;
+  state.message = " ";
+  modifiedText = text;
 
-  //#region helper autogenerated expressions
-  //All stats are assigned to re as regex searching for any of them
-  let statsExp = "(?<stat>";
-  state.stats.forEach((element) => {
-    statsExp += `(?:${element})|`;
-  });
-  //Checks if any stat exists so it won't break the RegEx
-  statsExp =
-    state.stats.length > 0
-      ? statsExp.substring(0, statsExp.length - 1) + ")"
-      : statsExp.substring(0, statsExp.length) + ")";
+  //#region globalCommand
+  //Checks for pattern !command(args)
+  const globalExp = /!(?<command>[^\s]+)\((?<arguments>.*)\)/i;
+  const globalMatch = text.match(globalExp);
 
-  //All characters are needed, too
-  let charactersExp = "(?<character>";
-  Object.keys(state.characters).forEach((element) => {
-    charactersExp += `(?:${element})|`;
-  });
-  //Checking if any character exists so it won't break the RegEx
-  charactersExp =
-    Object.keys(state.characters).length > 0
-      ? charactersExp.substring(0, charactersExp.length - 1) + ")"
-      : charactersExp.substring(0, charactersExp.length) + ")";
-  //#endregion helper autogenerated expressions
+  //If something matched, calls functions with further work
+  if (globalMatch !== null) {
+    const temp = text.indexOf(globalMatch[0]);
+    //Creates indices, because d flag is not allowed
+    currIndices = [temp, temp + globalMatch[0].length];
 
-  //#region skillcheck
-  {
-    //Checks for format !skillcheck(stat, character, thresholds), outputs groups character and thresholds1-4
-    const exp = RegExp(
-      "!skillcheck\\(" +
-        statsExp +
-        ", (?<character>(?:\\w|\\s|')+), (?:(?<thresholds1>\\d+)|(?<thresholds2>\\d+ *: *\\d+)|(?<thresholds3>\\d+ *: *\\d+ *: *\\d+)|(?<thresholds4>\\d+ *: *\\d+ *: *\\d+ *: *\\d+)|(?<thresholdsC>\\d+ *= *\\w(?:\\w|\\s|\\.)*(?: *: *\\d+ *= *\\w(?:\\w| |\\.)*)+))\\)",
-      "i"
-    );
+    //Matches the command and forwards arguments to them
+    switch (globalMatch.groups.command.toLowerCase()) {
+      case "skillcheck":
+        skillcheck(globalMatch.groups.arguments);
+        break;
 
-    //console.log(skillcheckExp);
-    const match = text.match(exp);
-    //console.log(match);
+      case "addcharacter":
+        addCharacter(globalMatch.groups.arguments);
+        break;
 
-    //Firstly, checks if something matched
-    if (match !== null) {
-      //Regex matched, so program is rolling the dice
-      const roll = diceRoll(state.dice);
-      //Grabbing necessary info
-      const stat = match.groups["stat"];
-      const char = match.groups["character"];
+      case "setstats":
+        setStats(globalMatch.groups.arguments);
+        break;
 
-      //Shortening access path
-      let character = state.characters[char];
+      case "showstats":
+        showStats(globalMatch.groups.arguments);
+        break;
 
-      //If you didn't create a character earlier, they get all stats at starting level from state
-      if (character === undefined) {
-        state.characters[char] = new Character();
-        character = state.characters[char];
-      }
+      case "getstate":
+        getState(globalMatch.groups.arguments);
+        break;
 
-      //Don't have a stat? No problem! You'll have a 0 instead! That's even worse than the default starting value!
-      const charStat =
-        character[stat] !== undefined ? character[stat].level : 0;
-      //console.log(char + ", " + stat + ": "+ charStat);
+      case "setstate":
+        setState(globalMatch.groups.arguments);
+        break;
 
-      //Tricky part, checking every group for data
-      for (key in match.groups) {
-        //Grabbing necessary info
-        let value = match.groups[key];
-        const currIndices = [
-          modifiedText.indexOf(match[0]),
-          modifiedText.indexOf(match[0]) + match[0].length,
-        ];
-
-        //null check
-        if (
-          value !== undefined &&
-          currIndices !== undefined &&
-          character !== undefined
-        ) {
-          const score = roll + charStat;
-          let mess = `Skillcheck performed: ${char} with ${stat} ${charStat} rolled ${roll}. ${charStat} + ${roll} = ${score}. Difficulty: ${value} Outcome: `;
-
-          let outcome;
-          //Handling the skillcheck
-          switch (key) {
-            //One threshold means success or failure
-            case "thresholds1":
-              outcome = score >= Number(value.trim()) ? "success." : "failure.";
-
-              state.ctxt =
-                modifiedText.substring(0, currIndices[0]) +
-                "Outcome: " +
-                outcome +
-                modifiedText.substring(currIndices[1], modifiedText.length);
-
-              modifiedText =
-                modifiedText.substring(0, currIndices[0]) +
-                mess +
-                outcome +
-                modifiedText.substring(currIndices[1], modifiedText.length);
-              break;
-
-            //Two of them - success, nothing, failure
-            case "thresholds2":
-              value = value
-                .split(":")
-                .map((el) => Number(el.trim()))
-                .sort((a, b) => a - b);
-
-              mess = `Skillcheck performed: ${char} with ${stat} ${charStat} rolled ${roll}. ${charStat} + ${roll} = ${score}. Difficulty: ${value.join(
-                ", "
-              )} Outcome: `;
-
-              if (score >= value[1]) {
-                outcome = "success.";
-              } else if (score >= value[0]) {
-                outcome = "nothing happens.";
-              } else {
-                outcome = "failure.";
-              }
-              state.ctxt =
-                modifiedText.substring(0, currIndices[0]) +
-                "Outcome: " +
-                outcome +
-                modifiedText.substring(currIndices[1], modifiedText.length);
-
-              modifiedText =
-                modifiedText.substring(0, currIndices[0]) +
-                mess +
-                outcome +
-                modifiedText.substring(currIndices[1], modifiedText.length);
-              break;
-
-            //Three of them - critical success, success, failure or critical failure
-            case "thresholds3":
-              value = value
-                .split(":")
-                .map((el) => Number(el.trim()))
-                .sort((a, b) => a - b);
-
-              mess = `Skillcheck performed: ${char} with ${stat} ${charStat} rolled ${roll}. ${charStat} + ${roll} = ${score}. Difficulty: ${value.join(
-                ", "
-              )} Outcome: `;
-
-              if (score >= value[2]) {
-                outcome = "critical success.";
-              } else if (score >= value[1]) {
-                outcome = "success.";
-              } else if (score >= value[0]) {
-                outcome = "failure.";
-              } else {
-                outcome = "critical failure.";
-              }
-              state.ctxt =
-                modifiedText.substring(0, currIndices[0]) +
-                "Outcome: " +
-                outcome +
-                modifiedText.substring(currIndices[1], modifiedText.length);
-
-              modifiedText =
-                modifiedText.substring(0, currIndices[0]) +
-                mess +
-                outcome +
-                modifiedText.substring(currIndices[1], modifiedText.length);
-              break;
-
-            //Four of them - critical success, success, nothing, failure or critical failure
-            case "thresholds4":
-              value = value
-                .split(":")
-                .map((el) => Number(el.trim()))
-                .sort((a, b) => a - b);
-              mess = `Skillcheck performed: ${char} with ${stat} ${charStat} rolled ${roll}. ${charStat} + ${roll} = ${score}. Difficulty: ${value.join(
-                ", "
-              )} Outcome: `;
-
-              if (score >= value[3]) {
-                outcome = "critical success.";
-              } else if (score >= value[2]) {
-                outcome = "success.";
-              } else if (score >= value[1]) {
-                outcome = "nothing happens.";
-              } else if (score >= value[0]) {
-                outcome = "failure.";
-              } else {
-                outcome = "critical failure.";
-              }
-              state.ctxt =
-                modifiedText.substring(0, currIndices[0]) +
-                "Outcome: " +
-                outcome +
-                modifiedText.substring(currIndices[1], modifiedText.length);
-
-              modifiedText =
-                modifiedText.substring(0, currIndices[0]) +
-                mess +
-                outcome +
-                modifiedText.substring(currIndices[1], modifiedText.length);
-              break;
-
-            //Custom thresholds with outcomes
-            case "thresholdsC":
-              value = value.split(":").map((el) => {
-                const temp = el.split("=").map((el) => el.trim());
-                return [Number(temp[0]), temp[1]];
-              });
-
-              mess = `Skillcheck performed: ${char} with ${stat} ${charStat} rolled ${roll}. ${charStat} + ${roll} = ${score}. Difficulty: ${CustomDifficulties(
-                value
-              )} Outcome: `;
-
-              state.ctxt =
-                modifiedText.substring(0, currIndices[0]) +
-                CustomOutcome(score, value) +
-                modifiedText.substring(currIndices[1], modifiedText.length);
-
-              modifiedText =
-                modifiedText.substring(0, currIndices[0]) +
-                mess +
-                CustomOutcome(score, value) +
-                modifiedText.substring(currIndices[1], modifiedText.length);
-              break;
-
-            //IDK why did I put it here, but may come in useful
-            case "character":
-              break;
-            case "stat":
-              break;
-
-            //Read message
-            default:
-              console.error("WTF is this?!");
-              state.message =
-                "An error has ocurred. Context: no group has been matched. \nIDK how did you make it, but think about creating an issue.";
-              break;
-          }
-        }
-      }
+      default:
+        state.message = "Command not found.";
+        //Changing output
+        state.ctxt =
+          state.ctxt !== ""
+            ? state.ctxt.substring(0, currIndices[0]) +
+              " " +
+              state.ctxt.substring(currIndices[1], state.ctxt.length)
+            : modifiedText.substring(0, currIndices[0]) +
+              " " +
+              modifiedText.substring(currIndices[1], modifiedText.length);
+        break;
     }
   }
-  //#endregion skillcheck
-
-  //#region addCharacter
-  {
-    //Looks for pattern !addCharacter(name) or !addCharacter(name, stat1=value, stat2=value, ..., statN=value)
-    const exp = new RegExp(
-      `!addCharacter\\((?<character>[\\w\\s'\`]+)(?<startingStats>(?:, \\w+ *= *\\d+)*)\\)`,
-      "i"
-    );
-
-    //Matches the RegEx
-    const match = text.match(exp);
-
-    //Null check
-    if (match !== null) {
-      //Grabbing info
-      const char = match.groups.character;
-      const currIndices = [
-        modifiedText.indexOf(match[0]),
-        modifiedText.indexOf(match[0]) + match[0].length,
-      ];
-
-      //Converts values to format [[stat, val], [stat2, val], ... [statN, val]]
-      let values = match.groups.startingStats
-        .substring(2, match.groups.startingStats.length)
-        .split(", ")
-        .map((el) => el.trim().split("="));
-
-      for (i in values) {
-        curr = values[i];
-        curr = [curr[0].trim(), Number(curr[1])];
-        values[i] = curr;
-      }
-
-      //Creates the character with stats
-      state.characters[char] = new Character(values);
-
-      //Changing output
-      state.ctxt =
-        state.ctxt !== ""
-          ? state.ctxt.substring(0, currIndices[0]) +
-            " " +
-            state.ctxt.substring(currIndices[1], state.ctxt.length)
-          : modifiedText.substring(0, currIndices[0]) +
-            " " +
-            modifiedText.substring(currIndices[1], modifiedText.length);
-      state.out = `\nCharacter ${char} has been created with stats ${state.characters[char]}.`;
-    }
-  }
-  //#endregion addCharacter
-
-  //#region setStats
-  {
-    //Looks for pattern !addCharacter(name) or !addCharacter(name, stat1=value, stat2=value, ..., statN=value)
-    const exp = new RegExp(
-      `!setStats\\(${charactersExp}(?<stats>(?:, \\w+ *= *\\d+)+)\\)`,
-      "i"
-    );
-
-    //Matches the RegEx
-    const match = text.match(exp);
-
-    //Null check
-    if (match !== null) {
-      const currIndices = [
-        modifiedText.indexOf(match[0]),
-        modifiedText.indexOf(match[0]) + match[0].length,
-      ];
-      //Grabbing info
-      const char = match.groups.character;
-      let character = state.characters[char];
-
-      //Converts values to format [[stat, newVal], [stat2, newVal], ... [statN, newVal]]
-      let values = match.groups.stats
-        .substring(2, match.groups.stats.length)
-        .split(", ")
-        .map((el) => el.trim().split("="));
-
-      for (i in values) {
-        curr = values[i];
-        curr = [curr[0].trim(), Number(curr[1])];
-        values[i] = curr;
-      }
-
-      //Caches old stats to show
-      oldStats = CharToString(character);
-
-      //Changes stats
-      values.forEach((el) => {
-        character[el[0]] = new Stat(el[0], el[1]);
-      });
-
-      state.characters[char] = character;
-
-      //Changing output
-      state.ctxt =
-        state.ctxt !== ""
-          ? state.ctxt.substring(0, currIndices[0]) +
-            " " +
-            state.ctxt.substring(currIndices[1], state.ctxt.length)
-          : modifiedText.substring(0, currIndices[0]) +
-            " " +
-            modifiedText.substring(currIndices[1], modifiedText.length);
-      state.out = `\n${char}'s stats has been changed\nfrom ${oldStats}\nto ${CharToString(
-        character
-      )}.`;
-    }
-  }
-  //#endregion setStats
-
-  //#region showStats
-  {
-    //Looks for pattern !showStats(already-created-character)
-    const exp = new RegExp(`!showStats\\(${charactersExp}\\)`, "i");
-    match = text.match(exp);
-    //Null check
-    if (match !== null) {
-      //Grabbing info
-      const char = match.groups.character;
-      const character = state.characters[char];
-      const currIndices = [
-        modifiedText.indexOf(match[0]),
-        modifiedText.indexOf(match[0]) + match[0].length,
-      ];
-
-      //Changing output
-      state.ctxt =
-        state.ctxt !== ""
-          ? state.ctxt.substring(0, currIndices[0]) +
-            " " +
-            state.ctxt.substring(currIndices[1], state.ctxt.length)
-          : modifiedText.substring(0, currIndices[0]) +
-            " " +
-            modifiedText.substring(currIndices[1], modifiedText.length);
-
-      //Sets info to print out
-      state.out = `\n${char}'s current stats are: ${CharToString(character)}`;
-    }
-  }
-  //#endregion showStats
-
-  //#region getState
-  {
-    //Looks for pattern !getState()
-    const exp = new RegExp("!getState\\(\\)", "i");
-    match = text.match(exp);
-    //Null check
-    if (match !== null) {
-      //Cutting command off text
-      const currIndices = [
-        modifiedText.indexOf(match[0]),
-        modifiedText.indexOf(match[0]) + match[0].length,
-      ];
-
-      state.ctxt =
-        state.ctxt !== ""
-          ? state.ctxt.substring(0, currIndices[0]) +
-            " " +
-            state.ctxt.substring(currIndices[1], state.ctxt.length)
-          : modifiedText.substring(0, currIndices[0]) +
-            " " +
-            modifiedText.substring(currIndices[1], modifiedText.length);
-
-      //Sets data to print out
-      state.out =
-        "\n----------\n\n" + JSON.stringify(state) + "\n\n----------\n";
-    }
-  }
-  //#endregion getState
-
-  //#region setState
-  {
-    //Looks for pattern !setState(anything)
-    const exp = new RegExp("!setState\\((?<json>.*)\\)", "i");
-    match = text.match(exp);
-
-    //Null check
-    if (match !== null) {
-      //Cutting the match out
-      const currIndices = [
-        modifiedText.indexOf(match[0]),
-        modifiedText.indexOf(match[0]) + match[0].length,
-      ];
-      state.ctxt =
-        state.ctxt !== ""
-          ? state.ctxt.substring(0, currIndices[0]) +
-            " " +
-            state.ctxt.substring(currIndices[1], state.ctxt.length)
-          : modifiedText.substring(0, currIndices[0]) +
-            " " +
-            modifiedText.substring(currIndices[1], modifiedText.length);
-
-      //Ensuring data won't be accidentally purged along with error handling
-      let cache;
-      try {
-        cache = JSON.parse(match.groups.json);
-      } catch (SyntaxError) {
-        cache = state;
-        state.out = "Invalid JSON state.";
-      }
-
-      if (cache !== null && cache !== undefined) {
-        for (let key in cache) {
-          state[key] = cache[key];
-        }
-      }
-    }
-  }
-  //#endregion setState
+  //#endregion globalCommand
 
   //!Debug info, uncomment when you need
   if (DEBUG) {
@@ -590,7 +719,7 @@ if (!DEBUG) {
   modifier(text);
 } else {
   //!tests
-  modifier("!addCharacter(Miguel, str = 1, dex = 10, int = 5)");
+  modifier("!addCharacter(Miguel, str=1, dex=5, int=3)");
   modifier(
     "Miguel tries to evade an arrow. !skillcheck(dex, Miguel, 3) Is he blind?"
   );
@@ -604,6 +733,7 @@ if (!DEBUG) {
   );
   modifier("!skillcheck(magic, Miguel, 3)");
   modifier("Setting stats... !setStats(Miguel, magic=100) Stats set");
+  modifier("!showstats(Miguel)");
   modifier("!getState()");
   console.log("\n\n\n");
   modifier("!setState(abc)");
