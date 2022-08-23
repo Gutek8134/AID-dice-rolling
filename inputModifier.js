@@ -3,6 +3,7 @@
 //!Turns on debug code
 const DEBUG = false;
 
+//Comment this if statement when debugging. End at line 95.
 if (DEBUG) {
   //Dummy state
   let state = {
@@ -52,7 +53,9 @@ if (DEBUG) {
         const value = this[key];
         temp += `${key}: ${value.level}, `;
       }
-      return temp.substring(0, temp.length - 2);
+      return temp.substring(0, temp.length - 2) == ""
+        ? "none"
+        : temp.substring(0, temp.length - 2);
     }
   }
 
@@ -76,17 +79,19 @@ if (DEBUG) {
       const value = character[key];
       temp += `${key}: ${value.level}, `;
     }
-    return temp.substring(0, temp.length - 2);
+    return temp.substring(0, temp.length - 2) == ""
+      ? "none"
+      : temp.substring(0, temp.length - 2);
   };
 
   //!End of shared library
 
   //dummy character
-
-  state.characters.Miguel = new Character();
-  state.characters.Miguel.str = new Stat("str");
-  state.characters.Miguel.dex = new Stat("dex", 10);
-  state.characters.Miguel.int = new Stat("int", 5);
+  /*
+state.characters.Miguel = new Character();
+state.characters.Miguel.str = new Stat("str");
+state.characters.Miguel.dex = new Stat("dex", 10);
+state.characters.Miguel.int = new Stat("int", 5);*/
 }
 
 const CustomOutcome = (score, values) => {
@@ -120,6 +125,16 @@ const SetupState = () => {
   }
 };
 
+//Purges the command from context
+const CutCommand = () => {
+  state.ctxt =
+    state.ctxt !== ""
+      ? state.ctxt.substring(0, currIndices[0]) +
+        state.ctxt.substring(currIndices[1], state.ctxt.length)
+      : modifiedText.substring(0, currIndices[0]) +
+        modifiedText.substring(currIndices[1], modifiedText.length);
+};
+
 const ElementInArray = (element, array) => {
   ret = false;
   if (element !== undefined && typeof array === "object") {
@@ -138,15 +153,7 @@ const skillcheck = (arguments) => {
   //Error checking
   if (arguments === undefined || arguments === null || arguments === "") {
     state.message = "No arguments found.";
-    //Changing output
-    state.ctxt =
-      state.ctxt !== ""
-        ? state.ctxt.substring(0, currIndices[0]) +
-          " " +
-          state.ctxt.substring(currIndices[1], state.ctxt.length)
-        : modifiedText.substring(0, currIndices[0]) +
-          " " +
-          modifiedText.substring(currIndices[1], modifiedText.length);
+    CutCommand();
     return;
   }
 
@@ -172,15 +179,7 @@ const skillcheck = (arguments) => {
     //Testing if stat exists, throwing error otherwise
     if (!ElementInArray(stat, state.stats)) {
       state.message = "Specified stat does not exist";
-      //Clearing the command from context
-      state.ctxt =
-        state.ctxt !== ""
-          ? state.ctxt.substring(0, currIndices[0]) +
-            " " +
-            state.ctxt.substring(currIndices[1], state.ctxt.length)
-          : modifiedText.substring(0, currIndices[0]) +
-            " " +
-            modifiedText.substring(currIndices[1], modifiedText.length);
+      CutCommand();
       return;
     }
 
@@ -201,15 +200,7 @@ const skillcheck = (arguments) => {
     const thresholds = arguments.match(thresholdCheck);
     if (thresholds === null) {
       state.message = "Thresholds are not in proper format";
-      //Clearing from memory
-      state.ctxt =
-        state.ctxt !== ""
-          ? state.ctxt.substring(0, currIndices[0]) +
-            " " +
-            state.ctxt.substring(currIndices[1], state.ctxt.length)
-          : modifiedText.substring(0, currIndices[0]) +
-            " " +
-            modifiedText.substring(currIndices[1], modifiedText.length);
+      CutCommand();
       return;
     }
 
@@ -228,23 +219,12 @@ const skillcheck = (arguments) => {
         let mess = `Skillcheck performed: ${char} with ${stat} ${charStat} rolled ${roll}. ${charStat} + ${roll} = ${score}. Difficulty: ${value} Outcome: `;
 
         let outcome;
+        let custom = false;
         //Handling the skillcheck
         switch (key) {
           //One threshold means success or failure
           case "thresholds1":
             outcome = score >= Number(value.trim()) ? "success." : "failure.";
-
-            state.ctxt =
-              modifiedText.substring(0, currIndices[0]) +
-              "Outcome: " +
-              outcome +
-              modifiedText.substring(currIndices[1], modifiedText.length);
-
-            modifiedText =
-              modifiedText.substring(0, currIndices[0]) +
-              mess +
-              outcome +
-              modifiedText.substring(currIndices[1], modifiedText.length);
             break;
 
           //Two of them - success, nothing, failure
@@ -265,17 +245,6 @@ const skillcheck = (arguments) => {
             } else {
               outcome = "failure.";
             }
-            state.ctxt =
-              modifiedText.substring(0, currIndices[0]) +
-              "Outcome: " +
-              outcome +
-              modifiedText.substring(currIndices[1], modifiedText.length);
-
-            modifiedText =
-              modifiedText.substring(0, currIndices[0]) +
-              mess +
-              outcome +
-              modifiedText.substring(currIndices[1], modifiedText.length);
             break;
 
           //Three of them - critical success, success, failure or critical failure
@@ -298,17 +267,6 @@ const skillcheck = (arguments) => {
             } else {
               outcome = "critical failure.";
             }
-            state.ctxt =
-              modifiedText.substring(0, currIndices[0]) +
-              "Outcome: " +
-              outcome +
-              modifiedText.substring(currIndices[1], modifiedText.length);
-
-            modifiedText =
-              modifiedText.substring(0, currIndices[0]) +
-              mess +
-              outcome +
-              modifiedText.substring(currIndices[1], modifiedText.length);
             break;
 
           //Four of them - critical success, success, nothing, failure or critical failure
@@ -332,17 +290,6 @@ const skillcheck = (arguments) => {
             } else {
               outcome = "critical failure.";
             }
-            state.ctxt =
-              modifiedText.substring(0, currIndices[0]) +
-              "Outcome: " +
-              outcome +
-              modifiedText.substring(currIndices[1], modifiedText.length);
-
-            modifiedText =
-              modifiedText.substring(0, currIndices[0]) +
-              mess +
-              outcome +
-              modifiedText.substring(currIndices[1], modifiedText.length);
             break;
 
           //Custom thresholds with outcomes
@@ -355,17 +302,7 @@ const skillcheck = (arguments) => {
             mess = `Skillcheck performed: ${char} with ${stat} ${charStat} rolled ${roll}. ${charStat} + ${roll} = ${score}. Difficulty: ${CustomDifficulties(
               value
             )} Outcome: `;
-
-            state.ctxt =
-              modifiedText.substring(0, currIndices[0]) +
-              CustomOutcome(score, value) +
-              modifiedText.substring(currIndices[1], modifiedText.length);
-
-            modifiedText =
-              modifiedText.substring(0, currIndices[0]) +
-              mess +
-              CustomOutcome(score, value) +
-              modifiedText.substring(currIndices[1], modifiedText.length);
+            custom = true;
             break;
 
           //Read message
@@ -373,21 +310,39 @@ const skillcheck = (arguments) => {
             console.error("WTF is this?!");
             state.message =
               "An error has ocurred. Context: no group has been matched. \nIDK how did you make it, but think about creating an issue.";
-            break;
+            return;
+        }
+
+        //Modifying context and input. Custom thresholds are handled differently, so they are separated
+        if (!custom) {
+          state.ctxt =
+            modifiedText.substring(0, currIndices[0]) +
+            "Outcome: " +
+            outcome +
+            modifiedText.substring(currIndices[1], modifiedText.length);
+
+          modifiedText =
+            modifiedText.substring(0, currIndices[0]) +
+            mess +
+            outcome +
+            modifiedText.substring(currIndices[1], modifiedText.length);
+        } else {
+          state.ctxt =
+            modifiedText.substring(0, currIndices[0]) +
+            CustomOutcome(score, value) +
+            modifiedText.substring(currIndices[1], modifiedText.length);
+
+          modifiedText =
+            modifiedText.substring(0, currIndices[0]) +
+            mess +
+            CustomOutcome(score, value) +
+            modifiedText.substring(currIndices[1], modifiedText.length);
         }
       }
     }
   } else {
     state.message = "No arguments found.";
-    //Changing output
-    state.ctxt =
-      state.ctxt !== ""
-        ? state.ctxt.substring(0, currIndices[0]) +
-          " " +
-          state.ctxt.substring(currIndices[1], state.ctxt.length)
-        : modifiedText.substring(0, currIndices[0]) +
-          " " +
-          modifiedText.substring(currIndices[1], modifiedText.length);
+    CutCommand();
     return;
   }
 };
@@ -421,17 +376,9 @@ addCharacter = (arguments) => {
 
     //Creates the character with stats. If none were given, every created stat is at state.startingLevel
     state.characters[char] =
-      values === [["", NaN]] ? new Character() : new Character(values);
+      values[0][0] === "" ? new Character() : new Character(values);
 
-    //Changing output
-    state.ctxt =
-      state.ctxt !== ""
-        ? state.ctxt.substring(0, currIndices[0]) +
-          " " +
-          state.ctxt.substring(currIndices[1], state.ctxt.length)
-        : modifiedText.substring(0, currIndices[0]) +
-          " " +
-          modifiedText.substring(currIndices[1], modifiedText.length);
+    CutCommand();
     state.out = `\nCharacter ${char} has been created with stats ${state.characters[char]}.`;
   }
 };
@@ -452,15 +399,7 @@ setStats = (arguments) => {
     if (!ElementInArray(char, Object.keys(state.characters))) {
       state.message =
         "Character has not been created and its stats cannot be altered.";
-      //Removing command from context
-      state.ctxt =
-        state.ctxt !== ""
-          ? state.ctxt.substring(0, currIndices[0]) +
-            " " +
-            state.ctxt.substring(currIndices[1], state.ctxt.length)
-          : modifiedText.substring(0, currIndices[0]) +
-            " " +
-            modifiedText.substring(currIndices[1], modifiedText.length);
+      CutCommand();
       return;
     }
     let character = state.characters[char];
@@ -487,30 +426,14 @@ setStats = (arguments) => {
 
     state.characters[char] = character;
 
-    //Changing output
-    state.ctxt =
-      state.ctxt !== ""
-        ? state.ctxt.substring(0, currIndices[0]) +
-          " " +
-          state.ctxt.substring(currIndices[1], state.ctxt.length)
-        : modifiedText.substring(0, currIndices[0]) +
-          " " +
-          modifiedText.substring(currIndices[1], modifiedText.length);
+    CutCommand();
 
     state.out = `\n${char}'s stats has been changed\nfrom ${oldStats}\nto ${CharToString(
       character
     )}.`;
   } else {
     state.message = "Invalid arguments.";
-    //Removing command from context
-    state.ctxt =
-      state.ctxt !== ""
-        ? state.ctxt.substring(0, currIndices[0]) +
-          " " +
-          state.ctxt.substring(currIndices[1], state.ctxt.length)
-        : modifiedText.substring(0, currIndices[0]) +
-          " " +
-          modifiedText.substring(currIndices[1], modifiedText.length);
+    CutCommand();
     return;
   }
 };
@@ -529,30 +452,14 @@ showStats = (arguments) => {
       state.message =
         "Character has not been created and its stats cannot be shown.";
       //Removing command from context
-      state.ctxt =
-        state.ctxt !== ""
-          ? state.ctxt.substring(0, currIndices[0]) +
-            " " +
-            state.ctxt.substring(currIndices[1], state.ctxt.length)
-          : modifiedText.substring(0, currIndices[0]) +
-            " " +
-            modifiedText.substring(currIndices[1], modifiedText.length);
+      CutCommand();
       return;
     }
     const character = state.characters[char];
 
-    //Changing output
-    state.ctxt =
-      state.ctxt !== ""
-        ? state.ctxt.substring(0, currIndices[0]) +
-          " " +
-          state.ctxt.substring(currIndices[1], state.ctxt.length)
-        : modifiedText.substring(0, currIndices[0]) +
-          " " +
-          modifiedText.substring(currIndices[1], modifiedText.length);
-
+    CutCommand();
     //Sets info to print out
-    state.out = `\n${char}'s current stats are: ${CharToString(character)}`;
+    state.out = `\n${char}'s current stats are: ${CharToString(character)}.`;
   }
 };
 //#endregion showStats
@@ -561,26 +468,10 @@ showStats = (arguments) => {
 getState = (arguments) => {
   if (arguments !== "") {
     state.message = "getState command doesn't take any arguments.";
-    //Removing command from context
-    state.ctxt =
-      state.ctxt !== ""
-        ? state.ctxt.substring(0, currIndices[0]) +
-          " " +
-          state.ctxt.substring(currIndices[1], state.ctxt.length)
-        : modifiedText.substring(0, currIndices[0]) +
-          " " +
-          modifiedText.substring(currIndices[1], modifiedText.length);
+    CutCommand();
     return;
   }
-  //Cutting command off text
-  state.ctxt =
-    state.ctxt !== ""
-      ? state.ctxt.substring(0, currIndices[0]) +
-        " " +
-        state.ctxt.substring(currIndices[1], state.ctxt.length)
-      : modifiedText.substring(0, currIndices[0]) +
-        " " +
-        modifiedText.substring(currIndices[1], modifiedText.length);
+  CutCommand();
 
   //Sets data to print out
   state.out = "\n----------\n\n" + JSON.stringify(state) + "\n\n----------\n";
@@ -595,19 +486,7 @@ setState = (arguments) => {
 
   //Null check
   if (match !== null) {
-    //Cutting the match out
-    const currIndices = [
-      modifiedText.indexOf(match[0]),
-      modifiedText.indexOf(match[0]) + match[0].length,
-    ];
-    state.ctxt =
-      state.ctxt !== ""
-        ? state.ctxt.substring(0, currIndices[0]) +
-          " " +
-          state.ctxt.substring(currIndices[1], state.ctxt.length)
-        : modifiedText.substring(0, currIndices[0]) +
-          " " +
-          modifiedText.substring(currIndices[1], modifiedText.length);
+    CutCommand();
 
     //Ensuring data won't be accidentally purged along with error handling
     let cache;
@@ -624,16 +503,8 @@ setState = (arguments) => {
       }
     }
   } else {
-    state.message = "You need to enter a parameter to setState command";
-    //Removing command from context
-    state.ctxt =
-      state.ctxt !== ""
-        ? state.ctxt.substring(0, currIndices[0]) +
-          " " +
-          state.ctxt.substring(currIndices[1], state.ctxt.length)
-        : modifiedText.substring(0, currIndices[0]) +
-          " " +
-          modifiedText.substring(currIndices[1], modifiedText.length);
+    state.message = "You need to enter a parameter to setState command.";
+    CutCommand();
     return;
   }
 };
@@ -687,17 +558,10 @@ const modifier = (text) => {
 
       default:
         state.message = "Command not found.";
-        //Changing output
-        state.ctxt =
-          state.ctxt !== ""
-            ? state.ctxt.substring(0, currIndices[0]) +
-              " " +
-              state.ctxt.substring(currIndices[1], state.ctxt.length)
-            : modifiedText.substring(0, currIndices[0]) +
-              " " +
-              modifiedText.substring(currIndices[1], modifiedText.length);
-        break;
+
+        return;
     }
+    if (state.ctxt.length <= 1) state.ctxt = " \n";
   }
   //#endregion globalCommand
 
@@ -719,6 +583,8 @@ if (!DEBUG) {
   modifier(text);
 } else {
   //!tests
+  modifier("!addcharacter(Librun)");
+  modifier("!showstats(Librun)");
   modifier("!addCharacter(Miguel, str=1, dex=5, int=3)");
   modifier(
     "Miguel tries to evade an arrow. !skillcheck(dex, Miguel, 3) Is he blind?"
@@ -727,6 +593,7 @@ if (!DEBUG) {
   modifier("!skillcheck(str, Miguel, 5 : 11)");
   modifier("!skillcheck(str, Miguel, 25 : 14 : 22)");
   modifier("!skillcheck(dex, Miguel, 5 : 12 : 15 : 20)");
+  modifier("!This is a normal input!");
   modifier("abc !addCharacter(Zuibroldun Jodem, dex = 5, magic = 11) def");
   modifier(
     "Zuibroldun Jodem tries to die. !skillcheck(dex, Zuibroldun Jodem, 5 = lol : 10 = lmao it Works. Hi 5. : 15 = You lose.) Paparapapa."
@@ -736,5 +603,5 @@ if (!DEBUG) {
   modifier("!showstats(Miguel)");
   modifier("!getState()");
   console.log("\n\n\n");
-  modifier("!setState(abc)");
+  modifier('!setState({"dice":10})');
 }

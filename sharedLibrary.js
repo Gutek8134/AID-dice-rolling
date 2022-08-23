@@ -35,7 +35,9 @@ class Character {
       const value = this[key];
       temp += `${key}: ${value.level}, `;
     }
-    return temp.substring(0, temp.length - 2);
+    return temp.substring(0, temp.length - 2) == ""
+      ? "none"
+      : temp.substring(0, temp.length - 2);
   }
 }
 
@@ -59,5 +61,7 @@ const CharToString = (character) => {
     const value = character[key];
     temp += `${key}: ${value.level}, `;
   }
-  return temp.substring(0, temp.length - 2);
+  return temp.substring(0, temp.length - 2) == ""
+    ? "none"
+    : temp.substring(0, temp.length - 2);
 };
