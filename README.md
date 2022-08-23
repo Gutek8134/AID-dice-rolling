@@ -5,9 +5,9 @@ This project gives you tools to play AI Dungeon like an RPG loosely based on Dun
 
 # COMMANDS
 
-Since commands are deleted from AI's view (called "context") you need to add any character (preferably space) for it to make custom outputs.<br>
-Temporary fix has been applied.<br>
-(Please avoid using more than one command per input, as the script will become unpredictable.)
+Issue with AI not printing custom outputs have been resolved as you have voted in the questionnaire:<br>
+I've made sure that the least AI sees is a space and newline (enter) character, which forces it to generate output.<br>
+The script will utilize only the first command in the input.
 
 ## !addCharacter
 
