@@ -16,6 +16,9 @@ Syntax: `!addCharacter(name, stat = value, stat2=value, stat3 = value, ..., stat
 Creates a character with given stats.
 There can be additional whitespace around "=" sign, but nowhere else.
 
+Allowed characters for the characters' names are: all latin characters, numbers,<br>
+whitespace characters and ' (apostrophe).
+
 If another character already has or had a stat not mentioned here, it is set to starting value.
 
 ## !setStats
@@ -24,6 +27,8 @@ Syntax: `!setStats(character, stat = value, stat2=value, stat3 = value, ..., sta
 
 Sets an already created character's stats.
 There can be additional whitespace around "=" sign, but nowhere else.
+
+Outputs stat changes.
 
 ## !showStats
 
@@ -46,6 +51,47 @@ Syntax: `!skillcheck(stat, name, thresholds)`
 
 Stat must be an already created one. Stats are automatically created when they are set on any character. If you create a character with a new stat, others don't have it automatically set. When stat is not set, it is assumed its value is 0.
 
+If you use skillcheck on a dead character, they are tested as if all of their stats were <br>5 levels lower (adjustable by `!setstate`).<br>
+Can be also turned off in the code.
+
+## !attack
+
+Syntax: `!attack(attacking character, attacking stat, defending character, defending stat)`
+
+While characters will be created with default stats, used stats need to be created BEFORE calling this command.<br>
+You can view and edit damage calculation at the top of input modifier. Additional info is provided there.<br>
+Default calculation: attacker's stat + score of rolling a 20-sided dice - defender's stat.
+
+Instead of outputting something, it changes the input the way skillcheck does.
+
+## !heal
+
+Syntax: `!heal(character, <d>value)`
+
+Character must be created and not dead (its hp must be more than 0).
+
+Healing value can be preceded by "d" to roll an n-sided dice.
+
+Outputs healing value and resulting hp.
+
+Examples:<br>
+`!heal(Zuibroldun Jodem, 100)` - will heal Zuibroldun Jodem by 100 hp (unless they do not exist or are dead)<br>
+`!heal(Zuibroldun Jodem, d100)` - will heal Zuibroldun Jodem by 1 to 100 hp<br>
+I plan on adding a min-max setter that will look like:<br>
+`!heal(Zuibroldun Jodem, 50:100)`, healing Zuibroldun by 50 to 100 hp
+
+## !revive
+
+Syntax: `!revive(reviving character, revived character, value)`
+
+Transfers value of hp from reviving to revived character.<br>
+It works both as reviving and transfusion tool.<br>
+
+Outputs both characters' resulting hp.
+
+Reviving character must exist and have at least value+1 hp to perform this action.<br>
+Revived character must exist.
+
 ## !getState
 
 Syntax: `!getState()`
@@ -63,7 +109,8 @@ Outputs only error messages.
 WARNING: do not change the values you get from `!getState()` unless you know what you're doing!<br>
 Guide to creating custom states is below.
 
-Note: all commands are case-insensitive and matched by regular expressions along with their values. This means an improperly written command will not be executed but rather sent to AI.
+Note: all commands are case-insensitive.<br>
+Thanks to refactor the newest version will throw errors and cut commands from what the AI sees even when something goes wrong.
 
 ---
 
@@ -84,11 +131,15 @@ Example: ["dexterity", "strength", "nanobots"]<br><br>
 Used when script is rolling an n-sided dice with 1-n values<br><br>
 "startingLevel": starting level for the characters<br>
 It's the default starting value used when you're adding a character with some stats not specified.<br><br>
+"punishment": number<br>
+Defines the punishment when dead character is skillchecked.
 "characters": {characters}
 Holds characters' objects.<br><br>
 Character object syntax:
 
 > "Name": {<br>
+>
+> "hp": number
 >
 > > "stat1": {<br>
 > > "level": number<br>
@@ -101,7 +152,9 @@ Character object syntax:
 > }
 
 Be wary that AI Dungeon's JSON format doesn't allow trailing commas or newline characters.<br>
-When setting up a character this way, check if all of their stats are in the "stats" array.
+When setting up a character this way, check if all of their stats are in the "stats" array.<br>
+All characters need an "hp" value set or the code will start throwing errors at every<br>
+attack, heal, and revive command.<br>
 
 Example:<br>
 
@@ -109,12 +162,14 @@ Example:<br>
 >
 > > "Miguel":<br>
 > > {<br>
+> > "hp": 100,<br>
 > > "dexterity": {"level": 3},<br>
 > > "strength": {"level": 1}<br>
 > > },<br>
 >
 > > "Zuibroldun Jodem":<br>
 > > {<br>
+> > "hp": 1000,<br>
 > > "dexterity": {"level": 5},<br>
 > > "demonic powers": {"level": 100},<br>
 > > "fire force": {"level": 7}<br>
@@ -125,7 +180,7 @@ Example:<br>
 Note: default parser doesn't allow newline characters<br><br>
 Formatted example (you can test it yourself):<br>
 
-> !setState({"characters": {"Miguel":{"dexterity": {"level": 3},"strength": {"level": 1}},"Zuibroldun Jodem":{"dexterity": {"level": 5},"demonic powers": {"level": 100},"fire force": {"level": 7}}}})
+> !setState({"characters": {"Miguel":{"hp": 100,"dexterity": {"level": 3},"strength": {"level": 1}},"Zuibroldun Jodem":{"hp": 1000,"dexterity": {"level": 5},"demonic powers": {"level": 100},"fire force": {"level": 7}}}})
 
 <br>Other values of state:<br>
 "out": overwrites output, leave as empty string to not do it<br>
