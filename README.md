@@ -132,7 +132,7 @@ Used when script is rolling an n-sided dice with 1-n values<br><br>
 "startingLevel": starting level for the characters<br>
 It's the default starting value used when you're adding a character with some stats not specified.<br><br>
 "punishment": number<br>
-Defines the punishment when dead character is skillchecked.
+Defines the punishment when dead character is skillchecked.<br><br>
 "characters": {characters}
 Holds characters' objects.<br><br>
 Character object syntax:
