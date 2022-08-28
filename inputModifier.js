@@ -241,7 +241,7 @@ const skillcheck = (arguments) => {
 
   //Checks for thresholds type
   const thresholdCheck =
-    /(?<thresholdsC>\d+ *= *\w[\w\s\.]*(?: *: *\d+ *= *\w[\w\s\.]*)+)|(?<thresholds4>\d+ *: *\d+ *: *\d+ *: *\d+)|(?<thresholds3>\d+ *: *\d+ *: *\d+)|(?<thresholds2>\d+ *: *\d+)|(?<thresholds1>\d+)/i;
+    /(?<thresholdsC>\d+ *= *.+(?: *: *\d+ *= *.+)+)|(?<thresholds4>\d+ *: *\d+ *: *\d+ *: *\d+)|(?<thresholds3>\d+ *: *\d+ *: *\d+)|(?<thresholds2>\d+ *: *\d+)|(?<thresholds1>\d+)/i;
 
   const match = arguments.match(exp);
   //console.log(match);
@@ -297,6 +297,7 @@ const skillcheck = (arguments) => {
     CutCommand();
     return;
   }
+  //console.log(thresholds);
 
   //Tricky part, checking every group for data
   for (key in thresholds.groups) {
@@ -919,7 +920,7 @@ if (!DEBUG) {
   modifier("!This is a normal input!");
   modifier("abc !addCharacter(Zuibroldun Jodem, dex = 5, magic = 11) def");
   modifier(
-    "Zuibroldun Jodem tries to die. !skillcheck(dex, Zuibroldun Jodem, 5 = lol : 10 = lmao it Works. Hi 5. : 15 = You lose.) Paparapapa."
+    "Zuibroldun Jodem tries to die. !skillcheck(dex, Zuibroldun Jodem, 5 = lol : 10 = lmao, it 'Works. Hi 5. : 20 = You're losing.) Paparapapa."
   );
   modifier("!skillcheck(magic, Miguel, 3)");
   modifier("Setting stats... !setStats(Miguel, magic=120) Stats set");
