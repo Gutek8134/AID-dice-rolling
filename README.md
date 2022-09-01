@@ -126,7 +126,7 @@ Thanks to refactor the newest version will throw errors and cut commands from wh
 
 You can change how much xp is needed to level up in shared library script.<br>
 You can change whether you want to level your stats<br>
-or characters and distribute skillpoints with `!levelStats`(default).<br>
+or characters and distribute skillpoints with `!levelStats`(default) in input modifier script.<br>
 You can only do it before creating the first character.
 
 The amount of skillpoints granted for level up can be adjusted by `!setstate`.
