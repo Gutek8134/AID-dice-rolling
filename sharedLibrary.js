@@ -1,3 +1,13 @@
+//!Function for calculating experience needed to level up. Adjust it to your heart's content
+const experienceCalculation = (level) => {
+  //Don't change it here, but in the shared library
+  //level is the current character/stat's level
+  const experience = /*You can edit from here*/ 2 * level; /*to here*/
+
+  return experience;
+};
+
+//Increasing scalability by OOP
 class Stat {
   constructor(name, level) {
     if (
@@ -8,10 +18,16 @@ class Stat {
         state.stats.push(name);
       }
       this.level = level === undefined ? state.startingLevel : level;
+      if (levellingToOblivion) {
+        this.experience = 0;
+        this.expToNextLvl = experienceCalculation(this.level);
+      }
     }
   }
   toString() {
-    return this.level.toString();
+    return `level = ${this.level} exp = ${this.experience} exp to lvl up=${
+      this.expToNextLvl
+    }(${this.expToNextLvl - this.experience})`;
   }
 }
 
@@ -22,6 +38,7 @@ class Character {
       this[stat] = new Stat(stat, state.startingLevel);
     });
     this.hp = state.startingHP;
+    this.level = 1;
 
     if (values !== undefined) {
       for (const el of values) {
@@ -29,24 +46,20 @@ class Character {
           this.hp = el[1];
           continue;
         }
+        if (el[0] === "level") {
+          this.level = el[1];
+          continue;
+        }
         this[el[0]] = new Stat(el[0], el[1]);
       }
     }
+    this.experience = 0;
+    this.expToNextLvl = experienceCalculation(this.level);
+    this.skillpoints = 0;
   }
 
   toString() {
-    let temp = "";
-    for (const key in this) {
-      if (key === "hp") {
-        temp += `hp: ${this.hp}, `;
-        continue;
-      }
-      const value = this[key];
-      temp += `${key}: ${value.level}, `;
-    }
-    return temp.substring(0, temp.length - 2) == ""
-      ? "none"
-      : temp.substring(0, temp.length - 2);
+    return CharToString(this);
   }
 }
 
@@ -64,25 +77,40 @@ const diceRoll = (maxValue) => {
   return Math.floor(Math.random() * maxValue) + 1;
 };
 
+const ignoredValues = ["level", "experience", "expToNextLvl", "skillpoints"];
 const CharToString = (character) => {
-  let temp = "";
+  let temp = levellingToOblivion
+    ? `hp: ${character.hp},\n`
+    : `hp: ${character.hp},\nlevel: ${character.level},\nskillpoints:${
+        character.skillpoints
+      },\nexperience: ${character.experience},\nto level up: ${
+        character.expToNextLvl
+      }(need ${character.expToNextLvl - character.experience} more),\n`;
   for (const key in character) {
-    if (key === "hp") {
-      temp += `hp: ${character.hp}, `;
+    if (key === "hp" || ElementInArray(key, ignoredValues)) {
       continue;
     }
     const value = character[key];
-    temp += `${key}: ${value.level}, `;
+    if (levellingToOblivion) {
+      temp += `${key}: level=${value.level}, exp=${
+        value.experience
+      }, to lvl up=${value.expToNextLvl}(need ${
+        value.expToNextLvl - value.experience
+      } more),\n`;
+    } else {
+      temp += `${key}: ${value.level},\n`;
+    }
   }
   return temp.substring(0, temp.length - 2) == ""
     ? "none"
     : temp.substring(0, temp.length - 2);
 };
 
-const CharLives = (characterName) => {
-  if (!ElementInArray(characterName, Object.keys(state.characters)))
-    return false;
-  if (!ElementInArray()) return state.characters[characterName].hp > 0;
+//Returns whether character exists and has more than 0 HP, returns bool
+const CharLives = (character) => {
+  if (!ElementInArray(character, Object.keys(state.characters))) return false;
+
+  return state.characters[character].hp > 0;
 };
 
 const ElementInArray = (element, array) => {

@@ -25,7 +25,8 @@ If another character already has or had a stat not mentioned here, it is set to 
 
 Syntax: `!setStats(character, stat = value, stat2=value, stat3 = value, ..., statN=value)`
 
-Sets an already created character's stats.
+Sets an already created character's stats.<br>
+Do NOT try to change things like HP and level!<br>
 There can be additional whitespace around "=" sign, but nowhere else.
 
 Outputs stat changes.
@@ -36,6 +37,13 @@ Syntax: `!showStats(character)`
 
 Shows stats of a specified character.
 Works only on created characters.
+
+## !levelStats
+
+Syntax: `!levelStats(character, stat + value, stat2+value, stat3 +value, ..., statN+value)`
+
+Uses acquired skillpoints to increase stats.<br>
+Works only when not levelling to oblivion.
 
 ## !skillcheck
 
@@ -106,7 +114,7 @@ Sets state to the json if it has proper format.
 
 Outputs only error messages.
 
-WARNING: do not change the values you get from `!getState()` unless you know what you're doing!<br>
+WARNING: do not change the values you get from `!getState` unless you know what you're doing!<br>
 Guide to creating custom states is below.
 
 Note: all commands are case-insensitive.<br>
@@ -114,15 +122,31 @@ Thanks to refactor the newest version will throw errors and cut commands from wh
 
 ---
 
+# Levels and leveling
+
+You can change how much xp is needed to level up in shared library script.<br>
+You can change whether you want to level your stats<br>
+or characters and distribute skillpoints with `!levelStats`(default).<br>
+You can only do it before creating the first character.
+
+The amount of skillpoints granted for level up can be adjusted by `!setstate`.
+
+---
+
 # Custom states
+
+`!setstate` doesn't change the values unless they are mentioned.
 
 Blank template (AKA default starting state):<br>
 
-> {\
-> "stats": [],\
->  "dice": 20,\
->  "startingLevel": 1,\
->  "characters": {}<br>
+> {<br>
+> "stats": [],<br>
+> "dice": 20,<br>
+> "startingLevel": 1,<br>
+> "startingHP": 100,<br>
+> "characters": {},<br>
+> "punishment": 5,<br>
+> "skillpointsOnLevelUp": 5<br>
 > }
 
 "stats": [stats you want to use as strings and separated by a comma]<br>
@@ -139,14 +163,22 @@ Character object syntax:
 
 > "Name": {<br>
 >
-> "hp": number
+> "hp": number,<br>
+> "level": number,<br>
+> "experience": number,<br>
+> "expToNextLevel": number,<br>
+> "skillpoints": number,<br>
 >
 > > "stat1": {<br>
-> > "level": number<br>
+> > "level": number,<br>
+> > "experience": number,<br>
+> > "expToNextLevel": number<br>
 > > },<br>
 >
 > > "stat2": {<br>
-> > "level": number<br>
+> > "level": number,<br>
+> > "experience": number,<br>
+> > "expToNextLevel": number<br>
 > > }<br>
 >
 > }
@@ -155,14 +187,20 @@ Be wary that AI Dungeon's JSON format doesn't allow trailing commas or newline c
 When setting up a character this way, check if all of their stats are in the "stats" array.<br>
 All characters need an "hp" value set or the code will start throwing errors at every<br>
 attack, heal, and revive command.<br>
+When not levelling to oblivion, skillcheck, attack, and levelStats commands will do the same if level, experience, expToNextLevel or skillpoints are not specified on the character.<br>
+Levelling to oblivion needs experience and expToNextLevel specified on the stats.
 
-Example:<br>
+Example (when not levelling to oblivion):<br>
 
 > {"characters": {<br>
 >
 > > "Miguel":<br>
 > > {<br>
-> > "hp": 100,<br>
+> > "hp": 100,<br>,
+> > "level": 3,<br>
+> > "experience": 3,<br>
+> > "expToNextLevel": 6,<br>
+> > "skillpoints": 0,<br>
 > > "dexterity": {"level": 3},<br>
 > > "strength": {"level": 1}<br>
 > > },<br>
@@ -180,12 +218,12 @@ Example:<br>
 Note: default parser doesn't allow newline characters<br><br>
 Formatted example (you can test it yourself):<br>
 
-> !setState({"characters": {"Miguel":{"hp": 100,"dexterity": {"level": 3},"strength": {"level": 1}},"Zuibroldun Jodem":{"hp": 1000,"dexterity": {"level": 5},"demonic powers": {"level": 100},"fire force": {"level": 7}}}})
+> !setState({"characters": {"Miguel":{"hp": 100,"level": 3,"experience": 3,"expToNextLevel": 6,"skillpoints": 0,"dexterity": {"level": 3},"strength": {"level": 1}},"Zuibroldun Jodem":{"hp": 1000,"level": 2,"experience": 1,"expToNextLevel": 4,"skillpoints": 8,"dexterity": {"level": 5},"demonic powers": {"level": 100},"fire force": {"level": 7}}}})
 
 <br>Other values of state:<br>
 "out": overwrites output, leave as empty string to not do it<br>
 "ctxt": overwrites what AI sees as your input, leave as empty string to not do it<br>
-"memory": your memory; setState will not change it unless you mention this parameter<br><br>
+"memory": your memory<br><br>
 For example<br>
 
 > !setState({"memory":""})<br>
