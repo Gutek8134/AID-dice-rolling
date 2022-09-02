@@ -208,10 +208,10 @@ Example (when not levelling to oblivion):<br>
 > > "Zuibroldun Jodem":<br>
 > > {<br>
 > > "hp": 1000,<br>
-> > "level": 1,<br>
-> > "experience": 0,<br>
-> > "expToNextLvl": 2,<br>
-> > "skillpoints": 0,<br>
+> > "level": 2,<br>
+> > "experience": 1,<br>
+> > "expToNextLvl": 4,<br>
+> > "skillpoints": 8,<br>
 > > "dexterity": {"level": 5},<br>
 > > "demonic powers": {"level": 100},<br>
 > > "fire force": {"level": 7}<br>
@@ -253,6 +253,6 @@ You can vote on what do you want me to do next [here](https://forms.gle/8zgA86jp
 # Installation
 
 1. Create a scenario.
-2. Get into Scripts menu.
+2. Get into Scripts menu. (You need to use browser for this.)
 3. Copy files contents to corresponding fragments: sharedLibrary.js to Shared Library, inputModifier.js to Input Modifier and so on.
 4. Play the created scenario. You should now be able to use the commands.
