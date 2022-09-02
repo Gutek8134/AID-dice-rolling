@@ -166,19 +166,19 @@ Character object syntax:
 > "hp": number,<br>
 > "level": number,<br>
 > "experience": number,<br>
-> "expToNextLevel": number,<br>
+> "expToNextLvl": number,<br>
 > "skillpoints": number,<br>
 >
 > > "stat1": {<br>
 > > "level": number,<br>
 > > "experience": number,<br>
-> > "expToNextLevel": number<br>
+> > "expToNextLvl": number<br>
 > > },<br>
 >
 > > "stat2": {<br>
 > > "level": number,<br>
 > > "experience": number,<br>
-> > "expToNextLevel": number<br>
+> > "expToNextLvl": number<br>
 > > }<br>
 >
 > }
@@ -187,8 +187,8 @@ Be wary that AI Dungeon's JSON format doesn't allow trailing commas or newline c
 When setting up a character this way, check if all of their stats are in the "stats" array.<br>
 All characters need an "hp" value set or the code will start throwing errors at every<br>
 attack, heal, and revive command.<br>
-When not levelling to oblivion, skillcheck, attack, and levelStats commands will do the same if level, experience, expToNextLevel or skillpoints are not specified on the character.<br>
-Levelling to oblivion needs experience and expToNextLevel specified on the stats.
+When not levelling to oblivion, skillcheck, attack, and levelStats commands will do the same if level, experience, expToNextLvl or skillpoints are not specified on the character.<br>
+Levelling to oblivion needs experience and expToNextLvl specified on the stats.
 
 Example (when not levelling to oblivion):<br>
 
@@ -199,7 +199,7 @@ Example (when not levelling to oblivion):<br>
 > > "hp": 100,<br>,
 > > "level": 3,<br>
 > > "experience": 3,<br>
-> > "expToNextLevel": 6,<br>
+> > "expToNextLvl": 6,<br>
 > > "skillpoints": 0,<br>
 > > "dexterity": {"level": 3},<br>
 > > "strength": {"level": 1}<br>
@@ -208,6 +208,10 @@ Example (when not levelling to oblivion):<br>
 > > "Zuibroldun Jodem":<br>
 > > {<br>
 > > "hp": 1000,<br>
+> > "level": 1,<br>
+> > "experience": 0,<br>
+> > "expToNextLvl": 2,<br>
+> > "skillpoints": 0,<br>
 > > "dexterity": {"level": 5},<br>
 > > "demonic powers": {"level": 100},<br>
 > > "fire force": {"level": 7}<br>
@@ -218,7 +222,7 @@ Example (when not levelling to oblivion):<br>
 Note: default parser doesn't allow newline characters<br><br>
 Formatted example (you can test it yourself):<br>
 
-> !setState({"characters": {"Miguel":{"hp": 100,"level": 3,"experience": 3,"expToNextLevel": 6,"skillpoints": 0,"dexterity": {"level": 3},"strength": {"level": 1}},"Zuibroldun Jodem":{"hp": 1000,"level": 2,"experience": 1,"expToNextLevel": 4,"skillpoints": 8,"dexterity": {"level": 5},"demonic powers": {"level": 100},"fire force": {"level": 7}}}})
+> !setState({"characters": {"Miguel":{"hp": 100,"level": 3,"experience": 3,"expToNextLvl": 6,"skillpoints": 0,"dexterity": {"level": 3},"strength": {"level": 1}},"Zuibroldun Jodem":{"hp": 1000,"level": 2,"experience": 1,"expToNextLvl": 4,"skillpoints": 8,"dexterity": {"level": 5},"demonic powers": {"level": 100},"fire force": {"level": 7}}}})
 
 <br>Other values of state:<br>
 "out": overwrites output, leave as empty string to not do it<br>
