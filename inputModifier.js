@@ -272,7 +272,7 @@ const skillcheck = (arguments) => {
   }
 
   //Checks for format stat, character, thresholds , outputs groups character and thresholds, that are matched later
-  const exp = /(?<stat>\w+), (?<character>[\w\s']+), (?<thresholds>.+)/i;
+  const exp = /(?<stat>[\w ']+), (?<character>[\w\s']+), (?<thresholds>.+)/i;
 
   //Checks for thresholds type
   const thresholdCheck =
@@ -516,7 +516,7 @@ const attack = (arguments) => {
 
   //Checks for format stat, character, stat, character
   const exp =
-    /(?<attackingCharacter>[\w\s']+), *(?<attackStat>\w+), *(?<defendingCharacter>[\w\s']+), *(?<defenseStat>\w+)/i;
+    /(?<attackingCharacter>[\w\s']+), *(?<attackStat>[\w ']+), *(?<defendingCharacter>[\w\s']+), *(?<defenseStat>[\w ']+)/i;
 
   const match = arguments.match(exp);
 
@@ -782,7 +782,7 @@ const revive = (arguments) => {
 //#region addCharacter
 addCharacter = (arguments) => {
   //Looks for pattern !addCharacter(name) or !addCharacter(name, stat1=value, stat2=value, ..., statN=value)
-  const exp = /(?<character>[\w\s'`]+)(?<startingStats>(?:, \w+ *= *\d+)*)/i;
+  const exp = /(?<character>[\w\s']+)(?<startingStats>(?:, [\w ']+ *= *\d+)*)/i;
 
   //Matches the RegEx
   const match = arguments.match(exp);
@@ -818,7 +818,7 @@ addCharacter = (arguments) => {
 //#region setStats
 setStats = (arguments) => {
   //Looks for pattern !addCharacter(name) or !addCharacter(name, stat1=value, stat2=value, ..., statN=value)
-  const exp = /(?<character>[\w\s']+)(?<stats>(?:, \w+ *= *\d+)+)/i;
+  const exp = /(?<character>[\w\s']+)(?<stats>(?:, [\w ']+ *= *\d+)+)/i;
 
   //Matches the RegEx
   const match = arguments.match(exp);
@@ -909,7 +909,7 @@ const levelStats = (arguments) => {
   }
 
   //Looks for format character, stat1+val1, stat2+val2...
-  const exp = /(?<character>[\w\s']+)(?<stats>(?:, \w+ *\+ *\d+)+)/i;
+  const exp = /(?<character>[\w\s']+)(?<stats>(?:, [\w ']+ *\+ *\d+)+)/i;
   const match = arguments.match(exp);
 
   if (match === null) {
@@ -1120,7 +1120,9 @@ if (!DEBUG) {
   modifier("!skillcheck(str, Miguel, 25 : 14 : 22)");
   modifier("!skillcheck(dex, Miguel, 5 : 12 : 15 : 20)");
   modifier("!This is a normal input!");
-  modifier("abc !addCharacter(Zuibroldun Jodem, dex = 5, magic = 11) def");
+  modifier(
+    "abc !addCharacter(Zuibroldun Jodem, dex = 5, magic = 11, fire's force=3) def"
+  );
   modifier(
     "Zuibroldun Jodem tries to die. !skillcheck(dex, Zuibroldun Jodem, 5 = lol : 10 = lmao, it 'Works. Hi 5. : 20 = You're losing.) Paparapapa."
   );
@@ -1136,6 +1138,7 @@ if (!DEBUG) {
     "Miguel felt guilty about what he has done. !revive(Miguel, Zuibroldun Jodem, 10)"
   );
   modifier("!heal(Zuibroldun Jodem, 100)");
+  modifier("!levelStats(Zuibroldun Jodem, fire's force + 2)");
   /*modifier("!getState()");
   console.log("\n\n\n");
   modifier('!setState({"dice":10})');*/

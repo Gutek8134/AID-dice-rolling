@@ -16,6 +16,8 @@ Syntax: `!addCharacter(name, stat = value, stat2=value, stat3 = value, ..., stat
 Creates a character with given stats.
 There can be additional whitespace around "=" sign, but nowhere else.
 
+You can specify hp and level the same way.
+
 Allowed characters for the characters' names are: all latin characters, numbers,<br>
 whitespace characters and ' (apostrophe).
 
@@ -26,7 +28,7 @@ If another character already has or had a stat not mentioned here, it is set to 
 Syntax: `!setStats(character, stat = value, stat2=value, stat3 = value, ..., statN=value)`
 
 Sets an already created character's stats.<br>
-Do NOT try to change things like HP and level!<br>
+Please avoid changing things like HP and level here.<br>
 There can be additional whitespace around "=" sign, but nowhere else.
 
 Outputs stat changes.
@@ -255,4 +257,5 @@ You can vote on what do you want me to do next [here](https://forms.gle/8zgA86jp
 1. Create a scenario.
 2. Get into Scripts menu. (You need to use browser for this.)
 3. Copy files contents to corresponding fragments: sharedLibrary.js to Shared Library, inputModifier.js to Input Modifier and so on.
-4. Play the created scenario. You should now be able to use the commands.
+4. Adjust the in-script settings. They are: damage function, damageOutputs, ignoreZeroDiv, shouldPunish, levellingToOblivion, defendingCharacterLevels in Input Modifier and experienceCalculation function in Shared Library.
+5. Play the created scenario. You should now be able to use the commands.
