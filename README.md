@@ -248,11 +248,13 @@ will leave it as is.<br>
 
 ![Roadmap](images/roadmap.png "Roadmap")
 
-You can vote on what do you want me to do next [here](https://forms.gle/8zgA86jpnGWa97rB8)
+You can vote on what do you want me to do next [here](https://forms.gle/SqfzW5hZjzNZDVH37)
 
 ---
 
 # Installation
+
+[Video tutorial](https://youtu.be/rwzCD6qZLi4)
 
 1. Create a scenario.
 2. Get into Scripts menu. (You need to use browser for this.)
