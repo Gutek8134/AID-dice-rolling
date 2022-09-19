@@ -1,5 +1,5 @@
 // Input modifier
-
+//TODO: !addnpc
 //!Function for calculating damage. Adjust it to your heart's content.
 //!Just make sure it won't divide by 0 (finally putting all the hours spent on learning math in high school to good use).
 const damage = (attackStat, defenseStat) => {
