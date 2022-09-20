@@ -1,5 +1,4 @@
 // Input modifier
-//TODO: !addNPC
 //!Function for calculating damage. Adjust it to your heart's content.
 //!Just make sure it won't divide by 0 (finally putting all the hours spent on learning math in high school to good use).
 const damage = (attackStat, defenseStat) => {
@@ -143,6 +142,39 @@ if (DEBUG) {
             this.experience = 0;
             this.expToNextLvl = experienceCalculation(this.level);
             this.skillpoints = 0;
+            this.isNpc = false;
+        }
+
+        toString() {
+            return CharToString(this);
+        }
+    }
+
+    class NPC {
+        constructor(values) {
+            state.stats.forEach((stat) => {
+                this[stat] = new Stat(stat, state.startingLevel);
+            });
+            this.hp = state.startingHP;
+            this.level = 1;
+
+            if (values !== undefined) {
+                for (const el of values) {
+                    if (el[0] === "hp") {
+                        this.hp = el[1];
+                        continue;
+                    }
+                    if (el[0] === "level") {
+                        this.level = el[1];
+                        continue;
+                    }
+                    this[el[0]] = new Stat(el[0], el[1]);
+                }
+            }
+            this.experience = 0;
+            this.expToNextLvl = experienceCalculation(this.level);
+            this.skillpoints = 0;
+            this.isNpc = true;
         }
 
         toString() {
@@ -314,7 +346,8 @@ const skillcheck = (arguments) => {
 
     //Firstly, checks if something matched
     if (match === null) {
-        state.message = "Arguments were not given in proper format.";
+        state.message =
+            "Skillcheck: Arguments were not given in proper format.";
         CutCommand();
         return;
     }
@@ -327,7 +360,7 @@ const skillcheck = (arguments) => {
 
     //Testing if stat exists, throwing error otherwise
     if (!ElementInArray(stat, state.stats)) {
-        state.message = "Specified stat does not exist";
+        state.message = "Skillcheck: Specified stat does not exist";
         CutCommand();
         return;
     }
@@ -341,19 +374,13 @@ const skillcheck = (arguments) => {
         character = state.characters[char];
     }
 
-    let punishment = false;
-    if (character.hp < 1 && shouldPunish) {
-        state.message = `Testing against dead character. Punishment: -${state.punishment} to all stats (temporary).`;
-        for (key in character) {
-            if (key !== "hp" && !ElementInArray(key, ignoredValues)) {
-                character[key].level -= state.punishment;
-            }
-        }
-        punishment = true;
-    }
-
     //Don't have a stat? No problem! You'll have a 0 instead! That's even worse than the default starting value!
-    const charStat = character[stat] !== undefined ? character[stat].level : 0;
+    let charStat = character[stat] !== undefined ? character[stat].level : 0;
+    //Punishing
+    if (character.hp < 1 && shouldPunish) {
+        state.message = `Skillcheck: Testing against dead character. Punishment: -${state.punishment} (temporary).`;
+        charStat -= state.punishment;
+    }
     //console.log(char + ", " + stat + ": "+ charStat);
 
     //Grabs thresholds
@@ -500,12 +527,9 @@ const skillcheck = (arguments) => {
             }
         }
     }
-    if (punishment) {
-        for (key in character) {
-            if (key !== "hp" && !ElementInArray(key, ignoredValues)) {
-                character[key].level += state.punishment;
-            }
-        }
+    if (character.isNpc) {
+        //console.log("NPCs don't level up");
+        return;
     }
     //Checks whether to level up stats or characters
     if (levellingToOblivion) {
@@ -652,6 +676,10 @@ const attack = (arguments) => {
         }`;
 
     //#region  levels
+    if (attackingCharacter.isNpc) {
+        //console.log("NPCs don't level up - attack");
+        return;
+    }
     //Checks whether to level up stats or characters
     if (levellingToOblivion) {
         //Increases experience by 1 and checks whether it's enough to level the stat up
@@ -682,6 +710,11 @@ const attack = (arguments) => {
             attackingCharacter.skillpoints += state.skillpointsOnLevelUp;
             modifiedText += ` ${attChar} has levelled up to level ${attackingCharacter.level} (free skillpoints: ${attackingCharacter.skillpoints})!`;
         }
+    }
+    if (defendingCharacter.isNpc) {
+        if (state.characters[defChar].hp <= 0) delete state.characters[defChar];
+        //console.log("NPCs don't level up - defense");
+        return;
     }
     if (defendingCharacterLevels) {
         //Checks whether to level up stats or characters
@@ -1035,32 +1068,72 @@ addCharacter = (arguments) => {
     const match = arguments.match(exp);
 
     //Null check
-    if (match !== null) {
-        //Grabbing info
-        const char = match.groups.character;
-
-        //Converts values to format [[stat, val], [stat2, val], ... [statN, val]]
-        let values = match.groups.startingStats
-            .substring(2, match.groups.startingStats.length)
-            .split(", ")
-            .map((el) => el.trim().split("="));
-
-        for (i in values) {
-            curr = values[i];
-            curr = [curr[0].trim(), Number(curr[1])];
-            values[i] = curr;
-        }
-        //End of conversion
-
-        //Creates the character with stats. If none were given, every created stat is at state.startingLevel
-        state.characters[char] =
-            values[0][0] === "" ? new Character() : new Character(values);
-
-        CutCommand();
-        state.out = `\nCharacter ${char} has been created with stats\n${state.characters[char]}.`;
+    if (match === null) {
+        state.message =
+            "Add Character: Arguments were not given in proper format.";
+        return;
     }
+    //Grabbing info
+    const char = match.groups.character;
+
+    //Converts values to format [[stat, val], [stat2, val], ... [statN, val]]
+    let values = match.groups.startingStats
+        .substring(2, match.groups.startingStats.length)
+        .split(", ")
+        .map((el) => el.trim().split("="));
+
+    for (i in values) {
+        curr = values[i];
+        curr = [curr[0].trim(), Number(curr[1])];
+        values[i] = curr;
+    }
+    //End of conversion
+
+    //Creates the character with stats. If none were given, every created stat is at state.startingLevel
+    state.characters[char] =
+        values[0][0] === "" ? new Character() : new Character(values);
+
+    CutCommand();
+    state.out = `\nCharacter ${char} has been created with stats\n${state.characters[char]}.`;
 };
 //#endregion addCharacter
+
+//#region addNPC
+addNPC = (arguments) => {
+    //Looks for pattern !addNPC(name) or !addNPC(name, stat1=value, stat2=value, ..., statN=value)
+    const exp =
+        /(?<character>[\w\s']+)(?<startingStats>(?:, [\w ']+ *= *\d+)*)/i;
+
+    //Matches the RegEx
+    const match = arguments.match(exp);
+
+    //Null check
+    if (match === null) {
+        state.message = "Add NPC: Arguments were not given in proper format.";
+    }
+    //Grabbing info
+    const char = match.groups.character;
+
+    //Converts values to format [[stat, val], [stat2, val], ... [statN, val]]
+    let values = match.groups.startingStats
+        .substring(2, match.groups.startingStats.length)
+        .split(", ")
+        .map((el) => el.trim().split("="));
+
+    for (i in values) {
+        curr = values[i];
+        curr = [curr[0].trim(), Number(curr[1])];
+        values[i] = curr;
+    }
+    //End of conversion
+
+    //Creates the character with stats. If none were given, every created stat is at state.startingLevel
+    state.characters[char] = values[0][0] === "" ? new NPC() : new NPC(values);
+
+    CutCommand();
+    state.out = `\nNon-Playable Character ${char} has been created with stats\n${state.characters[char]}.`;
+};
+//#endregion addNPC
 
 //#region setStats
 setStats = (arguments) => {
@@ -1316,6 +1389,10 @@ const modifier = (text) => {
                 addCharacter(globalMatch.groups.arguments);
                 break;
 
+            case "addnpc":
+                addNPC(globalMatch.groups.arguments);
+                break;
+
             case "setstats":
                 setStats(globalMatch.groups.arguments);
                 break;
@@ -1347,15 +1424,15 @@ const modifier = (text) => {
     //!Debug info, uncomment when you need
     if (DEBUG) {
         //console.log(`Og: ${text}`)
-        console.log(`In: ${modifiedText}`);
-        console.log(`Context: ${state.ctxt}`);
-        console.log(`Out: ${state.out}`);
-        console.log(`Message: ${state["message"]}`);
-        //console.log(state);
+        //console.log(`In: ${modifiedText}`);
+        //console.log(`Context: ${state.ctxt}`);
+        //console.log(`Out: ${state.out}`);
+        //console.log(`Message: ${state["message"]}`);
+        //console.log(state.characters);
         /*for (key in state.characters) {
       console.log(`\n\n${key}:\n${state.characters[key]}`);
     }*/
-        console.log("------------");
+        //console.log("------------");
     }
     // You must return an object with the text property defined.
     return { text: modifiedText };
@@ -1378,17 +1455,17 @@ if (!DEBUG) {
     modifier("!skillcheck(dex, Miguel, 5 : 12 : 15 : 20)");
     modifier("!This is a normal input!");
     modifier(
-        "abc !addCharacter(Zuibroldun Jodem, dex = 5, magic = 11, fire's force=3) def"
+        "abc !addNPC(Zuibroldun Jodem, dex = 5, magic = 11, fire's force=3) def"
     );
     modifier(
         "Zuibroldun Jodem tries to die. !skillcheck(dex, Zuibroldun Jodem, 5 = lol : 10 = lmao, it 'Works. Hi 5. : 20 = You're losing.) Paparapapa."
     );
     modifier("!skillcheck(magic, Miguel, 3)");
     modifier("!levelStats(Miguel, str +4, magic+ 3, dex + 3)");
-    modifier("!attack(Zuibroldun Jodem, str, Miguel, magic, magic)");
+    modifier("!sattack(Zuibroldun Jodem, str, Miguel, magic, magic)");
     modifier("Setting stats... !setStats(Miguel, magic=120) Stats set");
     modifier("!showstats(Miguel)");
-    modifier("!sattack(Miguel, magic, Zuibroldun Jodem, str)");
+    modifier("!attack(Miguel, magic, Zuibroldun Jodem, str)");
     modifier("!showstats(Zuibroldun Jodem)");
     modifier("!attack(Librun, magic, Zuibroldun Jodem, str)");
     modifier("!skillcheck(str, Zuibroldun Jodem, 5)");
