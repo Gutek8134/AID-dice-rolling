@@ -65,200 +65,192 @@ const levellingToOblivion = false;
 const defendingCharacterLevels = true;
 
 //!Turns on debug code
-const DEBUG = false;
+const DEBUG = true;
 
 //Comment this if statement when debugging. End at line 213.
-if (DEBUG) {
-    //Dummy state
-    let state = {
-        stats: [],
-        dice: 20,
-        startingLevel: 1,
-        startingHP: 100,
-        characters: {},
-        punishment: 5,
-        skillpointsOnLevelUp: 5,
-    };
+//if (DEBUG) {
+//Dummy state
+let state = {
+    stats: [],
+    dice: 20,
+    startingLevel: 1,
+    startingHP: 100,
+    characters: {},
+    punishment: 5,
+    skillpointsOnLevelUp: 5,
+};
 
-    //!Since I cannot import shared library locally, I will copy everything here. Debug purposes only.
+//!Since I cannot import shared library locally, I will copy everything here. Debug purposes only.
 
-    //!Function for calculating experience needed to level up. Adjust it to your heart's content
-    const experienceCalculation = (level) => {
-        //Don't change it here, but in the shared library
-        //level is the current character/stat's level
-        const experience = /*You can edit from here*/ 2 * level; /*to here*/
+//!Function for calculating experience needed to level up. Adjust it to your heart's content
+const experienceCalculation = (level) => {
+    //Don't change it here, but in the shared library
+    //level is the current character/stat's level
+    const experience = /*You can edit from here*/ 2 * level; /*to here*/
 
-        return experience;
-    };
+    return experience;
+};
 
-    //Increasing scalability by OOP
-    class Stat {
-        constructor(name, level) {
-            if (
-                typeof name === "string" &&
-                (typeof level === "number" || typeof level === "undefined")
-            ) {
-                if (!isInStats(name)) {
-                    state.stats.push(name);
-                }
-                this.level = level === undefined ? state.startingLevel : level;
-                if (levellingToOblivion) {
-                    this.experience = 0;
-                    this.expToNextLvl = experienceCalculation(this.level);
-                }
+//Increasing scalability by OOP
+class Stat {
+    constructor(name, level) {
+        if (
+            typeof name === "string" &&
+            (typeof level === "number" || typeof level === "undefined")
+        ) {
+            if (!isInStats(name)) {
+                state.stats.push(name);
             }
-        }
-        toString() {
-            return `level = ${this.level} exp = ${
-                this.experience
-            } exp to lvl up=${this.expToNextLvl}(${
-                this.expToNextLvl - this.experience
-            })`;
-        }
-    }
-
-    //Blank character with starting level stats
-    class Character {
-        constructor(values) {
-            state.stats.forEach((stat) => {
-                this[stat] = new Stat(stat, state.startingLevel);
-            });
-            this.hp = state.startingHP;
-            this.level = 1;
-
-            if (values !== undefined) {
-                for (const el of values) {
-                    if (el[0] === "hp") {
-                        this.hp = el[1];
-                        continue;
-                    }
-                    if (el[0] === "level") {
-                        this.level = el[1];
-                        continue;
-                    }
-                    this[el[0]] = new Stat(el[0], el[1]);
-                }
-            }
-            this.experience = 0;
-            this.expToNextLvl = experienceCalculation(this.level);
-            this.skillpoints = 0;
-            this.isNpc = false;
-        }
-
-        toString() {
-            return CharToString(this);
-        }
-    }
-
-    class NPC {
-        constructor(values) {
-            state.stats.forEach((stat) => {
-                this[stat] = new Stat(stat, state.startingLevel);
-            });
-            this.hp = state.startingHP;
-            this.level = 1;
-
-            if (values !== undefined) {
-                for (const el of values) {
-                    if (el[0] === "hp") {
-                        this.hp = el[1];
-                        continue;
-                    }
-                    if (el[0] === "level") {
-                        this.level = el[1];
-                        continue;
-                    }
-                    this[el[0]] = new Stat(el[0], el[1]);
-                }
-            }
-            this.experience = 0;
-            this.expToNextLvl = experienceCalculation(this.level);
-            this.skillpoints = 0;
-            this.isNpc = true;
-        }
-
-        toString() {
-            return CharToString(this);
-        }
-    }
-
-    const isInStats = (name) => {
-        for (i in state.stats) {
-            if (name == state.stats[i]) {
-                return true;
-            }
-        }
-        return false;
-    };
-
-    //Generates a value between 1 and maxValue
-    const diceRoll = (maxValue) => {
-        return Math.floor(Math.random() * maxValue) + 1;
-    };
-
-    const ignoredValues = [
-        "level",
-        "experience",
-        "expToNextLvl",
-        "skillpoints",
-    ];
-    const CharToString = (character) => {
-        let temp = levellingToOblivion
-            ? `hp: ${character.hp},\n`
-            : `hp: ${character.hp},\nlevel: ${character.level},\nskillpoints:${
-                  character.skillpoints
-              },\nexperience: ${character.experience},\nto level up: ${
-                  character.expToNextLvl
-              }(need ${character.expToNextLvl - character.experience} more),\n`;
-        for (const key in character) {
-            if (key === "hp" || ElementInArray(key, ignoredValues)) {
-                continue;
-            }
-            const value = character[key];
+            this.level = level === undefined ? state.startingLevel : level;
             if (levellingToOblivion) {
-                temp += `${key}: level=${value.level}, exp=${
-                    value.experience
-                }, to lvl up=${value.expToNextLvl}(need ${
-                    value.expToNextLvl - value.experience
-                } more),\n`;
-            } else {
-                temp += `${key}: ${value.level},\n`;
+                this.experience = 0;
+                this.expToNextLvl = experienceCalculation(this.level);
             }
         }
-        return temp.substring(0, temp.length - 2) == ""
-            ? "none"
-            : temp.substring(0, temp.length - 2);
-    };
+    }
+    toString() {
+        return `level = ${this.level} exp = ${this.experience} exp to lvl up=${
+            this.expToNextLvl
+        }(${this.expToNextLvl - this.experience})`;
+    }
+}
 
-    //Returns whether character exists and has more than 0 HP, returns bool
-    const CharLives = (character) => {
-        if (!ElementInArray(character, Object.keys(state.characters)))
-            return false;
+//Blank character with starting level stats
+class Character {
+    constructor(values) {
+        state.stats.forEach((stat) => {
+            this[stat] = new Stat(stat, state.startingLevel);
+        });
+        this.hp = state.startingHP;
+        this.level = 1;
 
-        return state.characters[character].hp > 0;
-    };
-
-    const ElementInArray = (element, array) => {
-        ret = false;
-        if (element !== undefined && typeof array === "object") {
-            for (const el of array) {
-                if (el === element) {
-                    ret = true;
-                    break;
+        if (values !== undefined) {
+            for (const el of values) {
+                if (el[0] === "hp") {
+                    this.hp = el[1];
+                    continue;
                 }
+                if (el[0] === "level") {
+                    this.level = el[1];
+                    continue;
+                }
+                this[el[0]] = new Stat(el[0], el[1]);
             }
         }
-        return ret;
-    };
-    //!End of shared library
+        this.experience = 0;
+        this.expToNextLvl = experienceCalculation(this.level);
+        this.skillpoints = 0;
+        this.isNpc = false;
+    }
 
-    //dummy character
-    /*
+    toString() {
+        return CharToString(this);
+    }
+}
+
+class NPC {
+    constructor(values) {
+        state.stats.forEach((stat) => {
+            this[stat] = new Stat(stat, state.startingLevel);
+        });
+        this.hp = state.startingHP;
+        this.level = 1;
+
+        if (values !== undefined) {
+            for (const el of values) {
+                if (el[0] === "hp") {
+                    this.hp = el[1];
+                    continue;
+                }
+                if (el[0] === "level") {
+                    this.level = el[1];
+                    continue;
+                }
+                this[el[0]] = new Stat(el[0], el[1]);
+            }
+        }
+        this.experience = 0;
+        this.expToNextLvl = experienceCalculation(this.level);
+        this.skillpoints = 0;
+        this.isNpc = true;
+    }
+
+    toString() {
+        return CharToString(this);
+    }
+}
+
+const isInStats = (name) => {
+    for (i in state.stats) {
+        if (name == state.stats[i]) {
+            return true;
+        }
+    }
+    return false;
+};
+
+//Generates a value between 1 and maxValue
+const diceRoll = (maxValue) => {
+    return Math.floor(Math.random() * maxValue) + 1;
+};
+
+const ignoredValues = ["level", "experience", "expToNextLvl", "skillpoints"];
+const CharToString = (character) => {
+    let temp = levellingToOblivion
+        ? `hp: ${character.hp},\n`
+        : `hp: ${character.hp},\nlevel: ${character.level},\nskillpoints:${
+              character.skillpoints
+          },\nexperience: ${character.experience},\nto level up: ${
+              character.expToNextLvl
+          }(need ${character.expToNextLvl - character.experience} more),\n`;
+    for (const key in character) {
+        if (key === "hp" || ElementInArray(key, ignoredValues)) {
+            continue;
+        }
+        const value = character[key];
+        if (levellingToOblivion) {
+            temp += `${key}: level=${value.level}, exp=${
+                value.experience
+            }, to lvl up=${value.expToNextLvl}(need ${
+                value.expToNextLvl - value.experience
+            } more),\n`;
+        } else {
+            temp += `${key}: ${value.level},\n`;
+        }
+    }
+    return temp.substring(0, temp.length - 2) == ""
+        ? "none"
+        : temp.substring(0, temp.length - 2);
+};
+
+//Returns whether character exists and has more than 0 HP, returns bool
+const CharLives = (character) => {
+    if (!ElementInArray(character, Object.keys(state.characters))) return false;
+
+    return state.characters[character].hp > 0;
+};
+
+const ElementInArray = (element, array) => {
+    ret = false;
+    if (element !== undefined && typeof array === "object") {
+        for (const el of array) {
+            if (el === element) {
+                ret = true;
+                break;
+            }
+        }
+    }
+    return ret;
+};
+//!End of shared library
+
+//dummy character
+/*
 state.characters.Miguel = new Character();
 state.characters.Miguel.str = new Stat("str");
 state.characters.Miguel.dex = new Stat("dex", 10);
 state.characters.Miguel.int = new Stat("int", 5);*/
-}
+//}
 
 //Produces outcome from two-dimensional array in format [[minimum score, outcome],]
 const CustomOutcome = (score, values) => {
@@ -312,6 +304,7 @@ const SetupState = () => {
             state.skillpointsOnLevelUp === undefined
                 ? 5
                 : state.skillpointsOnLevelUp;
+        state.inBattle = state.inBattle === undefined ? false : state.battle;
     }
 };
 
@@ -560,6 +553,28 @@ const skillcheck = (arguments) => {
     modifiedText += textCopy.substring(currIndices[1]);
 };
 //#endregion skillcheck
+
+//#region battle
+const battle = (arguments) => {
+    CutCommand();
+    //Error checking
+    if (arguments === undefined || arguments === null || arguments === "") {
+        state.message = "Battle: No arguments found.";
+        return;
+    }
+
+    const exp =
+        /\((?<group1>[\w\s']+(?:, *[\w\s']+)*)\), *\((?<group2>[\w\s']+(?:, *[\w\s']+)*)\)/i;
+    const match = modifiedText.match(exp);
+    if (match === null) {
+        state.message = "Battle: No matching arguments found.";
+        return;
+    }
+
+    const side1 = match.groups.group1.split(",");
+    const side2 = match.groups.group2.split(",");
+};
+//#endregion battle
 
 //#region attack
 const attack = (arguments) => {
@@ -1350,9 +1365,15 @@ const modifier = (text) => {
     state.message = " ";
     modifiedText = textCopy = text;
 
+    //#region battle handling
+    if (state.inBattle) {
+        //...
+    }
+    //#endregion battle handling
+
     //#region globalCommand
     //Checks for pattern !command(args)
-    const globalExp = /!(?<command>[^\s]+)\((?<arguments>.*)\)/i;
+    const globalExp = /!(?<command>[^\s()]+)\((?<arguments>.*)\)/i;
     const globalMatch = text.match(globalExp);
 
     //If something matched, calls functions with further work
@@ -1365,6 +1386,10 @@ const modifier = (text) => {
         switch (globalMatch.groups.command.toLowerCase()) {
             case "skillcheck":
                 skillcheck(globalMatch.groups.arguments);
+                break;
+
+            case "battle":
+                battle(globalMatch.groups.arguments);
                 break;
 
             case "attack":
@@ -1415,7 +1440,7 @@ const modifier = (text) => {
 
             default:
                 state.message = "Command not found.";
-                return;
+                break;
         }
         if (state.ctxt.length <= 1) state.ctxt = " \n";
     }
@@ -1423,16 +1448,16 @@ const modifier = (text) => {
 
     //!Debug info, uncomment when you need
     if (DEBUG) {
-        //console.log(`Og: ${text}`)
-        //console.log(`In: ${modifiedText}`);
-        //console.log(`Context: ${state.ctxt}`);
-        //console.log(`Out: ${state.out}`);
-        //console.log(`Message: ${state["message"]}`);
+        //console.log(`Og: ${text}`);
+        console.log(`In: ${modifiedText}`);
+        console.log(`Context: ${state.ctxt}`);
+        console.log(`Out: ${state.out}`);
+        console.log(`Message: ${state["message"]}`);
         //console.log(state.characters);
         /*for (key in state.characters) {
       console.log(`\n\n${key}:\n${state.characters[key]}`);
     }*/
-        //console.log("------------");
+        console.log("------------");
     }
     // You must return an object with the text property defined.
     return { text: modifiedText };
@@ -1443,37 +1468,38 @@ if (!DEBUG) {
     modifier(text);
 } else {
     //!test
-    modifier("!addcharacter(Librun, level=5)");
-    modifier("!showstats(Librun)");
-    modifier("!addCharacter(Miguel, str=1, dex=5, int=3, hp=1000)");
-    modifier(
-        "Miguel tries to evade an arrow. !skillcheck(dex, Miguel, 3) Is he blind?"
-    );
-    modifier("!skillcheck(int, Miguel, 5000)");
-    modifier("!skillcheck(str, Miguel, 5 : 11)");
-    modifier("!skillcheck(str, Miguel, 25 : 14 : 22)");
-    modifier("!skillcheck(dex, Miguel, 5 : 12 : 15 : 20)");
-    modifier("!This is a normal input!");
-    modifier(
-        "abc !addNPC(Zuibroldun Jodem, dex = 5, magic = 11, fire's force=3) def"
-    );
-    modifier(
-        "Zuibroldun Jodem tries to die. !skillcheck(dex, Zuibroldun Jodem, 5 = lol : 10 = lmao, it 'Works. Hi 5. : 20 = You're losing.) Paparapapa."
-    );
-    modifier("!skillcheck(magic, Miguel, 3)");
-    modifier("!levelStats(Miguel, str +4, magic+ 3, dex + 3)");
-    modifier("!sattack(Zuibroldun Jodem, str, Miguel, magic, magic)");
-    modifier("Setting stats... !setStats(Miguel, magic=120) Stats set");
-    modifier("!showstats(Miguel)");
-    modifier("!attack(Miguel, magic, Zuibroldun Jodem, str)");
-    modifier("!showstats(Zuibroldun Jodem)");
-    modifier("!attack(Librun, magic, Zuibroldun Jodem, str)");
-    modifier("!skillcheck(str, Zuibroldun Jodem, 5)");
-    modifier(
-        "Miguel felt guilty about what he has done. !revive(Miguel, Zuibroldun Jodem, 10)"
-    );
-    modifier("!heal(Zuibroldun Jodem, 100)");
-    modifier("!levelStats(Zuibroldun Jodem, fire's force + 2)");
+    // modifier("!addcharacter(Librun, level=5)");
+    // modifier("!showstats(Librun)");
+    // modifier("!addCharacter(Miguel, str=1, dex=5, int=3, hp=1000)");
+    // modifier(
+    //     "Miguel tries to evade an arrow. !skillcheck(dex, Miguel, 3) Is he blind?"
+    // );
+    // modifier("!skillcheck(int, Miguel, 5000)");
+    // modifier("!skillcheck(str, Miguel, 5 : 11)");
+    // modifier("!skillcheck(str, Miguel, 25 : 14 : 22)");
+    // modifier("!skillcheck(dex, Miguel, 5 : 12 : 15 : 20)");
+    // modifier("!This is a normal input!");
+    // modifier(
+    //     "abc !addNPC(Zuibroldun Jodem, dex = 5, magic = 11, fire's force=3) def"
+    // );
+    // modifier(
+    //     "Zuibroldun Jodem tries to die. !skillcheck(dex, Zuibroldun Jodem, 5 = lol : 10 = lmao, it 'Works. Hi 5. : 20 = You're losing.) Paparapapa."
+    // );
+    // modifier("!skillcheck(magic, Miguel, 3)");
+    // modifier("!levelStats(Miguel, str +4, magic+ 3, dex + 3)");
+    // modifier("!sattack(Zuibroldun Jodem, str, Miguel, magic, magic)");
+    // modifier("Setting stats... !setStats(Miguel, magic=120) Stats set");
+    // modifier("!showstats(Miguel)");
+    modifier("!battle((Miguel, Librun), (Zuibroldun Jodem))");
+    // modifier("!attack(Miguel, magic, Zuibroldun Jodem, str)");
+    // modifier("!showstats(Zuibroldun Jodem)");
+    // modifier("!attack(Librun, magic, Zuibroldun Jodem, str)");
+    // modifier("!skillcheck(str, Zuibroldun Jodem, 5)");
+    // modifier(
+    //     "Miguel felt guilty about what he has done. !revive(Miguel, Zuibroldun Jodem, 10)"
+    // );
+    // modifier("!heal(Zuibroldun Jodem, 100)");
+    // modifier("!levelStats(Zuibroldun Jodem, fire's force + 2)");
     /*modifier("!getState()");
   console.log("\n\n\n");
   modifier('!setState({"dice":10})');*/
