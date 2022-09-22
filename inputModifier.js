@@ -563,16 +563,49 @@ const battle = (arguments) => {
         return;
     }
 
+    //Looks for pattern (character1, character2, ...), (character3, character4, ...)
     const exp =
         /\((?<group1>[\w\s']+(?:, *[\w\s']+)*)\), *\((?<group2>[\w\s']+(?:, *[\w\s']+)*)\)/i;
     const match = modifiedText.match(exp);
+
+    //Error checking
     if (match === null) {
         state.message = "Battle: No matching arguments found.";
         return;
     }
 
-    const side1 = match.groups.group1.split(",");
-    const side2 = match.groups.group2.split(",");
+    //Grabs the info
+    const side1 = [...new Set(match.groups.group1.split(","))];
+    const side2 = [...new Set(match.groups.group2.split(","))];
+
+    //Checks if follows rules:
+    //Character is only one
+    //Character cannot belong to both sides of the battle
+    //Every element is a character
+    //TODO: or enemy class with count
+    for (const el of side1) {
+        if (ElementInArray(el, characters)) {
+            if (ElementInArray(el, side2)) {
+                state.message = `Battle: character ${el} cannot belong to both sides of the battle.`;
+                return;
+            }
+        } else {
+            state.message = `Battle: character ${el} doesn't exist.`;
+            return;
+        }
+    }
+    for (const el of side2) {
+        if (!ElementInArray(el, side2)) {
+            state.message = `Battle: character ${el} doesn't exist.`;
+            return;
+        }
+    }
+
+    state.side1 = side1;
+    state.side2 = side2;
+    state.currentSide = diceRoll(2);
+    state.active = [...side1, ...side2];
+    state.inactive = [];
 };
 //#endregion battle
 
