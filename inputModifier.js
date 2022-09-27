@@ -601,10 +601,11 @@ const battle = (arguments) => {
         }
     }
 
+    //Setting up values for automatic turns
     state.side1 = side1;
     state.side2 = side2;
-    state.currentSide = diceRoll(2);
-    state.active = [...side1, ...side2];
+    state.currentSide = `side${diceRoll(2)}`;
+    state.active = [...currentSide];
     state.inactive = [];
 };
 //#endregion battle
@@ -1389,6 +1390,24 @@ setState = (arguments) => {
 };
 //#endregion setState
 
+//#region logs
+const logs = () => {
+    //!Debug info, uncomment when you need
+    if (DEBUG) {
+        //console.log(`Og: ${text}`);
+        console.log(`In: ${modifiedText}`);
+        console.log(`Context: ${state.ctxt}`);
+        console.log(`Out: ${state.out}`);
+        console.log(`Message: ${state["message"]}`);
+        //console.log(state.characters);
+        /*for (key in state.characters) {
+      console.log(`\n\n${key}:\n${state.characters[key]}`);
+    }*/
+        console.log("------------");
+    }
+};
+//#endregion logs
+
 //Main function
 let currIndices, modifiedText, textCopy;
 const modifier = (text) => {
@@ -1400,7 +1419,22 @@ const modifier = (text) => {
 
     //#region battle handling
     if (state.inBattle) {
-        //...
+        if (!state.side1?.length) {
+            state.message =
+                "HP of all party members dropped to 0. Party retreated.";
+            modifiedText +=
+                "\nThe adventurers retreated, overwhelmed by the enemy.";
+        } else if (!state.side2?.length) {
+            state.message = "You have won the battle!";
+            modifiedText += "\nThe adventurers have won the battle.";
+        } else if (!state.active?.length) {
+            const temp = Number(state.currentSide.substring(4)) + 1;
+            state.currentSide = `side${temp >= 3 ? 1 : temp}`;
+            state.active = [...state[state.currentSide]];
+        }
+
+        logs();
+        return { text: modifiedText };
     }
     //#endregion battle handling
 
@@ -1479,19 +1513,7 @@ const modifier = (text) => {
     }
     //#endregion globalCommand
 
-    //!Debug info, uncomment when you need
-    if (DEBUG) {
-        //console.log(`Og: ${text}`);
-        console.log(`In: ${modifiedText}`);
-        console.log(`Context: ${state.ctxt}`);
-        console.log(`Out: ${state.out}`);
-        console.log(`Message: ${state["message"]}`);
-        //console.log(state.characters);
-        /*for (key in state.characters) {
-      console.log(`\n\n${key}:\n${state.characters[key]}`);
-    }*/
-        console.log("------------");
-    }
+    logs();
     // You must return an object with the text property defined.
     return { text: modifiedText };
 };
