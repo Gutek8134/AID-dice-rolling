@@ -318,6 +318,40 @@ const CutCommand = () => {
               modifiedText.substring(currIndices[1], modifiedText.length);
 };
 
+const BestStat = (character)=>{
+    let bestStat = {level: -Infinity};
+    for(const key in character){
+        if(ElementInArray(key, ignoredValues)) continue;
+        else if(character[key].level > character[bestStat]?.level ||character[bestStat]?.level === undefined) bestStat = key;
+    }
+    return bestStat;
+}
+
+const turn = () => {
+    let character;
+    while (character?.isNpc) {
+        const attCharInd = diceRoll(state.active.length) - 1
+        const attChar = state.active[attCharInd];
+        delete state.active[attCharInd];
+        const attackingCharacter = state.characters[attChar];
+        if (attackingCharacter === undefined) {
+            continue;
+        }
+        if(attackingCharacter.isNpc){
+            const defCharInd = diceRoll(state.side2.length)-1
+            const defChar = state.side2[defCharInd];
+            const defendingCharacter = state.characters[defChar];
+            const attCharStat = BestStat(attackingCharacter);
+            const defCharStat = BestStat(defendingCharacter);
+            if(defaultDodge){
+                if(dodge(attackingCharacter[attCharStat].level, defendingCharacter[defCharStat].level)){
+                    
+                }
+            }
+        }
+    }
+};
+
 //#region skillcheck
 const skillcheck = (arguments) => {
     //Error checking
@@ -606,7 +640,7 @@ const battle = (arguments) => {
     state.side2 = side2;
     state.currentSide = `side${diceRoll(2)}`;
     state.active = [...currentSide];
-    state.inactive = [];
+    turn();
 };
 //#endregion battle
 
