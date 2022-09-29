@@ -318,36 +318,71 @@ const CutCommand = () => {
               modifiedText.substring(currIndices[1], modifiedText.length);
 };
 
-const BestStat = (character)=>{
-    let bestStat = {level: -Infinity};
-    for(const key in character){
-        if(ElementInArray(key, ignoredValues)) continue;
-        else if(character[key].level > character[bestStat]?.level ||character[bestStat]?.level === undefined) bestStat = key;
+const BestStat = (character) => {
+    let bestStat = { level: -Infinity };
+    for (const key in character) {
+        if (ElementInArray(key, ignoredValues)) continue;
+        else if (
+            character[key]?.level > character[bestStat]?.level ||
+            character[bestStat]?.level === undefined
+        )
+            bestStat = key;
     }
     return bestStat;
-}
+};
 
 const turn = () => {
-    let character;
-    while (character?.isNpc) {
-        const attCharInd = diceRoll(state.active.length) - 1
+    let attackingCharacter;
+    while (attackingCharacter?.isNpc || attackingCharacter === undefined) {
+        const attCharInd = diceRoll(state.active.length) - 1;
         const attChar = state.active[attCharInd];
         delete state.active[attCharInd];
-        const attackingCharacter = state.characters[attChar];
+        attackingCharacter = state.characters[attChar];
         if (attackingCharacter === undefined) {
             continue;
         }
-        if(attackingCharacter.isNpc){
-            const defCharInd = diceRoll(state.side2.length)-1
-            const defChar = state.side2[defCharInd];
+        if (attackingCharacter.isNpc) {
+            const temp = Number(state.currentSide.substring(4)) + 1;
+            const attacked = `side${temp >= 3 ? 1 : temp}`;
+            const defCharInd = diceRoll(state[attacked].length) - 1;
+            const defChar = state[attacked][defCharInd];
             const defendingCharacter = state.characters[defChar];
-            const attCharStat = BestStat(attackingCharacter);
-            const defCharStat = BestStat(defendingCharacter);
-            if(defaultDodge){
-                if(dodge(attackingCharacter[attCharStat].level, defendingCharacter[defCharStat].level)){
-                    
+            const attackStat = BestStat(attackingCharacter);
+            const defenseStat = BestStat(defendingCharacter);
+            const attCharStat = attackingCharacter[attackStat].level;
+            const defCharStat = defendingCharacter[defenseStat].level;
+            if (defaultDodge) {
+                if (dodge(attCharStat, defCharStat)) {
+                    state.out += `\n${attChar}(${attackStat}: ${attCharStat}) attacked ${defChar}(${defenseStat}: ${defCharStat}), but missed.`;
+                    continue;
                 }
             }
+            //Calculating damage
+            const dam = damage(attCharStat, defCharStat);
+            //Damaging
+            state.characters[defChar].hp -= dam;
+            if (state.characters[defChar].hp <= 0) {
+                state.characters[defChar].hp = 0;
+                //If character's hp falls below 0, they are removed from the battle
+                delete state[attacked][defCharInd];
+                //NPCs die when they are killed
+                if (state.characters[defChar].isNpc)
+                    delete state.characters[defChar];
+            }
+            //Gives the player necessary info.
+            state.out += `\n${attChar} (${attackStat}: ${attCharStat}) attacked ${defChar} (${defenseStat}: ${defCharStat}) dealing ${CustomDamageOutput(
+                dam,
+                damageOutputs
+            )} (${dam}).\n${
+                state.characters[defChar].hp <= 0
+                    ? defChar + state.characters[defChar].isNpc
+                        ? " died."
+                        : " retreated."
+                    : defChar +
+                      " now has " +
+                      state.characters[defChar].hp +
+                      "hp."
+            }`;
         }
     }
 };
