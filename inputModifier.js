@@ -194,15 +194,23 @@ const diceRoll = (maxValue) => {
     return Math.floor(Math.random() * maxValue) + 1;
 };
 
-const ignoredValues = ["level", "experience", "expToNextLvl", "skillpoints"];
+const ignoredValues = [
+    "level",
+    "experience",
+    "expToNextLvl",
+    "skillpoints",
+    "isNpc",
+];
 const CharToString = (character) => {
     let temp = levellingToOblivion
-        ? `hp: ${character.hp},\n`
+        ? `hp: ${character.hp},\nisNPC: ${character.isNpc},\n`
         : `hp: ${character.hp},\nlevel: ${character.level},\nskillpoints:${
               character.skillpoints
           },\nexperience: ${character.experience},\nto level up: ${
               character.expToNextLvl
-          }(need ${character.expToNextLvl - character.experience} more),\n`;
+          }(need ${
+              character.expToNextLvl - character.experience
+          } more),\nisNpc: ${character.isNpc},\n`;
     for (const key in character) {
         if (key === "hp" || ElementInArray(key, ignoredValues)) {
             continue;
@@ -304,7 +312,7 @@ const SetupState = () => {
             state.skillpointsOnLevelUp === undefined
                 ? 5
                 : state.skillpointsOnLevelUp;
-        state.inBattle = state.inBattle === undefined ? false : state.battle;
+        state.inBattle = state.inBattle === undefined ? false : state.inBattle;
     }
 };
 
@@ -332,24 +340,40 @@ const BestStat = (character) => {
 };
 
 const turn = () => {
-    let attackingCharacter;
-    while (attackingCharacter?.isNpc || attackingCharacter === undefined) {
+    while (
+        state.attackingCharacter?.isNpc ||
+        state.attackingCharacter === undefined
+    ) {
+        if (!state.side1?.length) {
+            state.message =
+                "HP of all party members dropped to 0. Party retreated.";
+            modifiedText +=
+                "\nThe adventurers retreated, overwhelmed by the enemy.";
+            delete state.inBattle;
+            break;
+        } else if (!state.side2?.length) {
+            state.message = "You have won the battle!";
+            modifiedText += "\nThe adventurers have won the battle.";
+            delete state.inBattle;
+            break;
+        }
         const attCharInd = diceRoll(state.active.length) - 1;
         const attChar = state.active[attCharInd];
         delete state.active[attCharInd];
-        attackingCharacter = state.characters[attChar];
-        if (attackingCharacter === undefined) {
+        state.attackingCharacter = state.characters[attChar];
+        console.log(state.attackingCharacter);
+        if (state.attackingCharacter === undefined) {
             continue;
         }
-        if (attackingCharacter.isNpc) {
+        if (state.attackingCharacter.isNpc) {
             const temp = Number(state.currentSide.substring(4)) + 1;
             const attacked = `side${temp >= 3 ? 1 : temp}`;
             const defCharInd = diceRoll(state[attacked].length) - 1;
             const defChar = state[attacked][defCharInd];
             const defendingCharacter = state.characters[defChar];
-            const attackStat = BestStat(attackingCharacter);
+            const attackStat = BestStat(state.attackingCharacter);
             const defenseStat = BestStat(defendingCharacter);
-            const attCharStat = attackingCharacter[attackStat].level;
+            const attCharStat = state.attackingCharacter[attackStat].level;
             const defCharStat = defendingCharacter[defenseStat].level;
             if (defaultDodge) {
                 if (dodge(attCharStat, defCharStat)) {
@@ -644,8 +668,22 @@ const battle = (arguments) => {
     }
 
     //Grabs the info
-    const side1 = [...new Set(match.groups.group1.split(","))];
-    const side2 = [...new Set(match.groups.group2.split(","))];
+    const side1 = [
+        ...new Set(
+            match.groups.group1
+                .trim()
+                .split(",")
+                .map((el) => el.trim())
+        ),
+    ];
+    const side2 = [
+        ...new Set(
+            match.groups.group2
+                .trim()
+                .split(",")
+                .map((el) => el.trim())
+        ),
+    ];
 
     //Checks if follows rules:
     //Character is only one
@@ -653,19 +691,20 @@ const battle = (arguments) => {
     //Every element is a character
     //TODO: or enemy class with count
     for (const el of side1) {
-        if (ElementInArray(el, characters)) {
+        if (ElementInArray(el, Object.keys(state.characters))) {
             if (ElementInArray(el, side2)) {
                 state.message = `Battle: character ${el} cannot belong to both sides of the battle.`;
                 return;
             }
         } else {
-            state.message = `Battle: character ${el} doesn't exist.`;
+            console.log(`${el}\n\n${state.characters}`);
+            state.message = `Battle: character ${el} doesn't exist.a`;
             return;
         }
     }
     for (const el of side2) {
-        if (!ElementInArray(el, side2)) {
-            state.message = `Battle: character ${el} doesn't exist.`;
+        if (!ElementInArray(el, Object.keys(state.characters))) {
+            state.message = `Battle: character ${el} doesn't exist.b`;
             return;
         }
     }
@@ -674,7 +713,8 @@ const battle = (arguments) => {
     state.side1 = side1;
     state.side2 = side2;
     state.currentSide = `side${diceRoll(2)}`;
-    state.active = [...currentSide];
+    state.active = [...state[state.currentSide]];
+    state.inBattle = true;
     turn();
 };
 //#endregion battle
@@ -1469,6 +1509,7 @@ const logs = () => {
         console.log(`Out: ${state.out}`);
         console.log(`Message: ${state["message"]}`);
         //console.log(state.characters);
+        console.log(state.inBattle);
         /*for (key in state.characters) {
       console.log(`\n\n${key}:\n${state.characters[key]}`);
     }*/
@@ -1488,20 +1529,13 @@ const modifier = (text) => {
 
     //#region battle handling
     if (state.inBattle) {
-        if (!state.side1?.length) {
-            state.message =
-                "HP of all party members dropped to 0. Party retreated.";
-            modifiedText +=
-                "\nThe adventurers retreated, overwhelmed by the enemy.";
-        } else if (!state.side2?.length) {
-            state.message = "You have won the battle!";
-            modifiedText += "\nThe adventurers have won the battle.";
-        } else if (!state.active?.length) {
+        if (!state.active?.length) {
             const temp = Number(state.currentSide.substring(4)) + 1;
             state.currentSide = `side${temp >= 3 ? 1 : temp}`;
             state.active = [...state[state.currentSide]];
         }
 
+        turn();
         logs();
         return { text: modifiedText };
     }
@@ -1592,9 +1626,9 @@ if (!DEBUG) {
     modifier(text);
 } else {
     //!test
-    // modifier("!addcharacter(Librun, level=5)");
+    modifier("!addcharacter(Librun, level=5)");
     // modifier("!showstats(Librun)");
-    // modifier("!addCharacter(Miguel, str=1, dex=5, int=3, hp=1000)");
+    modifier("!addCharacter(Miguel, str=1, dex=5, int=3, hp=1000)");
     // modifier(
     //     "Miguel tries to evade an arrow. !skillcheck(dex, Miguel, 3) Is he blind?"
     // );
@@ -1603,9 +1637,9 @@ if (!DEBUG) {
     // modifier("!skillcheck(str, Miguel, 25 : 14 : 22)");
     // modifier("!skillcheck(dex, Miguel, 5 : 12 : 15 : 20)");
     // modifier("!This is a normal input!");
-    // modifier(
-    //     "abc !addNPC(Zuibroldun Jodem, dex = 5, magic = 11, fire's force=3) def"
-    // );
+    modifier(
+        "abc !addNPC(Zuibroldun Jodem, dex = 5, magic = 11, fire's force=3) def"
+    );
     // modifier(
     //     "Zuibroldun Jodem tries to die. !skillcheck(dex, Zuibroldun Jodem, 5 = lol : 10 = lmao, it 'Works. Hi 5. : 20 = You're losing.) Paparapapa."
     // );
@@ -1614,8 +1648,8 @@ if (!DEBUG) {
     // modifier("!sattack(Zuibroldun Jodem, str, Miguel, magic, magic)");
     // modifier("Setting stats... !setStats(Miguel, magic=120) Stats set");
     // modifier("!showstats(Miguel)");
-    modifier("!battle((Miguel, Librun), (Zuibroldun Jodem))");
-    // modifier("!attack(Miguel, magic, Zuibroldun Jodem, str)");
+    modifier("!battle((Zuibroldun Jodem, Librun), (Miguel))");
+    modifier("!attack(Miguel, magic, Zuibroldun Jodem, str)");
     // modifier("!showstats(Zuibroldun Jodem)");
     // modifier("!attack(Librun, magic, Zuibroldun Jodem, str)");
     // modifier("!skillcheck(str, Zuibroldun Jodem, 5)");
