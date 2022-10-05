@@ -339,29 +339,59 @@ const BestStat = (character) => {
     return bestStat;
 };
 
+//#region turn
 const turn = () => {
+    if (
+        !state.attackingCharacter?.isNpc &&
+        state.attackingCharacter !== undefined
+    ) {
+        const exp =
+            /(?:(?<escape>retreat|escape|exit)|(?:\((?<attackStat>[\w ']+), *)?(?<defendingCharacter>[\w\s']+)(?:, *(?<defenseStat>[\w ']+))?\))/i;
+        const match = textCopy.match(exp);
+        if (match === null) {
+            state.message =
+                "Battle turn: In battle you can only retreat or attack.\nFor further information read !battle section of README.";
+            return;
+        }
+        if (match.groups.escape) {
+            state.out += "\nParty retreated from the fight.";
+            delete state.inBattle;
+            delete state.attackingCharacter;
+            return;
+        }
+        //You ALWAYS have to pick a target
+        const defChar = match.groups.defendingCharacter;
+        //Grabs values or default for stats
+        const attackStat =
+            match.groups.attackStat || BestStat(state.attackingCharacter);
+        const defenseStat =
+            match.groups.defenseStat || BestStat(state.characters[defChar]);
+        let defendingCharacter;
+        const temp = Number(state.currentSide.substring(4)) + 1;
+        if (ElementInArray(defChar, state[`side${temp >= 3 ? 1 : temp}`]))
+            defendingCharacter = state.characters[defChar];
+        else {
+            state.message = `Battle turn: character ${defChar} doesn't belong to the other side of the battle.`;
+            return;
+        }
+        let attCharStat =
+            attackingCharacter[attackStat] !== undefined
+                ? attackingCharacter[attackStat].level
+                : 0;
+        let defCharStat =
+            defendingCharacter[defenseStat] !== undefined
+                ? defendingCharacter[defenseStat].level
+                : 0;
+    }
     while (
         state.attackingCharacter?.isNpc ||
         state.attackingCharacter === undefined
     ) {
-        if (!state.side1?.length) {
-            state.message =
-                "HP of all party members dropped to 0. Party retreated.";
-            modifiedText +=
-                "\nThe adventurers retreated, overwhelmed by the enemy.";
-            delete state.inBattle;
-            break;
-        } else if (!state.side2?.length) {
-            state.message = "You have won the battle!";
-            modifiedText += "\nThe adventurers have won the battle.";
-            delete state.inBattle;
-            break;
-        }
         const attCharInd = diceRoll(state.active.length) - 1;
-        const attChar = state.active[attCharInd];
+        const attChar = (state.activeCharacterName = state.active[attCharInd]);
         delete state.active[attCharInd];
         state.attackingCharacter = state.characters[attChar];
-        console.log(state.attackingCharacter);
+        //console.log(state.attackingCharacter);
         if (state.attackingCharacter === undefined) {
             continue;
         }
@@ -408,8 +438,26 @@ const turn = () => {
                       "hp."
             }`;
         }
+        //Checks if the battle should end after every attack
+        if (!state.side1?.length) {
+            state.message =
+                "HP of all party members dropped to 0. Party retreated.";
+            state.out +=
+                "\nThe adventurers retreated, overwhelmed by the enemy.";
+            delete state.inBattle;
+            delete state.attackingCharacter;
+            break;
+        } else if (!state.side2?.length) {
+            state.message = "You have won the battle!";
+            state.out += "\nThe adventurers have won the battle.";
+            delete state.inBattle;
+            delete state.attackingCharacter;
+            break;
+        }
     }
+    state.message = `Current turn: ${state.activeCharacterName}`;
 };
+//#endregion turn
 
 //#region skillcheck
 const skillcheck = (arguments) => {
@@ -674,6 +722,7 @@ const battle = (arguments) => {
                 .trim()
                 .split(",")
                 .map((el) => el.trim())
+                .filter((el) => state.characters[el]?.hp > 0)
         ),
     ];
     const side2 = [
@@ -682,6 +731,7 @@ const battle = (arguments) => {
                 .trim()
                 .split(",")
                 .map((el) => el.trim())
+                .filter((el) => state.characters[el]?.hp > 0)
         ),
     ];
 
@@ -697,14 +747,14 @@ const battle = (arguments) => {
                 return;
             }
         } else {
-            console.log(`${el}\n\n${state.characters}`);
-            state.message = `Battle: character ${el} doesn't exist.a`;
+            //console.log(`${el}\n\n${state.characters}`);
+            state.message = `Battle: character ${el} doesn't exist.`;
             return;
         }
     }
     for (const el of side2) {
         if (!ElementInArray(el, Object.keys(state.characters))) {
-            state.message = `Battle: character ${el} doesn't exist.b`;
+            state.message = `Battle: character ${el} doesn't exist.`;
             return;
         }
     }
@@ -1507,9 +1557,9 @@ const logs = () => {
         console.log(`In: ${modifiedText}`);
         console.log(`Context: ${state.ctxt}`);
         console.log(`Out: ${state.out}`);
-        console.log(`Message: ${state["message"]}`);
+        console.log(`Message: ${state.message}`);
         //console.log(state.characters);
-        console.log(state.inBattle);
+        //console.log(state.inBattle);
         /*for (key in state.characters) {
       console.log(`\n\n${key}:\n${state.characters[key]}`);
     }*/
@@ -1649,6 +1699,8 @@ if (!DEBUG) {
     // modifier("Setting stats... !setStats(Miguel, magic=120) Stats set");
     // modifier("!showstats(Miguel)");
     modifier("!battle((Zuibroldun Jodem, Librun), (Miguel))");
+    modifier("(Zuibroldun Jodem)");
+    modifier("Escape!");
     modifier("!attack(Miguel, magic, Zuibroldun Jodem, str)");
     // modifier("!showstats(Zuibroldun Jodem)");
     // modifier("!attack(Librun, magic, Zuibroldun Jodem, str)");
