@@ -74,6 +74,19 @@ Default calculation: attacker's stat + score of rolling a 20-sided dice - defend
 
 Instead of outputting something, it changes the input the way skillcheck does.
 
+## !sattack
+
+Syntax: `!sattack(attacking character, attacking stat, defending character, defending stat, dodging stat)`
+
+Main difference between this command and `!attack` is that before dealing damage script checks if the defending character dodged the damage.<br>
+Default dodge: both characters roll a 5-sided dice and att their stats (attacking and dodging). Defending character dodged if their score is greater than the attacker's.<br>
+
+While characters will be created with default stats, used stats need to be created BEFORE calling this command.<br>
+You can view and edit damage calculation at the top of input modifier. Additional info is provided there.<br>
+Default calculation: attacking stat + score of rolling a 20-sided dice - defending stat.
+
+Instead of outputting something, it changes the input the way skillcheck does.
+
 ## !heal
 
 Syntax: `!heal(character, <d>value)`
