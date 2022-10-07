@@ -23,6 +23,18 @@ whitespace characters and ' (apostrophe).
 
 If another character already has or had a stat not mentioned here, it is set to starting value.
 
+## !addNPC
+
+Syntax: `!addNPC(name, stat = value, stat2=value, stat3 = value, ..., statN=value)`
+
+Creates an NPC with given stats.
+
+Works the same way !addCharacter does, but:
+
+-   NPCs die when they are killed (AKA they are deleted)
+-   NPCs don't level
+-   NPCs attack automatically in battles, targeting a random enemy
+
 ## !setStats
 
 Syntax: `!setStats(character, stat = value, stat2=value, stat3 = value, ..., statN=value)`
@@ -86,6 +98,19 @@ You can view and edit damage calculation at the top of input modifier. Additiona
 Default calculation: attacking stat + score of rolling a 20-sided dice - defending stat.
 
 Instead of outputting something, it changes the input the way skillcheck does.
+
+## !battle
+
+Syntax: `!battle((character1, character2, ...), (character8, character9, ...))`
+
+Starts a battle between characters in the first and second bracket pair.
+
+Battle automatically sets which side and character attacks at the moment, and makes the NPCs attack their enemies.
+
+During battle you can only:
+
+-   retreat by writing escape, retreat or exit anywhere in the input
+-   attack a character from the other side of the battle with `(character)` or `(attacking stat, character, defending stat)`; if you are dodging by default, attacked character will try to dodge with defending stat used as dodging stat
 
 ## !heal
 
