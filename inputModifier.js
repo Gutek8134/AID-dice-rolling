@@ -2,7 +2,7 @@
 //!Function for calculating damage. Adjust it to your heart's content.
 //!Just make sure it won't divide by 0 (finally putting all the hours spent on learning math in high school to good use).
 const damage = (attackStat, defenseStat) => {
-    const dam =
+    let dam =
         /*You can edit from here*/ attackStat +
         diceRoll(20) -
         defenseStat; /*to here*/
@@ -19,13 +19,15 @@ const damage = (attackStat, defenseStat) => {
     //Raising to the power can be done using number1 ** number2
     //Where number1 is base and number2 is exponential
 
+    //If damage is less than 0, this line will set it to 0
+    if (dam < 0) dam = 0;
     return dam;
 };
 
 const dodge = (attackStat, dodgeStat) => {
-    dodged =
+    let dodged =
         /*You can edit from here*/ attackStat + diceRoll(5) <
-        dodgeStat + diceRoll(5) /*to here*/;
+        dodgeStat + diceRoll(5); /*to here*/
 
     //attackStat means attacker's statistic picked on calling !attack()
     //dodgeStat is accordingly, defender's statistic used for dodge
@@ -62,203 +64,210 @@ const defaultDodge = false;
 const levellingToOblivion = false;
 
 //!Should defending character also gain XP when !attack is used?
-const defendingCharacterLevels = true;
+const defendingCharacterLevels = false;
 
 //!Turns on debug code
-const DEBUG = true;
+const DEBUG = false;
+
+//!Turns on CLI when testing as stand-alone; used only if DEBUG is true
+const CLI = false;
 
 //Comment this if statement when debugging. End at line 213.
-//if (DEBUG) {
-//Dummy state
-let state = {
-    stats: [],
-    dice: 20,
-    startingLevel: 1,
-    startingHP: 100,
-    characters: {},
-    punishment: 5,
-    skillpointsOnLevelUp: 5,
-};
+if (DEBUG) {
+    //Dummy state
+    let state = {
+        stats: [],
+        dice: 20,
+        startingLevel: 1,
+        startingHP: 100,
+        characters: {},
+        punishment: 5,
+        skillpointsOnLevelUp: 5,
+    };
 
-//!Since I cannot import shared library locally, I will copy everything here. Debug purposes only.
+    //!Since I cannot import shared library locally, I will copy everything here. Debug purposes only.
 
-//!Function for calculating experience needed to level up. Adjust it to your heart's content
-const experienceCalculation = (level) => {
-    //Don't change it here, but in the shared library
-    //level is the current character/stat's level
-    const experience = /*You can edit from here*/ 2 * level; /*to here*/
+    //!Function for calculating experience needed to level up. Adjust it to your heart's content
+    const experienceCalculation = (level) => {
+        //Don't change it here, but in the shared library
+        //level is the current character/stat's level
+        const experience = /*You can edit from here*/ 2 * level; /*to here*/
 
-    return experience;
-};
+        return experience;
+    };
 
-//Increasing scalability by OOP
-class Stat {
-    constructor(name, level) {
-        if (
-            typeof name === "string" &&
-            (typeof level === "number" || typeof level === "undefined")
-        ) {
-            if (!isInStats(name)) {
-                state.stats.push(name);
+    //Increasing scalability by OOP
+    class Stat {
+        constructor(name, level) {
+            if (
+                typeof name === "string" &&
+                (typeof level === "number" || typeof level === "undefined")
+            ) {
+                if (!isInStats(name)) {
+                    state.stats.push(name);
+                }
+                this.level = level === undefined ? state.startingLevel : level;
+                if (levellingToOblivion) {
+                    this.experience = 0;
+                    this.expToNextLvl = experienceCalculation(this.level);
+                }
             }
-            this.level = level === undefined ? state.startingLevel : level;
+        }
+        toString() {
+            return `level = ${this.level} exp = ${
+                this.experience
+            } exp to lvl up=${this.expToNextLvl}(${
+                this.expToNextLvl - this.experience
+            })`;
+        }
+    }
+
+    //Blank character with starting level stats
+    class Character {
+        constructor(values) {
+            state.stats.forEach((stat) => {
+                this[stat] = new Stat(stat, state.startingLevel);
+            });
+            this.hp = state.startingHP;
+            this.level = 1;
+
+            if (values !== undefined) {
+                for (const el of values) {
+                    if (el[0] === "hp") {
+                        this.hp = el[1];
+                        continue;
+                    }
+                    if (el[0] === "level") {
+                        this.level = el[1];
+                        continue;
+                    }
+                    this[el[0]] = new Stat(el[0], el[1]);
+                }
+            }
+            this.experience = 0;
+            this.expToNextLvl = experienceCalculation(this.level);
+            this.skillpoints = 0;
+            this.isNpc = false;
+        }
+
+        toString() {
+            return CharToString(this);
+        }
+    }
+
+    class NPC {
+        constructor(values) {
+            state.stats.forEach((stat) => {
+                this[stat] = new Stat(stat, state.startingLevel);
+            });
+            this.hp = state.startingHP;
+            this.level = 1;
+
+            if (values !== undefined) {
+                for (const el of values) {
+                    if (el[0] === "hp") {
+                        this.hp = el[1];
+                        continue;
+                    }
+                    if (el[0] === "level") {
+                        this.level = el[1];
+                        continue;
+                    }
+                    this[el[0]] = new Stat(el[0], el[1]);
+                }
+            }
+            this.experience = 0;
+            this.expToNextLvl = experienceCalculation(this.level);
+            this.skillpoints = 0;
+            this.isNpc = true;
+        }
+
+        toString() {
+            return CharToString(this);
+        }
+    }
+
+    const isInStats = (name) => {
+        for (i in state.stats) {
+            if (name == state.stats[i]) {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    //Generates a value between 1 and maxValue
+    const diceRoll = (maxValue) => {
+        return Math.floor(Math.random() * maxValue) + 1;
+    };
+
+    const ignoredValues = [
+        "hp",
+        "level",
+        "experience",
+        "expToNextLvl",
+        "skillpoints",
+        "isNpc",
+    ];
+    const CharToString = (character) => {
+        let temp = levellingToOblivion
+            ? `hp: ${character.hp},\nisNPC: ${character.isNpc},\n`
+            : `hp: ${character.hp},\nlevel: ${character.level},\nskillpoints:${
+                  character.skillpoints
+              },\nexperience: ${character.experience},\nto level up: ${
+                  character.expToNextLvl
+              }(need ${
+                  character.expToNextLvl - character.experience
+              } more),\nisNpc: ${character.isNpc},\n`;
+        for (const key in character) {
+            if (key === "hp" || ElementInArray(key, ignoredValues)) {
+                continue;
+            }
+            const value = character[key];
             if (levellingToOblivion) {
-                this.experience = 0;
-                this.expToNextLvl = experienceCalculation(this.level);
+                temp += `${key}: level=${value.level}, exp=${
+                    value.experience
+                }, to lvl up=${value.expToNextLvl}(need ${
+                    value.expToNextLvl - value.experience
+                } more),\n`;
+            } else {
+                temp += `${key}: ${value.level},\n`;
             }
         }
-    }
-    toString() {
-        return `level = ${this.level} exp = ${this.experience} exp to lvl up=${
-            this.expToNextLvl
-        }(${this.expToNextLvl - this.experience})`;
-    }
-}
+        return temp.substring(0, temp.length - 2) == ""
+            ? "none"
+            : temp.substring(0, temp.length - 2);
+    };
 
-//Blank character with starting level stats
-class Character {
-    constructor(values) {
-        state.stats.forEach((stat) => {
-            this[stat] = new Stat(stat, state.startingLevel);
-        });
-        this.hp = state.startingHP;
-        this.level = 1;
+    //Returns whether character exists and has more than 0 HP, returns bool
+    const CharLives = (character) => {
+        if (!ElementInArray(character, Object.keys(state.characters)))
+            return false;
 
-        if (values !== undefined) {
-            for (const el of values) {
-                if (el[0] === "hp") {
-                    this.hp = el[1];
-                    continue;
+        return state.characters[character].hp > 0;
+    };
+
+    const ElementInArray = (element, array) => {
+        ret = false;
+        if (element !== undefined && typeof array === "object") {
+            for (const el of array) {
+                if (el === element) {
+                    ret = true;
+                    break;
                 }
-                if (el[0] === "level") {
-                    this.level = el[1];
-                    continue;
-                }
-                this[el[0]] = new Stat(el[0], el[1]);
             }
         }
-        this.experience = 0;
-        this.expToNextLvl = experienceCalculation(this.level);
-        this.skillpoints = 0;
-        this.isNpc = false;
-    }
+        return ret;
+    };
+    //!End of shared library
 
-    toString() {
-        return CharToString(this);
-    }
-}
-
-class NPC {
-    constructor(values) {
-        state.stats.forEach((stat) => {
-            this[stat] = new Stat(stat, state.startingLevel);
-        });
-        this.hp = state.startingHP;
-        this.level = 1;
-
-        if (values !== undefined) {
-            for (const el of values) {
-                if (el[0] === "hp") {
-                    this.hp = el[1];
-                    continue;
-                }
-                if (el[0] === "level") {
-                    this.level = el[1];
-                    continue;
-                }
-                this[el[0]] = new Stat(el[0], el[1]);
-            }
-        }
-        this.experience = 0;
-        this.expToNextLvl = experienceCalculation(this.level);
-        this.skillpoints = 0;
-        this.isNpc = true;
-    }
-
-    toString() {
-        return CharToString(this);
-    }
-}
-
-const isInStats = (name) => {
-    for (i in state.stats) {
-        if (name == state.stats[i]) {
-            return true;
-        }
-    }
-    return false;
-};
-
-//Generates a value between 1 and maxValue
-const diceRoll = (maxValue) => {
-    return Math.floor(Math.random() * maxValue) + 1;
-};
-
-const ignoredValues = [
-    "level",
-    "experience",
-    "expToNextLvl",
-    "skillpoints",
-    "isNpc",
-];
-const CharToString = (character) => {
-    let temp = levellingToOblivion
-        ? `hp: ${character.hp},\nisNPC: ${character.isNpc},\n`
-        : `hp: ${character.hp},\nlevel: ${character.level},\nskillpoints:${
-              character.skillpoints
-          },\nexperience: ${character.experience},\nto level up: ${
-              character.expToNextLvl
-          }(need ${
-              character.expToNextLvl - character.experience
-          } more),\nisNpc: ${character.isNpc},\n`;
-    for (const key in character) {
-        if (key === "hp" || ElementInArray(key, ignoredValues)) {
-            continue;
-        }
-        const value = character[key];
-        if (levellingToOblivion) {
-            temp += `${key}: level=${value.level}, exp=${
-                value.experience
-            }, to lvl up=${value.expToNextLvl}(need ${
-                value.expToNextLvl - value.experience
-            } more),\n`;
-        } else {
-            temp += `${key}: ${value.level},\n`;
-        }
-    }
-    return temp.substring(0, temp.length - 2) == ""
-        ? "none"
-        : temp.substring(0, temp.length - 2);
-};
-
-//Returns whether character exists and has more than 0 HP, returns bool
-const CharLives = (character) => {
-    if (!ElementInArray(character, Object.keys(state.characters))) return false;
-
-    return state.characters[character].hp > 0;
-};
-
-const ElementInArray = (element, array) => {
-    ret = false;
-    if (element !== undefined && typeof array === "object") {
-        for (const el of array) {
-            if (el === element) {
-                ret = true;
-                break;
-            }
-        }
-    }
-    return ret;
-};
-//!End of shared library
-
-//dummy character
-/*
+    //dummy character
+    /*
 state.characters.Miguel = new Character();
 state.characters.Miguel.str = new Stat("str");
 state.characters.Miguel.dex = new Stat("dex", 10);
 state.characters.Miguel.int = new Stat("int", 5);*/
-//}
+}
 
 //Produces outcome from two-dimensional array in format [[minimum score, outcome],]
 const CustomOutcome = (score, values) => {
@@ -327,7 +336,7 @@ const CutCommand = () => {
 };
 
 const BestStat = (character) => {
-    let bestStat = { level: -Infinity };
+    let bestStat;
     for (const key in character) {
         if (ElementInArray(key, ignoredValues)) continue;
         else if (
@@ -336,11 +345,12 @@ const BestStat = (character) => {
         )
             bestStat = key;
     }
-    return bestStat;
+    return bestStat ?? state.stats[0];
 };
 
 //#region turn
 const turn = () => {
+    console.log(state.active);
     if (
         !state.attackingCharacter?.isNpc &&
         state.attackingCharacter !== undefined
@@ -359,84 +369,130 @@ const turn = () => {
             delete state.attackingCharacter;
             return;
         }
+        const temp = Number(state.currentSide.substring(4)) + 1;
+        const attacked = `side${temp >= 3 ? 1 : temp}`;
+        const attChar = state.activeCharacterName;
         //You ALWAYS have to pick a target
         const defChar = match.groups.defendingCharacter;
+        const defCharInd = state[attacked].findIndex((el) => el === defChar);
         //Grabs values or default for stats
         const attackStat =
             match.groups.attackStat || BestStat(state.attackingCharacter);
         const defenseStat =
             match.groups.defenseStat || BestStat(state.characters[defChar]);
         let defendingCharacter;
-        const temp = Number(state.currentSide.substring(4)) + 1;
-        if (ElementInArray(defChar, state[`side${temp >= 3 ? 1 : temp}`]))
-            defendingCharacter = state.characters[defChar];
-        else {
+        if (!ElementInArray(defChar, state[attacked])) {
             state.message = `Battle turn: character ${defChar} doesn't belong to the other side of the battle.`;
             return;
         }
+        defendingCharacter = state.characters[defChar];
         let attCharStat =
-            attackingCharacter[attackStat] !== undefined
-                ? attackingCharacter[attackStat].level
+            state.attackingCharacter[attackStat] !== undefined
+                ? state.attackingCharacter[attackStat].level
                 : 0;
         let defCharStat =
             defendingCharacter[defenseStat] !== undefined
                 ? defendingCharacter[defenseStat].level
                 : 0;
-    }
-    while (
-        state.attackingCharacter?.isNpc ||
-        state.attackingCharacter === undefined
-    ) {
-        const attCharInd = diceRoll(state.active.length) - 1;
-        const attChar = (state.activeCharacterName = state.active[attCharInd]);
-        delete state.active[attCharInd];
-        state.attackingCharacter = state.characters[attChar];
-        //console.log(state.attackingCharacter);
-        if (state.attackingCharacter === undefined) {
-            continue;
+        //(Unless you are not ignoring zero division. In this case zeroes are changed to ones to avoid zero division error.)
+        if (!ignoreZeroDiv) {
+            attCharStat = attCharStat === 0 ? 1 : attCharStat;
+            defCharStat = defCharStat === 0 ? 1 : defCharStat;
         }
-        if (state.attackingCharacter.isNpc) {
-            const temp = Number(state.currentSide.substring(4)) + 1;
-            const attacked = `side${temp >= 3 ? 1 : temp}`;
-            const defCharInd = diceRoll(state[attacked].length) - 1;
-            const defChar = state[attacked][defCharInd];
-            const defendingCharacter = state.characters[defChar];
-            const attackStat = BestStat(state.attackingCharacter);
-            const defenseStat = BestStat(defendingCharacter);
-            const attCharStat = state.attackingCharacter[attackStat].level;
-            const defCharStat = defendingCharacter[defenseStat].level;
-            if (defaultDodge) {
-                if (dodge(attCharStat, defCharStat)) {
-                    state.out += `\n${attChar}(${attackStat}: ${attCharStat}) attacked ${defChar}(${defenseStat}: ${defCharStat}), but missed.`;
-                    continue;
+        //Calculating damage
+        const dam = damage(attCharStat, defCharStat);
+        //Damaging
+        state.characters[defChar].hp -= dam;
+
+        //Gives the player necessary info.
+        state.out += `\n${attChar} (${attackStat}: ${attCharStat}) attacked ${defChar} (${defenseStat}: ${defCharStat}) dealing ${CustomDamageOutput(
+            dam,
+            damageOutputs
+        )} (${dam}).\n${
+            state.characters[defChar].hp <= 0
+                ? defChar +
+                  (state.characters[defChar].isNpc ? " died." : " retreated.")
+                : defChar + " now has " + state.characters[defChar].hp + "hp."
+        }`;
+        //#region levels
+        //Checks whether to level up stats or characters
+        if (levellingToOblivion) {
+            //Increases experience by 1 and checks whether it's enough to level the stat up
+            if (
+                ++state.attackingCharacter[attackStat].experience >=
+                state.attackingCharacter[attackStat].expToNextLvl
+            ) {
+                //If it is, experience is set to 0,
+                state.attackingCharacter[attackStat].experience = 0;
+                //level increased and expToNextLevel re-calculated
+                state.attackingCharacter[attackStat].expToNextLvl =
+                    experienceCalculation(
+                        ++state.attackingCharacter[attackStat].level
+                    );
+                state.out += ` ${attChar}'s ${attackStat} has levelled up to level ${state.attackingCharacter[attackStat].level}!`;
+            }
+        } else {
+            //Increases experience by 1 and checks whether it's enough to level the character up
+            if (
+                ++state.attackingCharacter.experience >=
+                state.attackingCharacter.expToNextLvl
+            ) {
+                //If it is, experience is set to 0,
+                state.attackingCharacter.experience = 0;
+                //level increased and expToNextLevel re-calculated
+                state.attackingCharacter.expToNextLvl = experienceCalculation(
+                    ++state.attackingCharacter.level
+                );
+                //In the case of attackingCharacter levelling up, it also gains free skillpoints
+                state.attackingCharacter.skillpoints +=
+                    state.skillpointsOnLevelUp;
+                state.out += ` ${attChar} has levelled up to level ${state.attackingCharacter.level} (free skillpoints: ${state.attackingCharacter.skillpoints})!`;
+            }
+        }
+        if (defendingCharacterLevels && !defendingCharacter.isNpc) {
+            //Checks whether to level up stats or characters
+            if (levellingToOblivion) {
+                //Increases experience by 1 and checks whether it's enough to level the stat up
+                if (
+                    ++defendingCharacter[defenseStat].experience >=
+                    defendingCharacter[defenseStat].expToNextLvl
+                ) {
+                    //If it is, experience is set to 0,
+                    defendingCharacter[defenseStat].experience = 0;
+                    //level increased and expToNextLevel re-calculated
+                    defendingCharacter[defenseStat].expToNextLvl =
+                        experienceCalculation(
+                            ++defendingCharacter[defenseStat].level
+                        );
+                    state.out += ` ${defChar}'s ${defenseStat} has levelled up to level ${defendingCharacter[defenseStat].level}!`;
+                }
+            } else {
+                //Increases experience by 1 and checks whether it's enough to level the defendingCharacter up
+                if (
+                    ++defendingCharacter.experience >=
+                    defendingCharacter.expToNextLvl
+                ) {
+                    //If it is, experience is set to 0,
+                    defendingCharacter.experience = 0;
+                    //level increased and expToNextLevel re-calculated
+                    defendingCharacter.expToNextLvl = experienceCalculation(
+                        ++defendingCharacter.level
+                    );
+                    //In the case of defendingCharacter levelling up, it also gains free skillpoints
+                    defendingCharacter.skillpoints +=
+                        state.skillpointsOnLevelUp;
+                    state.out += ` ${defChar} has levelled up to level ${defendingCharacter.level} (free skillpoints: ${defendingCharacter.skillpoints})!`;
                 }
             }
-            //Calculating damage
-            const dam = damage(attCharStat, defCharStat);
-            //Damaging
-            state.characters[defChar].hp -= dam;
-            if (state.characters[defChar].hp <= 0) {
-                state.characters[defChar].hp = 0;
-                //If character's hp falls below 0, they are removed from the battle
-                delete state[attacked][defCharInd];
-                //NPCs die when they are killed
-                if (state.characters[defChar].isNpc)
-                    delete state.characters[defChar];
-            }
-            //Gives the player necessary info.
-            state.out += `\n${attChar} (${attackStat}: ${attCharStat}) attacked ${defChar} (${defenseStat}: ${defCharStat}) dealing ${CustomDamageOutput(
-                dam,
-                damageOutputs
-            )} (${dam}).\n${
-                state.characters[defChar].hp <= 0
-                    ? defChar + state.characters[defChar].isNpc
-                        ? " died."
-                        : " retreated."
-                    : defChar +
-                      " now has " +
-                      state.characters[defChar].hp +
-                      "hp."
-            }`;
+        }
+        //#endregion levels
+        if (state.characters[defChar]?.hp <= 0) {
+            state.characters[defChar].hp = 0;
+            //If character's hp falls below 0, they are removed from the battle
+            state[attacked].splice(defCharInd, 1);
+            //NPCs die when they are killed
+            if (state.characters[defChar].isNpc)
+                delete state.characters[defChar];
         }
         //Checks if the battle should end after every attack
         if (!state.side1?.length) {
@@ -446,16 +502,147 @@ const turn = () => {
                 "\nThe adventurers retreated, overwhelmed by the enemy.";
             delete state.inBattle;
             delete state.attackingCharacter;
-            break;
+            return;
         } else if (!state.side2?.length) {
             state.message = "You have won the battle!";
             state.out += "\nThe adventurers have won the battle.";
             delete state.inBattle;
             delete state.attackingCharacter;
+            return;
+        }
+        state.active.splice(state.attCharInd, 1);
+        if (!state.active?.length) {
+            const temp = Number(state.currentSide.substring(4)) + 1;
+            state.currentSide = `side${temp >= 3 ? 1 : temp}`;
+            state.active = [...state[state.currentSide]];
+        }
+        state.attCharInd = diceRoll(state.active.length) - 1;
+        state.activeCharacterName = state.active[state.attCharInd];
+        state.attackingCharacter = state.characters[state.activeCharacterName];
+    }
+    while (
+        state.attackingCharacter?.isNpc ||
+        state.attackingCharacter === undefined
+    ) {
+        if (!state.active?.length) {
+            const temp = Number(state.currentSide.substring(4)) + 1;
+            state.currentSide = `side${temp >= 3 ? 1 : temp}`;
+            state.active = [...state[state.currentSide]];
+        }
+        state.attCharInd = diceRoll(state.active.length) - 1;
+        const attChar = (state.activeCharacterName =
+            state.active[state.attCharInd]);
+        state.attackingCharacter = state.characters[attChar];
+        //console.log(state.attackingCharacter);
+        if (
+            state.attackingCharacter === undefined ||
+            !state.attackingCharacter?.isNpc
+        ) {
             break;
+        }
+        const temp = Number(state.currentSide.substring(4)) + 1;
+        const attacked = `side${temp >= 3 ? 1 : temp}`;
+        const defCharInd = diceRoll(state[attacked].length) - 1;
+        const defChar = state[attacked][defCharInd];
+        const defendingCharacter = state.characters[defChar];
+        const attackStat = BestStat(state.attackingCharacter);
+        const defenseStat = BestStat(defendingCharacter);
+        const attCharStat = state.attackingCharacter[attackStat].level;
+        const defCharStat = defendingCharacter[defenseStat].level;
+        if (defaultDodge) {
+            if (dodge(attCharStat, defCharStat)) {
+                state.out += `\n${attChar}(${attackStat}: ${attCharStat}) attacked ${defChar}(${defenseStat}: ${defCharStat}), but missed.`;
+                continue;
+            }
+        }
+        //Calculating damage
+        const dam = damage(attCharStat, defCharStat);
+        //Damaging
+        state.characters[defChar].hp -= dam;
+        //Deactivating character
+        state.active.splice(state.attCharInd, 1);
+        //Gives the player necessary info.
+        state.out += `\n${attChar} (${attackStat}: ${attCharStat}) attacked ${defChar} (${defenseStat}: ${defCharStat}) dealing ${CustomDamageOutput(
+            dam,
+            damageOutputs
+        )} (${dam}).\n${
+            state.characters[defChar].hp <= 0
+                ? defChar +
+                  (state.characters[defChar].isNpc ? " died." : " retreated.")
+                : defChar + " now has " + state.characters[defChar].hp + "hp."
+        }`;
+
+        //#region  levels
+        if (defendingCharacterLevels && !defendingCharacter.isNpc) {
+            //Checks whether to level up stats or characters
+            if (levellingToOblivion) {
+                //Increases experience by 1 and checks whether it's enough to level the stat up
+                if (
+                    ++defendingCharacter[defenseStat].experience >=
+                    defendingCharacter[defenseStat].expToNextLvl
+                ) {
+                    //If it is, experience is set to 0,
+                    defendingCharacter[defenseStat].experience = 0;
+                    //level increased and expToNextLevel re-calculated
+                    defendingCharacter[defenseStat].expToNextLvl =
+                        experienceCalculation(
+                            ++defendingCharacter[defenseStat].level
+                        );
+                    state.out += ` ${defChar}'s ${defenseStat} has levelled up to level ${defendingCharacter[defenseStat].level}!`;
+                }
+            } else {
+                //Increases experience by 1 and checks whether it's enough to level the defendingCharacter up
+                if (
+                    ++defendingCharacter.experience >=
+                    defendingCharacter.expToNextLvl
+                ) {
+                    //If it is, experience is set to 0,
+                    defendingCharacter.experience = 0;
+                    //level increased and expToNextLevel re-calculated
+                    defendingCharacter.expToNextLvl = experienceCalculation(
+                        ++defendingCharacter.level
+                    );
+                    //In the case of defendingCharacter levelling up, it also gains free skillpoints
+                    defendingCharacter.skillpoints +=
+                        state.skillpointsOnLevelUp;
+                    state.out += ` ${defChar} has levelled up to level ${defendingCharacter.level} (free skillpoints: ${defendingCharacter.skillpoints})!`;
+                }
+            }
+        }
+        //#endregion levels
+
+        if (state.characters[defChar].hp <= 0) {
+            state.characters[defChar].hp = 0;
+            //If character's hp falls below 0, they are removed from the battle
+            state[attacked].splice(defCharInd, 1);
+            //NPCs die when they are killed
+            if (state.characters[defChar].isNpc)
+                delete state.characters[defChar];
+        }
+        //Checks if the battle should end after every attack
+        if (!state.side1?.length) {
+            state.message =
+                "HP of all party members dropped to 0. Party retreated.";
+            state.out +=
+                "\nThe adventurers retreated, overwhelmed by the enemy.";
+            delete state.inBattle;
+            delete state.attackingCharacter;
+            return;
+        } else if (!state.side2?.length) {
+            state.message = "You have won the battle!";
+            state.out += "\nThe adventurers have won the battle.";
+            delete state.inBattle;
+            delete state.attackingCharacter;
+            return;
+        }
+        if (!state.active?.length) {
+            const temp = Number(state.currentSide.substring(4)) + 1;
+            state.currentSide = `side${temp >= 3 ? 1 : temp}`;
+            state.active = [...state[state.currentSide]];
         }
     }
     state.message = `Current turn: ${state.activeCharacterName}`;
+    console.log(state.active);
 };
 //#endregion turn
 
@@ -663,6 +850,7 @@ const skillcheck = (arguments) => {
     }
     if (character.isNpc) {
         //console.log("NPCs don't level up");
+        modifiedText += textCopy.substring(currIndices[1]);
         return;
     }
     //Checks whether to level up stats or characters
@@ -697,7 +885,6 @@ const skillcheck = (arguments) => {
 
 //#region battle
 const battle = (arguments) => {
-    CutCommand();
     //Error checking
     if (arguments === undefined || arguments === null || arguments === "") {
         state.message = "Battle: No arguments found.";
@@ -765,6 +952,7 @@ const battle = (arguments) => {
     state.currentSide = `side${diceRoll(2)}`;
     state.active = [...state[state.currentSide]];
     state.inBattle = true;
+    state.out = "A battle has emerged between two groups!";
     turn();
 };
 //#endregion battle
@@ -852,15 +1040,18 @@ const attack = (arguments) => {
     const dam = damage(attCharStat, defCharStat);
     //Damaging
     state.characters[defChar].hp -= dam;
-    if (state.characters[defChar].hp < 0) {
-        state.characters[defChar].hp = 0;
-    }
 
     //Modifies the context, so AI will not know the exact values
     const mess = `${attChar} attacked ${defChar} dealing ${CustomDamageOutput(
         dam,
         damageOutputs
     )}.${state.characters[defChar].hp <= 0 ? "\n" + defChar + " died." : ""}`;
+
+    if (state.characters[defChar].hp <= 0) {
+        state.characters[defChar].hp = 0;
+        //NPCs die when they are killed
+        if (state.characters[defChar].isNpc) delete state.characters[defChar];
+    }
 
     state.ctxt =
         state.ctxt !== ""
@@ -884,47 +1075,45 @@ const attack = (arguments) => {
         }`;
 
     //#region  levels
-    if (attackingCharacter.isNpc) {
-        //console.log("NPCs don't level up - attack");
-        return;
-    }
-    //Checks whether to level up stats or characters
-    if (levellingToOblivion) {
-        //Increases experience by 1 and checks whether it's enough to level the stat up
-        if (
-            ++attackingCharacter[attackStat].experience >=
-            attackingCharacter[attackStat].expToNextLvl
-        ) {
-            //If it is, experience is set to 0,
-            attackingCharacter[attackStat].experience = 0;
-            //level increased and expToNextLevel re-calculated
-            attackingCharacter[attackStat].expToNextLvl = experienceCalculation(
-                ++attackingCharacter[attackStat].level
-            );
-            modifiedText += ` ${attChar}'s ${attackStat} has levelled up to level ${attackingCharacter[attackStat].level}!`;
-        }
-    } else {
-        //Increases experience by 1 and checks whether it's enough to level the character up
-        if (
-            ++attackingCharacter.experience >= attackingCharacter.expToNextLvl
-        ) {
-            //If it is, experience is set to 0,
-            attackingCharacter.experience = 0;
-            //level increased and expToNextLevel re-calculated
-            attackingCharacter.expToNextLvl = experienceCalculation(
-                ++attackingCharacter.level
-            );
-            //In the case of attackingCharacter levelling up, it also gains free skillpoints
-            attackingCharacter.skillpoints += state.skillpointsOnLevelUp;
-            modifiedText += ` ${attChar} has levelled up to level ${attackingCharacter.level} (free skillpoints: ${attackingCharacter.skillpoints})!`;
+    if (!attackingCharacter.isNpc) {
+        //Checks whether to level up stats or characters
+        if (levellingToOblivion) {
+            //Increases experience by 1 and checks whether it's enough to level the stat up
+            if (
+                ++attackingCharacter[attackStat].experience >=
+                attackingCharacter[attackStat].expToNextLvl
+            ) {
+                //If it is, experience is set to 0,
+                attackingCharacter[attackStat].experience = 0;
+                //level increased and expToNextLevel re-calculated
+                attackingCharacter[attackStat].expToNextLvl =
+                    experienceCalculation(
+                        ++attackingCharacter[attackStat].level
+                    );
+                modifiedText += ` ${attChar}'s ${attackStat} has levelled up to level ${attackingCharacter[attackStat].level}!`;
+            }
+        } else {
+            //Increases experience by 1 and checks whether it's enough to level the character up
+            if (
+                ++attackingCharacter.experience >=
+                attackingCharacter.expToNextLvl
+            ) {
+                //If it is, experience is set to 0,
+                attackingCharacter.experience = 0;
+                //level increased and expToNextLevel re-calculated
+                attackingCharacter.expToNextLvl = experienceCalculation(
+                    ++attackingCharacter.level
+                );
+                //In the case of attackingCharacter levelling up, it also gains free skillpoints
+                attackingCharacter.skillpoints += state.skillpointsOnLevelUp;
+                modifiedText += ` ${attChar} has levelled up to level ${attackingCharacter.level} (free skillpoints: ${attackingCharacter.skillpoints})!`;
+            }
         }
     }
     if (defendingCharacter.isNpc) {
         if (state.characters[defChar].hp <= 0) delete state.characters[defChar];
         //console.log("NPCs don't level up - defense");
-        return;
-    }
-    if (defendingCharacterLevels) {
+    } else if (defendingCharacterLevels) {
         //Checks whether to level up stats or characters
         if (levellingToOblivion) {
             //Increases experience by 1 and checks whether it's enough to level the stat up
@@ -1069,9 +1258,6 @@ const sattack = (arguments) => {
     const dam = damage(attCharStat, defCharStat);
     //Damaging
     state.characters[defChar].hp -= dam;
-    if (state.characters[defChar].hp < 0) {
-        state.characters[defChar].hp = 0;
-    }
 
     //Modifies the context, so AI will not know the exact values
     const mess = `${attChar} attacked ${defChar} and hit dealing ${CustomDamageOutput(
@@ -1079,6 +1265,13 @@ const sattack = (arguments) => {
         damageOutputs
     )}.${state.characters[defChar].hp <= 0 ? "\n" + defChar + " died." : ""}`;
 
+    if (state.characters[defChar].hp <= 0) {
+        state.characters[defChar].hp = 0;
+        //If character's hp falls below 0, they are removed from the battle
+        state[attacked].splice(defCharInd, 1);
+        //NPCs die when they are killed
+        if (state.characters[defChar].isNpc) delete state.characters[defChar];
+    }
     state.ctxt =
         state.ctxt !== ""
             ? state.ctxt.substring(0, currIndices[0]) +
@@ -1101,38 +1294,44 @@ const sattack = (arguments) => {
         }`;
 
     //#region levels
-    //Checks whether to level up stats or characters
-    if (levellingToOblivion) {
-        //Increases experience by 1 and checks whether it's enough to level the stat up
-        if (
-            ++attackingCharacter[attackStat].experience >=
-            attackingCharacter[attackStat].expToNextLvl
-        ) {
-            //If it is, experience is set to 0,
-            attackingCharacter[attackStat].experience = 0;
-            //level increased and expToNextLevel re-calculated
-            attackingCharacter[attackStat].expToNextLvl = experienceCalculation(
-                ++attackingCharacter[attackStat].level
-            );
-            modifiedText += ` ${attChar}'s ${attackStat} has levelled up to level ${attackingCharacter[attackStat].level}!`;
-        }
-    } else {
-        //Increases experience by 1 and checks whether it's enough to level the character up
-        if (
-            ++attackingCharacter.experience >= attackingCharacter.expToNextLvl
-        ) {
-            //If it is, experience is set to 0,
-            attackingCharacter.experience = 0;
-            //level increased and expToNextLevel re-calculated
-            attackingCharacter.expToNextLvl = experienceCalculation(
-                ++attackingCharacter.level
-            );
-            //In the case of attackingCharacter levelling up, it also gains free skillpoints
-            attackingCharacter.skillpoints += state.skillpointsOnLevelUp;
-            modifiedText += ` ${attChar} has levelled up to level ${attackingCharacter.level} (free skillpoints: ${attackingCharacter.skillpoints})!`;
+    if (!attackingCharacter.isNpc) {
+        //Checks whether to level up stats or characters
+        if (levellingToOblivion) {
+            //Increases experience by 1 and checks whether it's enough to level the stat up
+            if (
+                ++attackingCharacter[attackStat].experience >=
+                attackingCharacter[attackStat].expToNextLvl
+            ) {
+                //If it is, experience is set to 0,
+                attackingCharacter[attackStat].experience = 0;
+                //level increased and expToNextLevel re-calculated
+                attackingCharacter[attackStat].expToNextLvl =
+                    experienceCalculation(
+                        ++attackingCharacter[attackStat].level
+                    );
+                modifiedText += ` ${attChar}'s ${attackStat} has levelled up to level ${attackingCharacter[attackStat].level}!`;
+            }
+        } else {
+            //Increases experience by 1 and checks whether it's enough to level the character up
+            if (
+                ++attackingCharacter.experience >=
+                attackingCharacter.expToNextLvl
+            ) {
+                //If it is, experience is set to 0,
+                attackingCharacter.experience = 0;
+                //level increased and expToNextLevel re-calculated
+                attackingCharacter.expToNextLvl = experienceCalculation(
+                    ++attackingCharacter.level
+                );
+                //In the case of attackingCharacter levelling up, it also gains free skillpoints
+                attackingCharacter.skillpoints += state.skillpointsOnLevelUp;
+                modifiedText += ` ${attChar} has levelled up to level ${attackingCharacter.level} (free skillpoints: ${attackingCharacter.skillpoints})!`;
+            }
         }
     }
-    if (defendingCharacterLevels) {
+    if (defendingCharacter.isNpc) {
+        if (state.characters[defChar].hp <= 0) delete state.characters[defChar];
+    } else if (defendingCharacterLevels) {
         //Checks whether to level up stats or characters
         if (levellingToOblivion) {
             //Increases experience by 1 and checks whether it's enough to level the stat up
@@ -1553,11 +1752,12 @@ setState = (arguments) => {
 const logs = () => {
     //!Debug info, uncomment when you need
     if (DEBUG) {
-        //console.log(`Og: ${text}`);
+        //console.log(`Og: ${textCopy}`);
         console.log(`In: ${modifiedText}`);
         console.log(`Context: ${state.ctxt}`);
         console.log(`Out: ${state.out}`);
         console.log(`Message: ${state.message}`);
+        //console.log(state.side1, state.side2);
         //console.log(state.characters);
         //console.log(state.inBattle);
         /*for (key in state.characters) {
@@ -1579,12 +1779,19 @@ const modifier = (text) => {
 
     //#region battle handling
     if (state.inBattle) {
+        temp = text.match(
+            /\((?:(?<attackStat>[\w ']+), *)?(?<defendingCharacter>[\w\s']+)(?:, *(?<defenseStat>[\w ']+))?\)/i
+        )?.[0];
+        if (temp !== undefined)
+            modifiedText = modifiedText.substring(
+                text.indexOf(temp),
+                text.indexOf(temp) + temp.length
+            );
         if (!state.active?.length) {
             const temp = Number(state.currentSide.substring(4)) + 1;
             state.currentSide = `side${temp >= 3 ? 1 : temp}`;
             state.active = [...state[state.currentSide]];
         }
-
         turn();
         logs();
         return { text: modifiedText };
@@ -1675,42 +1882,52 @@ if (!DEBUG) {
     // Don't modify this part
     modifier(text);
 } else {
-    //!test
+    //!fixed tests
     modifier("!addcharacter(Librun, level=5)");
-    // modifier("!showstats(Librun)");
-    modifier("!addCharacter(Miguel, str=1, dex=5, int=3, hp=1000)");
-    // modifier(
-    //     "Miguel tries to evade an arrow. !skillcheck(dex, Miguel, 3) Is he blind?"
-    // );
-    // modifier("!skillcheck(int, Miguel, 5000)");
-    // modifier("!skillcheck(str, Miguel, 5 : 11)");
-    // modifier("!skillcheck(str, Miguel, 25 : 14 : 22)");
-    // modifier("!skillcheck(dex, Miguel, 5 : 12 : 15 : 20)");
-    // modifier("!This is a normal input!");
+    modifier("!showstats(Librun)");
+    modifier("!addCharacter(Miguel, str=1, dex=5, int=3, hp=10)");
+    modifier(
+        "Miguel tries to evade an arrow. !skillcheck(dex, Miguel, 3) Is he blind?"
+    );
+    modifier("!skillcheck(int, Miguel, 5000)");
+    modifier("!skillcheck(str, Miguel, 5 : 11)");
+    modifier("!skillcheck(str, Miguel, 25 : 14 : 22)");
+    modifier("!skillcheck(dex, Miguel, 5 : 12 : 15 : 20)");
+    modifier("!This is a normal input!");
     modifier(
         "abc !addNPC(Zuibroldun Jodem, dex = 5, magic = 11, fire's force=3) def"
     );
-    // modifier(
-    //     "Zuibroldun Jodem tries to die. !skillcheck(dex, Zuibroldun Jodem, 5 = lol : 10 = lmao, it 'Works. Hi 5. : 20 = You're losing.) Paparapapa."
-    // );
-    // modifier("!skillcheck(magic, Miguel, 3)");
-    // modifier("!levelStats(Miguel, str +4, magic+ 3, dex + 3)");
-    // modifier("!sattack(Zuibroldun Jodem, str, Miguel, magic, magic)");
-    // modifier("Setting stats... !setStats(Miguel, magic=120) Stats set");
-    // modifier("!showstats(Miguel)");
+    modifier(
+        "Zuibroldun Jodem tries to die. !skillcheck(dex, Zuibroldun Jodem, 5 = lol : 10 = lmao, it 'Works. Hi 5. : 20 = You're losing.) Paparapapa."
+    );
+    modifier("!skillcheck(magic, Miguel, 3)");
+    modifier("!levelStats(Miguel, str +4, magic+ 3, dex + 3)");
+    modifier("!sattack(Zuibroldun Jodem, str, Miguel, magic, magic)");
+    modifier("Setting stats... !setStats(Miguel, magic=120) Stats set");
+    modifier("!showstats(Miguel)");
     modifier("!battle((Zuibroldun Jodem, Librun), (Miguel))");
-    modifier("(Zuibroldun Jodem)");
+    modifier("Miguel throws a rock at Zuibroldun Jodem. (Zuibroldun Jodem)");
     modifier("Escape!");
     modifier("!attack(Miguel, magic, Zuibroldun Jodem, str)");
-    // modifier("!showstats(Zuibroldun Jodem)");
-    // modifier("!attack(Librun, magic, Zuibroldun Jodem, str)");
-    // modifier("!skillcheck(str, Zuibroldun Jodem, 5)");
-    // modifier(
-    //     "Miguel felt guilty about what he has done. !revive(Miguel, Zuibroldun Jodem, 10)"
-    // );
-    // modifier("!heal(Zuibroldun Jodem, 100)");
-    // modifier("!levelStats(Zuibroldun Jodem, fire's force + 2)");
+    modifier("!showstats(Zuibroldun Jodem)");
+    modifier("!attack(Librun, magic, Zuibroldun Jodem, str)");
+    modifier("!skillcheck(str, Zuibroldun Jodem, 5)");
+    modifier(
+        "Miguel felt guilty about what he has done. !revive(Miguel, Zuibroldun Jodem, 10)"
+    );
+    modifier("!heal(Zuibroldun Jodem, 100)");
+    modifier("!levelStats(Zuibroldun Jodem, fire's force + 2)");
     /*modifier("!getState()");
   console.log("\n\n\n");
   modifier('!setState({"dice":10})');*/
+    //!CLI
+    if (CLI) {
+        const prompt = require("prompt-sync")();
+        console.log("Now you can use CLI.\nTo exit send 'q'.");
+        let input = prompt("");
+        while (input !== "q") {
+            modifier(input);
+            input = prompt("");
+        }
+    }
 }
