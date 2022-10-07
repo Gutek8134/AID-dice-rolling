@@ -1783,10 +1783,9 @@ const modifier = (text) => {
             /\((?:(?<attackStat>[\w ']+), *)?(?<defendingCharacter>[\w\s']+)(?:, *(?<defenseStat>[\w ']+))?\)/i
         )?.[0];
         if (temp !== undefined)
-            modifiedText = modifiedText.substring(
-                text.indexOf(temp),
-                text.indexOf(temp) + temp.length
-            );
+            modifiedText =
+                modifiedText.substring(0, text.indexOf(temp)) +
+                modifiedText.substring(text.indexOf(temp) + temp.length);
         if (!state.active?.length) {
             const temp = Number(state.currentSide.substring(4)) + 1;
             state.currentSide = `side${temp >= 3 ? 1 : temp}`;
