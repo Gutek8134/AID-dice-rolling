@@ -67,12 +67,12 @@ const levellingToOblivion = false;
 const defendingCharacterLevels = false;
 
 //!Turns on debug code
-const DEBUG = true;
+const DEBUG = false;
 
 <<<<<<< Updated upstream
 =======
 //!Executes automated tests before enabling CLI
-const TESTS = true;
+const TESTS = false;
 
 >>>>>>> Stashed changes
 //!Turns on CLI when testing as stand-alone; used only if DEBUG is true
