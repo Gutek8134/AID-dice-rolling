@@ -125,8 +125,7 @@ Outputs healing value and resulting hp.
 Examples:<br>
 `!heal(Zuibroldun Jodem, 100)` - will heal Zuibroldun Jodem by 100 hp (unless they do not exist or are dead)<br>
 `!heal(Zuibroldun Jodem, d100)` - will heal Zuibroldun Jodem by 1 to 100 hp<br>
-I plan on adding a min-max setter that will look like:<br>
-`!heal(Zuibroldun Jodem, 50:100)`, healing Zuibroldun by 50 to 100 hp
+`!heal(Zuibroldun Jodem, 50:100)` - wil heal Zuibroldun by 50 to 100 hp
 
 ## !revive
 
