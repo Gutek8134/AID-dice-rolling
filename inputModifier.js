@@ -69,12 +69,9 @@ const defendingCharacterLevels = false;
 //!Turns on debug code
 const DEBUG = false;
 
-<<<<<<< Updated upstream
-=======
 //!Executes automated tests before enabling CLI
 const TESTS = false;
 
->>>>>>> Stashed changes
 //!Turns on CLI when testing as stand-alone; used only if DEBUG is true
 const CLI = false;
 
@@ -1901,47 +1898,9 @@ if (!DEBUG) {
     // Don't modify this part
     modifier(text);
 } else {
-<<<<<<< Updated upstream
-    //!fixed tests
-    modifier("!addcharacter(Librun, level=5)");
-    modifier("!showstats(Librun)");
-    modifier("!addCharacter(Miguel, str=1, dex=5, int=3, hp=10)");
-    modifier(
-        "Miguel tries to evade an arrow. !skillcheck(dex, Miguel, 3) Is he blind?"
-    );
-    modifier("!skillcheck(int, Miguel, 5000)");
-    modifier("!skillcheck(str, Miguel, 5 : 11)");
-    modifier("!skillcheck(str, Miguel, 25 : 14 : 22)");
-    modifier("!skillcheck(dex, Miguel, 5 : 12 : 15 : 20)");
-    modifier("!This is a normal input!");
-    modifier(
-        "abc !addNPC(Zuibroldun Jodem, dex = 5, magic = 11, fire's force=3) def"
-    );
-    modifier(
-        "Zuibroldun Jodem tries to die. !skillcheck(dex, Zuibroldun Jodem, 5 = lol : 10 = lmao, it 'Works. Hi 5. : 20 = You're losing.) Paparapapa."
-    );
-    modifier("!skillcheck(magic, Miguel, 3)");
-    modifier("!levelStats(Miguel, str +4, magic+ 3, dex + 3)");
-    modifier("!sattack(Zuibroldun Jodem, str, Miguel, magic, magic)");
-    modifier("Setting stats... !setStats(Miguel, magic=120) Stats set");
-    modifier("!showstats(Miguel)");
-    modifier("!battle((Zuibroldun Jodem, Librun), (Miguel))");
-    modifier("Miguel throws a rock at Zuibroldun Jodem. (Zuibroldun Jodem)");
-    modifier("Escape!");
-    modifier("!attack(Miguel, magic, Zuibroldun Jodem, str)");
-    modifier("!showstats(Zuibroldun Jodem)");
-    modifier("!attack(Librun, magic, Zuibroldun Jodem, str)");
-    modifier("!skillcheck(str, Zuibroldun Jodem, 5)");
-    modifier(
-        "Miguel felt guilty about what he has done. !revive(Miguel, Zuibroldun Jodem, 10)"
-    );
-    modifier("!heal(Zuibroldun Jodem, 100)");
-    modifier("!levelStats(Zuibroldun Jodem, fire's force + 2)");
-    /*modifier("!getState()");
-=======
     if (TESTS) {
         //!fixed tests
-        modifier("!addcharacter(Librun, level=5, hp=5)");
+        // modifier("!addcharacter(Librun, level=5, hp=5)");
         // modifier("!showstats(Librun)");
         // modifier("!addCharacter(Miguel, str=1, dex=5, int=3, hp=10)");
         // modifier(
@@ -1979,9 +1938,9 @@ if (!DEBUG) {
         // modifier("!levelStats(Zuibroldun Jodem, fire's force + 2)");
         // for (let i = 0; i < 30; ++i) modifier("!heal(Librun, 10:50)");
         /*modifier("!getState()");
->>>>>>> Stashed changes
   console.log("\n\n\n");
   modifier('!setState({"dice":10})');*/
+    }
     //!CLI
     if (CLI) {
         const prompt = require("prompt-sync")();
