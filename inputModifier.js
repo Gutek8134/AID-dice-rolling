@@ -1821,7 +1821,7 @@ const modifier = (text) => {
 
     //If something matched, calls functions with further work
     if (globalMatch !== null) {
-        const temp = text.indexOf(globalMatch[0]);
+        const temp = (state.in = text.indexOf(globalMatch[0]));
         //Creates indices, because d flag is not allowed
         currIndices = [temp, temp + globalMatch[0].length];
 
