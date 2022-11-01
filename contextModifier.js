@@ -7,7 +7,9 @@ modifier = (text) => {
         text:
             state.ctxt === undefined || state.ctxt === ""
                 ? text
-                : text.substring(0, temp) + state.ctxt + text.substring(temp),
+                : text.substring(0, temp) +
+                  state.ctxt +
+                  text.substring(temp + state.in.length),
     };
 };
 
