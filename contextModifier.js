@@ -1,10 +1,14 @@
 //Context modifier
 
 modifier = (text) => {
-  return {
-    //Returns normally if context wasn't set in state, else whatever was set
-    text: state.ctxt === undefined || state.ctxt === "" ? text : state.ctxt,
-  };
+    const temp = text.indexOf(state.in);
+    return {
+        //Returns normally if context wasn't set in state, else whatever was set
+        text:
+            state.ctxt === undefined || state.ctxt === ""
+                ? text
+                : text.substring(0, temp) + state.ctxt + text.substring(temp),
+    };
 };
 
 // Don't modify this part

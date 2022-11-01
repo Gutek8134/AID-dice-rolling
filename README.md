@@ -63,7 +63,7 @@ Works only when not levelling to oblivion.
 
 Syntax: `!skillcheck(stat, name, thresholds)`
 
-### Thresholds syntax:
+### Thresholds syntax
 
     a) number - outcome - success or failure
     b) number : number - outcome - success, nothing happens, failure
@@ -277,7 +277,7 @@ will clear your memory, while<br>
 
 will leave it as is.<br>
 
-### Generally it's best to write desired state in external program and then remove all newline characters. This may not be needed in the future, but is now.
+### Generally it's best to write desired state in external program and then remove all newline characters. This may not be needed in the future, but is now
 
 ---
 
