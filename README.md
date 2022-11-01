@@ -172,6 +172,16 @@ The amount of skillpoints granted for level up can be adjusted by `!setstate`.
 
 ---
 
+# Tips and tricks
+
+-   when using `!skillcheck` without custom outcomes, I recommend using it like
+    `Antonio tries to do something. !skillcheck(...)`
+-   the same applies to other commands that don't generate output, like `!attack` and `!sattack`
+-   after deletion of custom output, produced by some commands, fe. `!showStats`, write something of your own to "clear cache" of the script
+-   before starting the adventure use [AID state creator](https://github.com/Gutek8134/AID-state-creator) and set everything with `!setState` instead of using other commands, so the AI won't try to mimic them and you will save time
+
+---
+
 # Custom states
 
 `!setstate` doesn't change the values unless they are mentioned.
