@@ -1,7 +1,7 @@
 //Context modifier
 
 modifier = (text) => {
-    const temp = text.indexOf(state.in);
+    const temp = text.lastIndexOf(state.in);
     return {
         //Returns normally if context wasn't set in state, else whatever was set
         text:

@@ -1818,10 +1818,9 @@ const modifier = (text) => {
     //Checks for pattern !command(args)
     const globalExp = /!(?<command>[^\s()]+)\((?<arguments>.*)\)/i;
     const globalMatch = text.match(globalExp);
-
     //If something matched, calls functions with further work
     if (globalMatch !== null) {
-        const temp = (state.in = text.indexOf(globalMatch[0]));
+        const temp = text.indexOf(globalMatch[0]);
         //Creates indices, because d flag is not allowed
         currIndices = [temp, temp + globalMatch[0].length];
 
@@ -1888,7 +1887,7 @@ const modifier = (text) => {
         if (state.ctxt.length <= 1) state.ctxt = " \n";
     }
     //#endregion globalCommand
-
+    state.in = modifiedText;
     logs();
     // You must return an object with the text property defined.
     return { text: modifiedText };
