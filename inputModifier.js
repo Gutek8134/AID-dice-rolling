@@ -51,6 +51,8 @@ const damageOutputs = [
     [100, "killing blow"],
 ];
 
+const equipmentItems = ["helmet", "armor", "leggins", "weapon"];
+
 //!Does not check whether stats are equal to 0 when attacking. Change only if your damage function does not contain division or you've checked it properly.
 const ignoreZeroDiv = false;
 
@@ -67,210 +69,196 @@ const levellingToOblivion = false;
 const defendingCharacterLevels = false;
 
 //!Turns on debug code
-const DEBUG = false;
+const DEBUG = true;
 
 //!Executes automated tests before enabling CLI
-const TESTS = false;
+const TESTS = true;
 
 //!Turns on CLI when testing as stand-alone; used only if DEBUG is true
 const CLI = false;
 
 //Comment this if statement when debugging. End at line 272.
-if (DEBUG) {
-    //Dummy state
-    let state = {
-        stats: [],
-        dice: 20,
-        startingLevel: 1,
-        startingHP: 100,
-        characters: {},
-        punishment: 5,
-        skillpointsOnLevelUp: 5,
-    };
+// if (DEBUG) {
+//Dummy state
+let state = {
+    stats: [],
+    dice: 20,
+    startingLevel: 1,
+    startingHP: 100,
+    characters: {},
+    punishment: 5,
+    skillpointsOnLevelUp: 5,
+    items: {},
+    inventory: [],
+};
 
-    //!Since I cannot import shared library locally, I will copy everything here. Debug purposes only.
+//!Since I cannot import shared library locally, I will copy everything here. Debug purposes only.
 
-    //!Function for calculating experience needed to level up. Adjust it to your heart's content
-    const experienceCalculation = (level) => {
-        //Don't change it here, but in the shared library
-        //level is the current character/stat's level
-        const experience = /*You can edit from here*/ 2 * level; /*to here*/
+//!Function for calculating experience needed to level up. Adjust it to your heart's content
+const experienceCalculation = (level) => {
+    //Don't change it here, but in the shared library
+    //level is the current character/stat's level
+    const experience = /*You can edit from here*/ 2 * level; /*to here*/
 
-        return experience;
-    };
+    return experience;
+};
 
-    //Increasing scalability by OOP
-    class Stat {
-        constructor(name, level) {
-            if (
-                typeof name === "string" &&
-                (typeof level === "number" || typeof level === "undefined")
-            ) {
-                if (!isInStats(name)) {
-                    state.stats.push(name);
-                }
-                this.level = level === undefined ? state.startingLevel : level;
-                if (levellingToOblivion) {
-                    this.experience = 0;
-                    this.expToNextLvl = experienceCalculation(this.level);
-                }
+//Increasing scalability by OOP
+class Stat {
+    constructor(name, level) {
+        if (
+            typeof name === "string" &&
+            (typeof level === "number" || typeof level === "undefined")
+        ) {
+            if (!isInStats(name)) {
+                state.stats.push(name);
             }
-        }
-        toString() {
-            return `level = ${this.level} exp = ${
-                this.experience
-            } exp to lvl up=${this.expToNextLvl}(${
-                this.expToNextLvl - this.experience
-            })`;
+            this.level = level === undefined ? state.startingLevel : level;
+            if (levellingToOblivion) {
+                this.experience = 0;
+                this.expToNextLvl = experienceCalculation(this.level);
+            }
         }
     }
-
-    //Blank character with starting level stats
-    class Character {
-        constructor(values) {
-            state.stats.forEach((stat) => {
-                this[stat] = new Stat(stat, state.startingLevel);
-            });
-            this.hp = state.startingHP;
-            this.level = 1;
-
-            if (values !== undefined) {
-                for (const el of values) {
-                    if (el[0] === "hp") {
-                        this.hp = el[1];
-                        continue;
-                    }
-                    if (el[0] === "level") {
-                        this.level = el[1];
-                        continue;
-                    }
-                    this[el[0]] = new Stat(el[0], el[1]);
-                }
-            }
-            this.experience = 0;
-            this.expToNextLvl = experienceCalculation(this.level);
-            this.skillpoints = 0;
-            this.isNpc = false;
-        }
-
-        toString() {
-            return CharToString(this);
-        }
+    toString() {
+        return `level = ${this.level} exp = ${this.experience} exp to lvl up=${
+            this.expToNextLvl
+        }(${this.expToNextLvl - this.experience})`;
     }
+}
 
-    class NPC {
-        constructor(values) {
-            state.stats.forEach((stat) => {
-                this[stat] = new Stat(stat, state.startingLevel);
-            });
-            this.hp = state.startingHP;
-            this.level = 1;
+_constructor = (_this) => {
+    state.stats.forEach((stat) => {
+        _this[stat] = new Stat(stat, state.startingLevel);
+    });
+    _this.hp = state.startingHP;
+    _this.level = 1;
 
-            if (values !== undefined) {
-                for (const el of values) {
-                    if (el[0] === "hp") {
-                        this.hp = el[1];
-                        continue;
-                    }
-                    if (el[0] === "level") {
-                        this.level = el[1];
-                        continue;
-                    }
-                    this[el[0]] = new Stat(el[0], el[1]);
-                }
-            }
-            this.experience = 0;
-            this.expToNextLvl = experienceCalculation(this.level);
-            this.skillpoints = 0;
-            this.isNpc = true;
-        }
-
-        toString() {
-            return CharToString(this);
-        }
-    }
-
-    const isInStats = (name) => {
-        for (i in state.stats) {
-            if (name == state.stats[i]) {
-                return true;
-            }
-        }
-        return false;
-    };
-
-    //Generates a value between 1 and maxValue
-    const diceRoll = (maxValue) => {
-        return Math.floor(Math.random() * maxValue) + 1;
-    };
-
-    const ignoredValues = [
-        "hp",
-        "level",
-        "experience",
-        "expToNextLvl",
-        "skillpoints",
-        "isNpc",
-    ];
-    const CharToString = (character) => {
-        let temp = levellingToOblivion
-            ? `hp: ${character.hp},\nisNPC: ${character.isNpc},\n`
-            : `hp: ${character.hp},\nlevel: ${character.level},\nskillpoints:${
-                  character.skillpoints
-              },\nexperience: ${character.experience},\nto level up: ${
-                  character.expToNextLvl
-              }(need ${
-                  character.expToNextLvl - character.experience
-              } more),\nisNpc: ${character.isNpc},\n`;
-        for (const key in character) {
-            if (key === "hp" || ElementInArray(key, ignoredValues)) {
+    if (values !== undefined) {
+        for (const el of values) {
+            if (el[0] === "hp") {
+                _this.hp = el[1];
                 continue;
             }
-            const value = character[key];
-            if (levellingToOblivion) {
-                temp += `${key}: level=${value.level}, exp=${
-                    value.experience
-                }, to lvl up=${value.expToNextLvl}(need ${
-                    value.expToNextLvl - value.experience
-                } more),\n`;
-            } else {
-                temp += `${key}: ${value.level},\n`;
+            if (el[0] === "level") {
+                _this.level = el[1];
+                continue;
+            }
+            if (el[0][0] === "$") {
+                _this[el[0].substring(1)] = state.items[el[1]];
+                continue;
+            }
+            _this[el[0]] = new Stat(el[0], el[1]);
+        }
+    }
+    _this.experience = 0;
+    _this.expToNextLvl = experienceCalculation(_this.level);
+    _this.skillpoints = 0;
+};
+
+//Blank character with starting level stats
+class Character {
+    constructor(values) {
+        _constructor(this);
+        this.isNpc = false;
+    }
+
+    toString() {
+        return CharToString(this);
+    }
+}
+
+class NPC {
+    constructor(values) {
+        _constructor(this);
+        this.isNpc = true;
+    }
+
+    toString() {
+        return CharToString(this);
+    }
+}
+
+const isInStats = (name) => {
+    for (i in state.stats) {
+        if (name == state.stats[i]) {
+            return true;
+        }
+    }
+    return false;
+};
+
+//Generates a value between 1 and maxValue
+const diceRoll = (maxValue) => {
+    return Math.floor(Math.random() * maxValue) + 1;
+};
+
+const ignoredValues = [
+    "hp",
+    "level",
+    "experience",
+    "expToNextLvl",
+    "skillpoints",
+    "isNpc",
+];
+const CharToString = (character) => {
+    let temp = levellingToOblivion
+        ? `hp: ${character.hp},\nisNPC: ${character.isNpc},\n`
+        : `hp: ${character.hp},\nlevel: ${character.level},\nskillpoints:${
+              character.skillpoints
+          },\nexperience: ${character.experience},\nto level up: ${
+              character.expToNextLvl
+          }(need ${
+              character.expToNextLvl - character.experience
+          } more),\nisNpc: ${character.isNpc},\n`;
+    for (const key in character) {
+        if (key === "hp" || ElementInArray(key, ignoredValues)) {
+            continue;
+        }
+        const value = character[key];
+        if (levellingToOblivion) {
+            temp += `${key}: level=${value.level}, exp=${
+                value.experience
+            }, to lvl up=${value.expToNextLvl}(need ${
+                value.expToNextLvl - value.experience
+            } more),\n`;
+        } else {
+            temp += `${key}: ${value.level},\n`;
+        }
+    }
+    return temp.substring(0, temp.length - 2) == ""
+        ? "none"
+        : temp.substring(0, temp.length - 2);
+};
+
+//Returns whether character exists and has more than 0 HP, returns bool
+const CharLives = (character) => {
+    if (!ElementInArray(character, Object.keys(state.characters))) return false;
+
+    return state.characters[character].hp > 0;
+};
+
+const ElementInArray = (element, array) => {
+    ret = false;
+    if (element !== undefined && typeof array === "object") {
+        for (const el of array) {
+            if (el === element) {
+                ret = true;
+                break;
             }
         }
-        return temp.substring(0, temp.length - 2) == ""
-            ? "none"
-            : temp.substring(0, temp.length - 2);
-    };
+    }
+    return ret;
+};
+//!End of shared library
 
-    //Returns whether character exists and has more than 0 HP, returns bool
-    const CharLives = (character) => {
-        if (!ElementInArray(character, Object.keys(state.characters)))
-            return false;
-
-        return state.characters[character].hp > 0;
-    };
-
-    const ElementInArray = (element, array) => {
-        ret = false;
-        if (element !== undefined && typeof array === "object") {
-            for (const el of array) {
-                if (el === element) {
-                    ret = true;
-                    break;
-                }
-            }
-        }
-        return ret;
-    };
-    //!End of shared library
-
-    //dummy character
-    /*
+//dummy character
+/*
 state.characters.Miguel = new Character();
 state.characters.Miguel.str = new Stat("str");
 state.characters.Miguel.dex = new Stat("dex", 10);
 state.characters.Miguel.int = new Stat("int", 5);*/
-}
+// }
 
 //Produces outcome from two-dimensional array in format [[minimum score, outcome],]
 const CustomOutcome = (score, values) => {
@@ -1486,7 +1474,7 @@ const revive = (arguments) => {
 addCharacter = (arguments) => {
     //Looks for pattern !addCharacter(name) or !addCharacter(name, stat1=value, stat2=value, ..., statN=value)
     const exp =
-        /(?<character>[\w\s']+)(?<startingStats>(?:, [\w ']+ *= *\d+)*)/i;
+        /(?<character>[\w\s']+)(?<startingStats>(?:, [\w ']+ *= *(?:\d+|\$[\w ']+))*)/i;
 
     //Matches the RegEx
     const match = arguments.match(exp);
@@ -1507,6 +1495,19 @@ addCharacter = (arguments) => {
         .map((el) => el.trim().split("="));
 
     for (i in values) {
+        if (i[1][0] === "$") {
+            if (!ElementInArray(i[1].substring(1), state.items)) {
+                state.message = `Add Character: item ${i} doesn't exist.`;
+                return;
+            }
+            if (!ElementInArray(i[0], equipmentItems)) {
+                state.message = `Add Character: you have no place to wear ${i[0]}.`;
+                return;
+            }
+            curr = values[i];
+            values[i] = [curr[0].trim(), curr[1].trim().toLowerCase()];
+            continue;
+        }
         curr = values[i];
         curr = [curr[0].trim(), Number(curr[1])];
         values[i] = curr;
@@ -1526,7 +1527,7 @@ addCharacter = (arguments) => {
 addNPC = (arguments) => {
     //Looks for pattern !addNPC(name) or !addNPC(name, stat1=value, stat2=value, ..., statN=value)
     const exp =
-        /(?<character>[\w\s']+)(?<startingStats>(?:, [\w ']+ *= *\d+)*)/i;
+        /(?<character>[\w\s']+)(?<startingStats>(?:, [\w ']+ *= *(?:\d+|\$[\w ']+))*)/i;
 
     //Matches the RegEx
     const match = arguments.match(exp);
@@ -1545,6 +1546,19 @@ addNPC = (arguments) => {
         .map((el) => el.trim().split("="));
 
     for (i in values) {
+        if (i[1][0] === "$") {
+            if (!ElementInArray(i[1].substring(1), state.items)) {
+                state.message = `Add NPC: item ${i} doesn't exist.`;
+                return;
+            }
+            if (!ElementInArray(i[0], equipmentItems)) {
+                state.message = `Add NPC: you have no place to wear ${i[0]}.`;
+                return;
+            }
+            curr = values[i];
+            values[i] = [curr[0].trim(), curr[1].trim().toLowerCase()];
+            continue;
+        }
         curr = values[i];
         curr = [curr[0].trim(), Number(curr[1])];
         values[i] = curr;
@@ -1562,7 +1576,8 @@ addNPC = (arguments) => {
 //#region setStats
 setStats = (arguments) => {
     //Looks for pattern !addCharacter(name) or !addCharacter(name, stat1=value, stat2=value, ..., statN=value)
-    const exp = /(?<character>[\w\s']+)(?<stats>(?:, [\w ']+ *= *\d+)+)/i;
+    const exp =
+        /(?<character>[\w\s']+)(?<stats>(?:, [\w ']+ *= *(?:\d+|[\w ']+))+)/i;
 
     //Matches the RegEx
     const match = arguments.match(exp);
@@ -1586,6 +1601,19 @@ setStats = (arguments) => {
             .map((el) => el.trim().split("="));
 
         for (i in values) {
+            if (i[1][0] === "$") {
+                if (!ElementInArray(i[1].substring(1), state.items)) {
+                    state.message = `Set Stats: item ${i} doesn't exist.`;
+                    return;
+                }
+                if (!ElementInArray(i[0], equipmentItems)) {
+                    state.message = `Set Stats: you have no place to wear ${i[0]}.`;
+                    return;
+                }
+                curr = values[i];
+                values[i] = [curr[0].trim(), curr[1].trim().toLowerCase()];
+                continue;
+            }
             curr = values[i];
             curr = [curr[0].trim(), Number(curr[1])];
             values[i] = curr;
