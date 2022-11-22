@@ -51,7 +51,8 @@ const damageOutputs = [
     [100, "killing blow"],
 ];
 
-const equipmentItems = ["helmet", "armor", "leggins", "weapon"];
+//Contains every type of equipment you can wear and have
+const equipmentParts = ["helmet", "armor", "leggins", "weapon", "artifact"];
 
 //!Does not check whether stats are equal to 0 when attacking. Change only if your damage function does not contain division or you've checked it properly.
 const ignoreZeroDiv = false;
@@ -128,14 +129,21 @@ class Stat {
 }
 
 _constructor = (_this) => {
+    //Initializes every previously created stat
     state.stats.forEach((stat) => {
         _this[stat] = new Stat(stat, state.startingLevel);
     });
+
+    //Initializes hp and character level
     _this.hp = state.startingHP;
     _this.level = 1;
 
+    //Null check, just to be sure
     if (values !== undefined) {
+        //el in format ["attribute/stat/name", value/"$value"], because I didn't like converting array to object
+        //Sanitized beforehand
         for (const el of values) {
+            //Hp and level need to be double checked to not make a stat of them
             if (el[0] === "hp") {
                 _this.hp = el[1];
                 continue;
@@ -144,16 +152,21 @@ _constructor = (_this) => {
                 _this.level = el[1];
                 continue;
             }
+            //Separating items from the rest
             if (el[0][0] === "$") {
                 _this[el[0].substring(1)] = state.items[el[1]];
                 continue;
             }
+            //It's not hp, level, nor item, so it might as well be a stat
             _this[el[0]] = new Stat(el[0], el[1]);
         }
     }
+
+    //No overrides for these starting values
     _this.experience = 0;
     _this.expToNextLvl = experienceCalculation(_this.level);
     _this.skillpoints = 0;
+    _this.type = "character";
 };
 
 //Blank character with starting level stats
@@ -176,6 +189,27 @@ class NPC {
 
     toString() {
         return CharToString(this);
+    }
+}
+
+class Item {
+    constructor(values) {
+        if (values !== undefined) {
+            //el in format ["slot/stat", "equipmentPart"/value]
+            //Sanitized beforehand
+            for (const el of values) {
+                //Slot is a string, everything else must be a number
+                //Until buffs and debuffs will be extended to items
+                if (el[0] === "slot") {
+                    this.slot = el[1];
+                    continue;
+                }
+                //It's not equipment place, so it's a stat modifier
+                this[el[0]] = el[1];
+            }
+        }
+        //Since you can't save object type to JSON, this has to do (just in case)
+        this.type = "item";
     }
 }
 
@@ -306,6 +340,8 @@ const SetupState = () => {
             state.startingHP === undefined ? 100 : state.startingHP;
         state.characters =
             state.characters === undefined ? {} : state.characters;
+        state.items = state.items === undefined ? {} : state.items;
+        state.inventory = state.inventory === undefined ? [] : state.inventory;
         state.punishment =
             state.punishment === undefined ? 5 : state.punishment;
         state.skillpointsOnLevelUp =
@@ -636,6 +672,15 @@ const turn = () => {
     console.log(state.active);
 };
 //#endregion turn
+
+//#region bonus
+//TODO: implement
+const calcBonus = (char) => {
+    const character = state.characters[char];
+    for (const el of equipmentParts) {
+    }
+};
+//#endregion bonus
 
 //#region skillcheck
 const skillcheck = (arguments) => {
@@ -1470,6 +1515,21 @@ const revive = (arguments) => {
 };
 //#endregion revive
 
+//#region addItem
+//TODO: implement
+const addItem = (arguments) => {};
+//#endregion removeItem
+
+//#region equip
+//TODO: implement
+const equip = (arguments) => {};
+//#endregion equip
+
+//#region unequip
+//TODO: implement
+const unequip = (arguments) => {};
+//#endregion unequip
+
 //#region addCharacter
 addCharacter = (arguments) => {
     //Looks for pattern !addCharacter(name) or !addCharacter(name, stat1=value, stat2=value, ..., statN=value)
@@ -1500,7 +1560,7 @@ addCharacter = (arguments) => {
                 state.message = `Add Character: item ${i} doesn't exist.`;
                 return;
             }
-            if (!ElementInArray(i[0], equipmentItems)) {
+            if (!ElementInArray(i[0], equipmentParts)) {
                 state.message = `Add Character: you have no place to wear ${i[0]}.`;
                 return;
             }
@@ -1551,7 +1611,7 @@ addNPC = (arguments) => {
                 state.message = `Add NPC: item ${i} doesn't exist.`;
                 return;
             }
-            if (!ElementInArray(i[0], equipmentItems)) {
+            if (!ElementInArray(i[0], equipmentParts)) {
                 state.message = `Add NPC: you have no place to wear ${i[0]}.`;
                 return;
             }
@@ -1606,7 +1666,7 @@ setStats = (arguments) => {
                     state.message = `Set Stats: item ${i} doesn't exist.`;
                     return;
                 }
-                if (!ElementInArray(i[0], equipmentItems)) {
+                if (!ElementInArray(i[0], equipmentParts)) {
                     state.message = `Set Stats: you have no place to wear ${i[0]}.`;
                     return;
                 }
