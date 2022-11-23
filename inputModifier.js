@@ -193,16 +193,26 @@ class NPC {
 }
 
 class Item {
+    //Item structure:
+    //Fields:
+    //slot - string representing slot name
+    //effects - array of strings representing effect names
+    //others - numbers representing stat modifiers
+    //type="item" - JSON doesn't hold types, so it's here just in case
     constructor(values) {
         if (values !== undefined) {
             //el in format ["slot/stat", "equipmentPart"/value]
             //Sanitized beforehand
+            this.effects = [];
             for (const el of values) {
-                //Slot is a string, everything else must be a number
+                //Slot and effects are strings, everything else must be a number
                 //Until buffs and debuffs will be extended to items
                 if (el[0] === "slot") {
                     this.slot = el[1];
                     continue;
+                }
+                if (el[0] === "effect") {
+                    this.effects.push(el[1]);
                 }
                 //It's not equipment place, so it's a stat modifier
                 this[el[0]] = el[1];
@@ -674,11 +684,22 @@ const turn = () => {
 //#endregion turn
 
 //#region bonus
-//TODO: implement
-const calcBonus = (char) => {
+//Calculates sum of item stat bonuses
+const calcBonus = (char, stat) => {
+    //Grabs character
     const character = state.characters[char];
+    //Defaults to 0 - no bonus
+    let mod = 0;
+    //Iterates on equipmentParts array, because I don't want to put another one into characters;
+    //Names are shared anyway
     for (const el of equipmentParts) {
+        //Standard "if exists in object"
+        if (character[el] !== undefined && character[el]?.[stat] !== undefined)
+            //And adds tem up if found
+            //May want to give users choice later
+            mod += character[el][stat];
     }
+    return mod;
 };
 //#endregion bonus
 
