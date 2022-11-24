@@ -128,7 +128,7 @@ class Stat {
     }
 }
 
-_constructor = (_this) => {
+_constructor = (_this, values) => {
     //Initializes every previously created stat
     state.stats.forEach((stat) => {
         _this[stat] = new Stat(stat, state.startingLevel);
@@ -140,7 +140,7 @@ _constructor = (_this) => {
 
     //Null check, just to be sure
     if (values !== undefined) {
-        //el in format ["attribute/stat/name", value/"$value"], because I didn't like converting array to object
+        //el in format ["attribute/stat/slot", value/"$item"], because I didn't like converting array to object
         //Sanitized beforehand
         for (const el of values) {
             //Hp and level need to be double checked to not make a stat of them
@@ -152,9 +152,9 @@ _constructor = (_this) => {
                 _this.level = el[1];
                 continue;
             }
-            //Separating items from the rest
-            if (el[0][0] === "$") {
-                _this[el[0].substring(1)] = state.items[el[1]];
+            //Separating items from the rest by preceding slot name with $
+            if (el[1][0] === "$") {
+                _this[el[0]] = state.items[el[1].substring(1)];
                 continue;
             }
             //It's not hp, level, nor item, so it might as well be a stat
@@ -172,7 +172,7 @@ _constructor = (_this) => {
 //Blank character with starting level stats
 class Character {
     constructor(values) {
-        _constructor(this);
+        _constructor(this, values);
         this.isNpc = false;
     }
 
@@ -183,7 +183,7 @@ class Character {
 
 class NPC {
     constructor(values) {
-        _constructor(this);
+        _constructor(this, values);
         this.isNpc = true;
     }
 
@@ -200,10 +200,10 @@ class Item {
     //others - numbers representing stat modifiers
     //type="item" - JSON doesn't hold types, so it's here just in case
     constructor(values) {
+        this.effects = [];
         if (values !== undefined) {
             //el in format ["slot/stat", "equipmentPart"/value]
             //Sanitized beforehand
-            this.effects = [];
             for (const el of values) {
                 //Slot and effects are strings, everything else must be a number
                 //Until buffs and debuffs will be extended to items
@@ -214,7 +214,7 @@ class Item {
                 if (el[0] === "effect") {
                     this.effects.push(el[1]);
                 }
-                //It's not equipment place, so it's a stat modifier
+                //It's not equipment place nor effect, so it's a stat modifier
                 this[el[0]] = el[1];
             }
         }
@@ -1538,8 +1538,65 @@ const revive = (arguments) => {
 
 //#region addItem
 //TODO: implement
-const addItem = (arguments) => {};
-//#endregion removeItem
+const addItem = (arguments) => {
+    CutCommand();
+    //Error checking
+    if (arguments === undefined || arguments === null || arguments === "") {
+        state.message = "Add Item: No arguments found.";
+        return;
+    }
+    //Looks for pattern name, stat=value, target place (none by default) and character
+    const exp =
+        /(?<name>[\w ']+), (?<slot>\w+)(?<bonuses>(?:, [\w ']+ *= *(?:\d+|\$[\w ']+))*)(?:, *(?<target>[inventory|equip]), (?<character>[\w\s']+)?)?/i;
+    const match = arguments.match(exp);
+
+    //Error checking
+    if (match === null) {
+        state.message = "Add Item: No matching arguments found.";
+        return;
+    }
+
+    if (
+        match.groups.target === "equip" &&
+        match.groups.character === undefined
+    ) {
+        state.message =
+            "Add Item: You must specify who will equip the item when you choose so.";
+        return;
+    }
+
+    //Converts values to format [[stat, val], [stat2, val], ... [statN, val]]
+    let values = match.groups.bonuses
+        .substring(2)
+        .split(", ")
+        .map((el) => el.trim().split("="));
+
+    for (i in values) {
+        if (i[1][0] === "$") {
+            state.message = `Add Item: You cannot pass item as property of another item.`;
+            return;
+        }
+        curr = values[i];
+        curr[0] = curr[0].trim();
+        if (!isInStats(curr[0])) {
+            state.message = `Add Item: Stat ${curr[0]} doesn't exist`;
+            return;
+        }
+        curr = [curr[0], Number(curr[1])];
+        values[i] = curr;
+    }
+    //End of conversion
+    //Adds slot
+    values.push(["slot", match.groups.slot]);
+    //Passes to constructor and adds received item to the list
+    state.items.push(Item(values));
+};
+//#endregion addItem
+
+//#region gainItem
+//TODO: implement
+const gainItem = (arguments) => {};
+//#endregion gainItem
 
 //#region equip
 //TODO: implement
