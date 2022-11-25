@@ -237,6 +237,16 @@ const diceRoll = (maxValue) => {
     return Math.floor(Math.random() * maxValue) + 1;
 };
 
+//Equips item for a character
+const _equip = (char, item) => {
+    //Grabs character
+    const character = state.characters[char];
+    //If character has an already equipped item, it is put back into inventory
+    if (!character[item.slot]) state.inventory.push(character[item.slot]);
+    //Puts the item onto character's slot
+    character[item.slot] = item;
+};
+
 const ignoredValues = [
     "hp",
     "level",
@@ -1537,7 +1547,6 @@ const revive = (arguments) => {
 //#endregion revive
 
 //#region addItem
-//TODO: implement
 const addItem = (arguments) => {
     CutCommand();
     //Error checking
@@ -1589,7 +1598,9 @@ const addItem = (arguments) => {
     //Adds slot
     values.push(["slot", match.groups.slot]);
     //Passes to constructor and adds received item to the list
-    state.items.push(Item(values));
+    const item = Item(values);
+    state.items.push(item);
+    if (match.groups.target === "equip") _equip(match.groups.character, item);
 };
 //#endregion addItem
 
