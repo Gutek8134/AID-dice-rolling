@@ -91,6 +91,12 @@ let state = {
     skillpointsOnLevelUp: 5,
     items: {},
     inventory: [],
+    ctxt: "",
+    out: "",
+    message: "",
+    inBattle: false,
+    side1: [],
+    side2: [],
 };
 
 //!Since I cannot import shared library locally, I will copy everything here. Debug purposes only.
@@ -128,7 +134,7 @@ class Stat {
     }
 }
 
-_constructor = (_this, values) => {
+CharacterConstructor = (_this, values) => {
     //Initializes every previously created stat
     state.stats.forEach((stat) => {
         _this[stat] = new Stat(stat, state.startingLevel);
@@ -172,7 +178,7 @@ _constructor = (_this, values) => {
 //Blank character with starting level stats
 class Character {
     constructor(values) {
-        _constructor(this, values);
+        CharacterConstructor(this, values);
         this.isNpc = false;
     }
 
@@ -183,7 +189,7 @@ class Character {
 
 class NPC {
     constructor(values) {
-        _constructor(this, values);
+        CharacterConstructor(this, values);
         this.isNpc = true;
     }
 
@@ -199,7 +205,7 @@ class Item {
     //effects - array of strings representing effect names
     //others - numbers representing stat modifiers
     //type="item" - JSON doesn't hold types, so it's here just in case
-    constructor(values) {
+    constructor(name, values) {
         this.effects = [];
         if (values !== undefined) {
             //el in format ["slot/stat", "equipmentPart"/value]
@@ -242,9 +248,15 @@ const _equip = (char, item) => {
     //Grabs character
     const character = state.characters[char];
     //If character has an already equipped item, it is put back into inventory
-    if (!character[item.slot]) state.inventory.push(character[item.slot]);
+    if (!character[item.slot]) {
+        modifiedText += `\nCharacter ${char} unequipped ${
+            character[item.slot].name
+        }.`;
+        state.inventory.push(character[item.slot].name);
+    }
     //Puts the item onto character's slot
-    character[item.slot] = item;
+    character[item.slot] = item.name;
+    modifiedText += `\nCharacter ${char} equipped ${item.name}.`;
 };
 
 const ignoredValues = [
@@ -280,6 +292,16 @@ const CharToString = (character) => {
             temp += `${key}: ${value.level},\n`;
         }
     }
+    return temp.substring(0, temp.length - 2) == ""
+        ? "none"
+        : temp.substring(0, temp.length - 2);
+};
+
+const ItemToString = (item) => {
+    temp = `slot: ${item.slot}`;
+    for (const key in item)
+        if (key !== "slot") temp += `${key}: ${item[key]},\n`;
+
     return temp.substring(0, temp.length - 2) == ""
         ? "none"
         : temp.substring(0, temp.length - 2);
@@ -1547,6 +1569,7 @@ const revive = (arguments) => {
 //#endregion revive
 
 //#region addItem
+//TODO: test
 const addItem = (arguments) => {
     CutCommand();
     //Error checking
@@ -1556,7 +1579,7 @@ const addItem = (arguments) => {
     }
     //Looks for pattern name, stat=value, target place (none by default) and character
     const exp =
-        /(?<name>[\w ']+), (?<slot>\w+)(?<bonuses>(?:, [\w ']+ *= *(?:\d+|\$[\w ']+))*)(?:, *(?<target>[inventory|equip]), (?<character>[\w\s']+)?)?/i;
+        /(?<name>[\w ']+), (?<slot>\w+)(?<bonuses>(?:, [\w ']+ *= *(?:\d+|\$[\w ']+))*)(?:, *(?<target>[inventory|equip])(?:, *(?<character>[\w\s']+))?)?/i;
     const match = arguments.match(exp);
 
     //Error checking
@@ -1565,14 +1588,24 @@ const addItem = (arguments) => {
         return;
     }
 
-    if (
-        match.groups.target === "equip" &&
-        match.groups.character === undefined
-    ) {
-        state.message =
-            "Add Item: You must specify who will equip the item when you choose so.";
-        return;
+    if (match.groups.target === "equip") {
+        if (match.groups.character === undefined) {
+            state.message =
+                "Add Item: You must specify who will equip the item when you choose so.";
+            return;
+        }
+        if (
+            !ElementInArray(
+                match.groups.character,
+                Object.keys(state.characters)
+            )
+        ) {
+            state.message = `Add Item: Character ${match.groups.character} doesn't exist.`;
+            return;
+        }
     }
+
+    const name = match.groups.name.trim();
 
     //Converts values to format [[stat, val], [stat2, val], ... [statN, val]]
     let values = match.groups.bonuses
@@ -1594,19 +1627,66 @@ const addItem = (arguments) => {
         curr = [curr[0], Number(curr[1])];
         values[i] = curr;
     }
-    //End of conversion
     //Adds slot
     values.push(["slot", match.groups.slot]);
-    //Passes to constructor and adds received item to the list
-    const item = Item(values);
-    state.items.push(item);
+    //End of conversion
+
+    //Passes to constructor and adds received item to the object
+    const item = Item(name, values);
+    state.items[name] = item;
+    modifiedText = `Item ${name} created with attributes:\n${ItemToString(
+        item
+    )}`;
     if (match.groups.target === "equip") _equip(match.groups.character, item);
+    else if (match.groups.target === "inventory") {
+        state.inventory.push(name);
+        `Item ${name} put into inventory`;
+    }
 };
 //#endregion addItem
 
 //#region gainItem
-//TODO: implement
-const gainItem = (arguments) => {};
+//TODO: test
+const gainItem = (arguments) => {
+    CutCommand();
+    //Error checking
+    if (arguments === undefined || arguments === null || arguments === "") {
+        state.message = "Gain Item: No arguments found.";
+        return;
+    }
+
+    const exp = /(?<name>[\w ']+)(?:, *(?<character>[\w\s']+))?/i;
+    const match = arguments.match(exp);
+
+    //Error checking
+    if (match === null) {
+        state.message = "Gain Item: No matching arguments found.";
+        return;
+    }
+
+    const char = match.groups.characters,
+        name = match.groups.name;
+
+    if (!ElementInArray(name, Object.keys(state.items))) {
+        state.message = `Gain Item: Item ${name} doesn't exist.`;
+        return;
+    }
+
+    //If the character has been specified, it must exist
+    if (
+        char !== undefined &&
+        !ElementInArray(char, Object.keys(state.characters))
+    ) {
+        state.message = `Gain Item: Character ${char} doesn't exist.`;
+        return;
+    }
+
+    state.inventory.push(name);
+    if (char !== undefined) {
+        modifiedText = "";
+        _equip(char, state.items[name]);
+    } else modifiedText = `Item ${name} was put into inventory.`;
+};
 //#endregion gainItem
 
 //#region equip
@@ -1618,6 +1698,11 @@ const equip = (arguments) => {};
 //TODO: implement
 const unequip = (arguments) => {};
 //#endregion unequip
+
+//#region showInventory
+//TODO: implement
+const showInventory = (arguments) => {};
+//#endregion showInventory
 
 //#region addCharacter
 addCharacter = (arguments) => {
