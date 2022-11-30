@@ -1613,7 +1613,7 @@ const addItem = (arguments) => {
         .split(", ")
         .map((el) => el.trim().split("="));
 
-    for (i in values) {
+    for (const i in values) {
         if (i[1][0] === "$") {
             state.message = `Add Item: You cannot pass item as property of another item.`;
             return;
@@ -1690,8 +1690,45 @@ const gainItem = (arguments) => {
 //#endregion gainItem
 
 //#region equip
-//TODO: implement
-const equip = (arguments) => {};
+//TODO: test
+const equip = (arguments) => {
+    CutCommand();
+    //Error checking
+    if (arguments === undefined || arguments === null || arguments === "") {
+        state.message = "Equip Item: No arguments found.";
+        return;
+    }
+
+    const exp = /(?<character>[\w\s']+)(?<items>(?:, *[\w ']+)+)/i;
+    const match = arguments.match(exp);
+
+    //Error checking
+    if (match === null) {
+        state.message = "Equip Item: No matching arguments found.";
+        return;
+    }
+
+    const char = match.groups.character,
+        items = match.groups.items
+            .substring(1)
+            .trim()
+            .split(", ")
+            .map((x) => x.trim());
+
+    if (!ElementInArray(char, Object.keys(state.characters))) {
+        state.message = `Equip Item: Character ${char} doesn't exist.`;
+        return;
+    }
+    for (const el of items)
+        if (!ElementInArray(el, Object.keys(state.items))) {
+            state.message = `Item ${el} isn't in your inventory.`;
+            return;
+        }
+
+    for (const el of items) _equip(char, el);
+
+    modifiedText += "\nItem(s) successfully equipped.";
+};
 //#endregion equip
 
 //#region unequip
@@ -1700,8 +1737,17 @@ const unequip = (arguments) => {};
 //#endregion unequip
 
 //#region showInventory
-//TODO: implement
-const showInventory = (arguments) => {};
+//TODO: test
+const showInventory = (arguments) => {
+    if (arguments !== "") {
+        state.message =
+            "Show Inventory: showInventory doesn't take any arguments";
+        return;
+    }
+
+    modifiedText =
+        "Currently your inventory holds: " + state.inventory.join(", ") + ".";
+};
 //#endregion showInventory
 
 //#region addCharacter
