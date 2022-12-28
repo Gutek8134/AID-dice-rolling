@@ -48,7 +48,7 @@ const damageOutputs = [
     [15, "medium damage"],
     [30, "significant damage"],
     [60, "heavy damage"],
-    [100, "killing blow"],
+    [100, "a killing blow"],
 ];
 
 //Contains every type of equipment you can wear and have
@@ -75,7 +75,7 @@ const DEBUG = true;
 //!Executes automated tests before enabling CLI
 const TESTS = true;
 
-//!Turns on CLI when testing as stand-alone; used only if DEBUG is true
+//!Turns on CLI when testing as stand-alone
 const CLI = false;
 
 //Comment this if statement when debugging. End at line 272.
@@ -158,7 +158,8 @@ CharacterConstructor = (_this, values) => {
                 _this.level = el[1];
                 continue;
             }
-            //Separating items from the rest by preceding slot name with $
+
+            //Separating items from the rest by preceding item name with $
             if (el[1][0] === "$") {
                 _this[el[0]] = state.items[el[1].substring(1)];
                 continue;
@@ -266,6 +267,7 @@ const ignoredValues = [
     "expToNextLvl",
     "skillpoints",
     "isNpc",
+    "type",
 ];
 const CharToString = (character) => {
     let temp = levellingToOblivion
@@ -1136,11 +1138,7 @@ const attack = (arguments) => {
         damageOutputs
     )}.${state.characters[defChar].hp <= 0 ? "\n" + defChar + " died." : ""}`;
 
-    if (state.characters[defChar].hp <= 0) {
-        state.characters[defChar].hp = 0;
-        //NPCs die when they are killed
-        if (state.characters[defChar].isNpc) delete state.characters[defChar];
-    }
+    if (state.characters[defChar].hp <= 0) state.characters[defChar].hp = 0;
 
     state.ctxt =
         state.ctxt !== ""
@@ -1712,7 +1710,7 @@ const equip = (arguments) => {
         items = match.groups.items
             .substring(1)
             .trim()
-            .split(", ")
+            .split(/, */)
             .map((x) => x.trim());
 
     if (!ElementInArray(char, Object.keys(state.characters))) {
@@ -1725,15 +1723,53 @@ const equip = (arguments) => {
             return;
         }
 
-    for (const el of items) _equip(char, el);
+    for (const el of items) _equip(char, state.items[el]);
 
     modifiedText += "\nItem(s) successfully equipped.";
 };
 //#endregion equip
 
 //#region unequip
-//TODO: implement
-const unequip = (arguments) => {};
+//TODO: test
+const unequip = (arguments) => {
+    CutCommand();
+    //Error checking
+    if (arguments === undefined || arguments === null || arguments === "") {
+        state.message = "Unequip Item: No arguments found.";
+        return;
+    }
+
+    const exp = /(?<character>[\w\s']+)(?<slots>(?:, *[\w ']+)+)/i;
+    const match = arguments.match(exp);
+
+    //Error checking
+    if (match === null) {
+        state.message = "Unequip Item: No matching arguments found.";
+        return;
+    }
+
+    //Grabs character name
+    const char = match.groups.character;
+
+    //Checks if character exists
+    if (!ElementInArray(char, Object.keys(state.characters))) {
+        state.message = `Unequip Item: Character ${char} doesn't exist.`;
+        return;
+    }
+
+    //Puts items from slots back into inventory
+    for (const slot of match.groups.slots
+        .substring(1)
+        .trim()
+        .split(/, */)
+        .map((x) => x.trim())) {
+        if (!state.characters[char][slot]) {
+            state.inventory.push(state.characters[char][slot]);
+            modifiedText += `\n${char} unequipped ${state.characters[char][slot]}`;
+            state.characters[char][slot] = undefined;
+        }
+    }
+};
 //#endregion unequip
 
 //#region showInventory
@@ -1774,21 +1810,21 @@ addCharacter = (arguments) => {
         .split(", ")
         .map((el) => el.trim().split("="));
 
-    for (i in values) {
-        if (i[1][0] === "$") {
-            if (!ElementInArray(i[1].substring(1), state.items)) {
-                state.message = `Add Character: item ${i} doesn't exist.`;
+    for (const i in values) {
+        let curr = values[i];
+        curr.map((el) => el.trim());
+        if (curr[1][0] === "$") {
+            if (!ElementInArray(curr[1].substring(1), state.items)) {
+                state.message = `Add Character: item ${curr} doesn't exist.`;
                 return;
             }
-            if (!ElementInArray(i[0], equipmentParts)) {
-                state.message = `Add Character: you have no place to wear ${i[0]}.`;
+            if (!ElementInArray(curr[0], equipmentParts)) {
+                state.message = `Add Character: you have no place to wear ${curr[0]}.`;
                 return;
             }
-            curr = values[i];
-            values[i] = [curr[0].trim(), curr[1].trim().toLowerCase()];
+            curr = [curr[0].trim(), curr[1].trim().toLowerCase()];
             continue;
         }
-        curr = values[i];
         curr = [curr[0].trim(), Number(curr[1])];
         values[i] = curr;
     }
@@ -1826,20 +1862,26 @@ addNPC = (arguments) => {
         .map((el) => el.trim().split("="));
 
     for (i in values) {
-        if (i[1][0] === "$") {
-            if (!ElementInArray(i[1].substring(1), state.items)) {
-                state.message = `Add NPC: item ${i} doesn't exist.`;
+        let curr = values[i];
+        curr = [curr[0].trim(), curr[1].trim().toLowerCase()];
+        if (curr[1][0] === "$") {
+            if (
+                !ElementInArray(curr[1].substring(1), Object.keys(state.items))
+            ) {
+                state.message = `Add NPC: item ${curr[1].substring(
+                    1
+                )} doesn't exist.`;
                 return;
             }
-            if (!ElementInArray(i[0], equipmentParts)) {
-                state.message = `Add NPC: you have no place to wear ${i[0]}.`;
+            if (!ElementInArray(curr[0], equipmentParts)) {
+                state.message = `Add NPC: you have no place to wear ${curr[1].substring(
+                    1
+                )}.`;
                 return;
             }
-            curr = values[i];
             values[i] = [curr[0].trim(), curr[1].trim().toLowerCase()];
             continue;
         }
-        curr = values[i];
         curr = [curr[0].trim(), Number(curr[1])];
         values[i] = curr;
     }
@@ -1881,20 +1923,20 @@ setStats = (arguments) => {
             .map((el) => el.trim().split("="));
 
         for (i in values) {
-            if (i[1][0] === "$") {
-                if (!ElementInArray(i[1].substring(1), state.items)) {
+            let curr = values[i];
+            curr.map((el) => el.trim());
+            if (curr[1][0] === "$") {
+                if (!ElementInArray(curr[1].substring(1), state.items)) {
                     state.message = `Set Stats: item ${i} doesn't exist.`;
                     return;
                 }
-                if (!ElementInArray(i[0], equipmentParts)) {
+                if (!ElementInArray(curr[0], equipmentParts)) {
                     state.message = `Set Stats: you have no place to wear ${i[0]}.`;
                     return;
                 }
-                curr = values[i];
                 values[i] = [curr[0].trim(), curr[1].trim().toLowerCase()];
                 continue;
             }
-            curr = values[i];
             curr = [curr[0].trim(), Number(curr[1])];
             values[i] = curr;
         }
@@ -2160,6 +2202,26 @@ const modifier = (text) => {
                 revive(globalMatch.groups.arguments);
                 break;
 
+            case "additem":
+                addItem(globalMatch.groups.arguments);
+                break;
+
+            case "gainitem":
+                gainItem(globalMatch.groups.arguments);
+                break;
+
+            case "equip":
+                equip(globalMatch.groups.arguments);
+                break;
+
+            case "unequip":
+                unequip(globalMatch.groups.arguments);
+                break;
+
+            case "showinventory":
+                showInventory(globalMatch.groups.arguments);
+                break;
+
             case "addcharacter":
                 addCharacter(globalMatch.groups.arguments);
                 break;
@@ -2207,42 +2269,42 @@ if (!DEBUG) {
 } else {
     if (TESTS) {
         //!fixed tests
-        // modifier("!addcharacter(Librun, level=5, hp=5)");
-        // modifier("!showstats(Librun)");
-        // modifier("!addCharacter(Miguel, str=1, dex=5, int=3, hp=10)");
-        // modifier(
-        //     "Miguel tries to evade an arrow. !skillcheck(dex, Miguel, 3) Is he blind?"
-        // );
-        // modifier("!skillcheck(int, Miguel, 5000)");
-        // modifier("!skillcheck(str, Miguel, 5 : 11)");
-        // modifier("!skillcheck(str, Miguel, 25 : 14 : 22)");
-        // modifier("!skillcheck(dex, Miguel, 5 : 12 : 15 : 20)");
-        // modifier("!This is a normal input!");
-        // modifier(
-        //     "abc !addNPC(Zuibroldun Jodem, dex = 5, magic = 11, fire's force=3) def"
-        // );
-        // modifier(
-        //     "Zuibroldun Jodem tries to die. !skillcheck(dex, Zuibroldun Jodem, 5 = lol : 10 = lmao, it 'Works. Hi 5. : 20 = You're losing.) Paparapapa."
-        // );
-        // modifier("!skillcheck(magic, Miguel, 3)");
-        // modifier("!levelStats(Miguel, str +4, magic+ 3, dex + 3)");
-        // modifier("!sattack(Zuibroldun Jodem, str, Miguel, magic, magic)");
-        // modifier("Setting stats... !setStats(Miguel, magic=120) Stats set");
-        // modifier("!showstats(Miguel)");
-        // modifier("!battle((Zuibroldun Jodem, Librun), (Miguel))");
-        // modifier(
-        //     "Miguel throws a rock at Zuibroldun Jodem. (Zuibroldun Jodem)"
-        // );
-        // modifier("Escape!");
-        // modifier("!attack(Miguel, magic, Zuibroldun Jodem, str)");
-        // modifier("!showstats(Zuibroldun Jodem)");
-        // modifier("!attack(Librun, magic, Zuibroldun Jodem, str)");
-        // modifier("!skillcheck(str, Zuibroldun Jodem, 5)");
-        // modifier(
-        //     "Miguel felt guilty about what he has done. !revive(Miguel, Zuibroldun Jodem, 10)"
-        // );
-        // modifier("!heal(Zuibroldun Jodem, 100)");
-        // modifier("!levelStats(Zuibroldun Jodem, fire's force + 2)");
+        modifier("!addcharacter(Librun, level=5, hp=5)");
+        modifier("!showstats(Librun)");
+        modifier("!addCharacter(Miguel, str=1, dex=5, int=3, hp=10)");
+        modifier(
+            "Miguel tries to evade an arrow. !skillcheck(dex, Miguel, 3) Is he blind?"
+        );
+        modifier("!skillcheck(int, Miguel, 5000)");
+        modifier("!skillcheck(str, Miguel, 5 : 11)");
+        modifier("!skillcheck(str, Miguel, 25 : 14 : 22)");
+        modifier("!skillcheck(dex, Miguel, 5 : 12 : 15 : 20)");
+        modifier("!This is a normal input!");
+        modifier(
+            "abc !addNPC(Zuibroldun Jodem, dex = 5, magic = 11, fire's force=3,  armor = $Gigantic horn) def"
+        );
+        modifier(
+            "Zuibroldun Jodem tries to die. !skillcheck(dex, Zuibroldun Jodem, 5 = lol : 10 = lmao, it 'Works. Hi 5. : 20 = You're losing.) Paparapapa."
+        );
+        modifier("!skillcheck(magic, Miguel, 3)");
+        modifier("!levelStats(Miguel, str +4, magic+ 3, dex + 3)");
+        modifier("!sattack(Zuibroldun Jodem, str, Miguel, magic, magic)");
+        modifier("Setting stats... !setStats(Miguel, magic=120) Stats set");
+        modifier("!showstats(Miguel)");
+        modifier("!battle((Zuibroldun Jodem, Librun), (Miguel))");
+        modifier(
+            "Miguel throws a rock at Zuibroldun Jodem. (Zuibroldun Jodem)"
+        );
+        modifier("Escape!");
+        modifier("!attack(Miguel, magic, Zuibroldun Jodem, str)");
+        modifier("!showstats(Zuibroldun Jodem)");
+        modifier("!attack(Librun, magic, Zuibroldun Jodem, str)");
+        modifier("!skillcheck(str, Zuibroldun Jodem, 5)");
+        modifier(
+            "Miguel felt guilty about what he has done. !revive(Miguel, Zuibroldun Jodem, 10)"
+        );
+        modifier("!heal(Zuibroldun Jodem, 100)");
+        modifier("!levelStats(Zuibroldun Jodem, fire's force + 2)");
         // for (let i = 0; i < 30; ++i) modifier("!heal(Librun, 10:50)");
         /*modifier("!getState()");
   console.log("\n\n\n");
