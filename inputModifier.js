@@ -134,7 +134,7 @@ class Stat {
     }
 }
 
-CharacterConstructor = (_this, values) => {
+CharacterConstructor = (_this, values, items) => {
     //Initializes every previously created stat
     state.stats.forEach((stat) => {
         _this[stat] = new Stat(stat, state.startingLevel);
@@ -146,7 +146,7 @@ CharacterConstructor = (_this, values) => {
 
     //Null check, just to be sure
     if (values !== undefined) {
-        //el in format ["attribute/stat/slot", value/"$item"], because I didn't like converting array to object
+        //el in format ["attribute/stat", value], because I didn't like converting array to object
         //Sanitized beforehand
         for (const el of values) {
             //Hp and level need to be double checked to not make a stat of them
@@ -158,14 +158,18 @@ CharacterConstructor = (_this, values) => {
                 _this.level = el[1];
                 continue;
             }
-
-            //Separating items from the rest by preceding item name with $
-            if (el[1][0] === "$") {
-                _this[el[0]] = state.items[el[1].substring(1)];
-                continue;
-            }
             //It's not hp, level, nor item, so it might as well be a stat
             _this[el[0]] = new Stat(el[0], el[1]);
+        }
+    }
+
+    _this.items = {};
+
+    if (items !== undefined) {
+        //el is item name
+        for (let el of items) {
+            el = state.items[el.substring(1)];
+            _this.items[el.slot] = el;
         }
     }
 
@@ -178,8 +182,8 @@ CharacterConstructor = (_this, values) => {
 
 //Blank character with starting level stats
 class Character {
-    constructor(values) {
-        CharacterConstructor(this, values);
+    constructor(values, items) {
+        CharacterConstructor(this, values, items);
         this.isNpc = false;
     }
 
@@ -189,8 +193,8 @@ class Character {
 }
 
 class NPC {
-    constructor(values) {
-        CharacterConstructor(this, values);
+    constructor(values, items) {
+        CharacterConstructor(this, values, items);
         this.isNpc = true;
     }
 
@@ -249,14 +253,14 @@ const _equip = (char, item) => {
     //Grabs character
     const character = state.characters[char];
     //If character has an already equipped item, it is put back into inventory
-    if (!character[item.slot]) {
+    if (character.items[item.slot]) {
         modifiedText += `\nCharacter ${char} unequipped ${
-            character[item.slot].name
+            character.items[item.slot].name
         }.`;
         state.inventory.push(character[item.slot].name);
     }
     //Puts the item onto character's slot
-    character[item.slot] = item.name;
+    character.items[item.slot] = item.name;
     modifiedText += `\nCharacter ${char} equipped ${item.name}.`;
 };
 
@@ -421,7 +425,7 @@ const BestStat = (character) => {
 
 //#region turn
 const turn = () => {
-    console.log(state.active);
+    console.log("Active: ", state.active);
     if (
         !state.attackingCharacter?.isNpc &&
         state.attackingCharacter !== undefined
@@ -713,7 +717,7 @@ const turn = () => {
         }
     }
     state.message = `Current turn: ${state.activeCharacterName}`;
-    console.log(state.active);
+    console.log("Active: ", state.active);
 };
 //#endregion turn
 
@@ -793,6 +797,7 @@ const skillcheck = (arguments) => {
         state.message = `Skillcheck: Testing against dead character. Punishment: -${state.punishment} (temporary).`;
         charStat -= state.punishment;
     }
+
     //console.log(char + ", " + stat + ": "+ charStat);
 
     //Grabs thresholds
@@ -1575,9 +1580,9 @@ const addItem = (arguments) => {
         state.message = "Add Item: No arguments found.";
         return;
     }
-    //Looks for pattern name, stat=value, target place (none by default) and character
+    //Looks for pattern name, slot, stat=value, target place (none by default) and character
     const exp =
-        /(?<name>[\w ']+), (?<slot>\w+)(?<bonuses>(?:, [\w ']+ *= *(?:\d+|\$[\w ']+))*)(?:, *(?<target>[inventory|equip])(?:, *(?<character>[\w\s']+))?)?/i;
+        /(?<name>[\w ']+), (?<slot>\w+)(?<bonuses>(?:, [\w ']+ *= *(?:\d+|\$[\w ']+))+)(?:, *(?<target>[inventory|equip])(?:, *(?<character>[\w\s']+))?)?/i;
     const match = arguments.match(exp);
 
     //Error checking
@@ -1612,12 +1617,12 @@ const addItem = (arguments) => {
         .map((el) => el.trim().split("="));
 
     for (const i in values) {
-        if (i[1][0] === "$") {
+        let curr = values[i].map((el) => el.trim());
+        console.log(curr);
+        if (curr[1][0] === "$") {
             state.message = `Add Item: You cannot pass item as property of another item.`;
             return;
         }
-        curr = values[i];
-        curr[0] = curr[0].trim();
         if (!isInStats(curr[0])) {
             state.message = `Add Item: Stat ${curr[0]} doesn't exist`;
             return;
@@ -1662,7 +1667,7 @@ const gainItem = (arguments) => {
         return;
     }
 
-    const char = match.groups.characters,
+    const char = match.groups.character,
         name = match.groups.name;
 
     if (!ElementInArray(name, Object.keys(state.items))) {
@@ -1719,7 +1724,7 @@ const equip = (arguments) => {
     }
     for (const el of items)
         if (!ElementInArray(el, Object.keys(state.items))) {
-            state.message = `Item ${el} isn't in your inventory.`;
+            state.message = `Equip Item: Item ${el} isn't in your inventory.`;
             return;
         }
 
@@ -1761,7 +1766,7 @@ const unequip = (arguments) => {
     for (const slot of match.groups.slots
         .substring(1)
         .trim()
-        .split(/, */)
+        .split(",")
         .map((x) => x.trim())) {
         if (!state.characters[char][slot]) {
             state.inventory.push(state.characters[char][slot]);
@@ -1782,7 +1787,9 @@ const showInventory = (arguments) => {
     }
 
     modifiedText =
-        "Currently your inventory holds: " + state.inventory.join(", ") + ".";
+        "Currently your inventory holds: " +
+        state.inventory.map((item) => ItemToString(item)).join(", ") +
+        ".";
 };
 //#endregion showInventory
 
@@ -1790,7 +1797,7 @@ const showInventory = (arguments) => {
 addCharacter = (arguments) => {
     //Looks for pattern !addCharacter(name) or !addCharacter(name, stat1=value, stat2=value, ..., statN=value)
     const exp =
-        /(?<character>[\w\s']+)(?<startingStats>(?:, [\w ']+ *= *(?:\d+|\$[\w ']+))*)/i;
+        /(?<character>[\w\s']+)(?<startingStats>(?:, [\w ']+ *= *(?:\d+|\$[\w ']+))*)(?<startingItems>(?:, *(?:\$[\w '])+)*)/i;
 
     //Matches the RegEx
     const match = arguments.match(exp);
@@ -1806,7 +1813,7 @@ addCharacter = (arguments) => {
 
     //Converts values to format [[stat, val], [stat2, val], ... [statN, val]]
     let values = match.groups.startingStats
-        .substring(2, match.groups.startingStats.length)
+        .substring(2)
         .split(", ")
         .map((el) => el.trim().split("="));
 
@@ -2281,7 +2288,7 @@ if (!DEBUG) {
         modifier("!skillcheck(dex, Miguel, 5 : 12 : 15 : 20)");
         modifier("!This is a normal input!");
         modifier(
-            "abc !addNPC(Zuibroldun Jodem, dex = 5, magic = 11, fire's force=3,  armor = $Gigantic horn) def"
+            "abc !addNPC(Zuibroldun Jodem, dex = 5, magic = 11, fire's force=3, $Gigantic horn) def"
         );
         modifier(
             "Zuibroldun Jodem tries to die. !skillcheck(dex, Zuibroldun Jodem, 5 = lol : 10 = lmao, it 'Works. Hi 5. : 20 = You're losing.) Paparapapa."
@@ -2305,6 +2312,7 @@ if (!DEBUG) {
         );
         modifier("!heal(Zuibroldun Jodem, 100)");
         modifier("!levelStats(Zuibroldun Jodem, fire's force + 2)");
+        modifier("!additem(Giant horn)");
         // for (let i = 0; i < 30; ++i) modifier("!heal(Librun, 10:50)");
         /*modifier("!getState()");
   console.log("\n\n\n");
