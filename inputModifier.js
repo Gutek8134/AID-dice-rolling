@@ -212,8 +212,11 @@ class Item {
     //type="item" - JSON doesn't hold types, so it's here just in case
     constructor(name, values) {
         this.effects = [];
+
+        this.modifiers = {};
+
         if (values !== undefined) {
-            //el in format ["slot/stat", "equipmentPart"/value]
+            //el in format ["slot/stat", "equipmentPart"/statObj]
             //Sanitized beforehand
             for (const el of values) {
                 //Slot and effects are strings, everything else must be a number
@@ -225,10 +228,13 @@ class Item {
                 if (el[0] === "effect") {
                     this.effects.push(el[1]);
                 }
-                //It's not equipment place nor effect, so it's a stat modifier
-                this[el[0]] = el[1];
+                //It's not slot name nor effect, so it's a stat modifier
+                this.modifiers[el[0]] = el[1];
             }
         }
+
+        this.name = name;
+
         //Since you can't save object type to JSON, this has to do (just in case)
         this.type = "item";
     }
@@ -255,7 +261,7 @@ const _equip = (char, item) => {
     //If character has an already equipped item, it is put back into inventory
     if (character.items[item.slot]) {
         modifiedText += `\nCharacter ${char} unequipped ${
-            character.items[item.slot].name
+            character.items[item.slot]
         }.`;
         state.inventory.push(character[item.slot].name);
     }
@@ -271,6 +277,7 @@ const ignoredValues = [
     "expToNextLvl",
     "skillpoints",
     "isNpc",
+    "items",
     "type",
 ];
 const CharToString = (character) => {
@@ -287,6 +294,7 @@ const CharToString = (character) => {
         if (key === "hp" || ElementInArray(key, ignoredValues)) {
             continue;
         }
+
         const value = character[key];
         if (levellingToOblivion) {
             temp += `${key}: level=${value.level}, exp=${
@@ -298,19 +306,22 @@ const CharToString = (character) => {
             temp += `${key}: ${value.level},\n`;
         }
     }
+    for (let el of Object.keys(character.items)) {
+        el = character.items[el];
+        const item = state.items[el];
+        temp += `${item.slot}: ${ItemToString(item)},\n`;
+    }
     return temp.substring(0, temp.length - 2) == ""
         ? "none"
         : temp.substring(0, temp.length - 2);
 };
 
 const ItemToString = (item) => {
-    temp = `slot: ${item.slot}`;
+    temp = `slot: ${item.slot}\n`;
     for (const key in item)
         if (key !== "slot") temp += `${key}: ${item[key]},\n`;
 
-    return temp.substring(0, temp.length - 2) == ""
-        ? "none"
-        : temp.substring(0, temp.length - 2);
+    return temp.substring(0, temp.length - 2);
 };
 
 //Returns whether character exists and has more than 0 HP, returns bool
@@ -411,15 +422,28 @@ const CutCommand = () => {
 };
 
 const BestStat = (character) => {
-    let bestStat;
+    const stats = {};
+
+    for (let item of Object.keys(character.items)) {
+        console.log("item:", item);
+        item = character.items[item];
+
+        for (const mod in state.items[item].modifiers)
+            stats[mod] += state.items[item].modifiers[mod];
+    }
+
     for (const key in character) {
         if (ElementInArray(key, ignoredValues)) continue;
-        else if (
-            character[key]?.level > character[bestStat]?.level ||
-            character[bestStat]?.level === undefined
-        )
-            bestStat = key;
+        // console.log(key);
+        stats[key] += character[key].level;
     }
+    // console.log(stats);
+
+    let bestStat;
+    for (const el of Object.keys(stats))
+        if (stats[el] > stats[bestStat] || stats[bestStat] === undefined)
+            bestStat = el;
+
     return bestStat ?? state.stats[0];
 };
 
@@ -447,9 +471,11 @@ const turn = () => {
         const temp = Number(state.currentSide.substring(4)) + 1;
         const attacked = `side${temp >= 3 ? 1 : temp}`;
         const attChar = state.activeCharacterName;
+
         //You ALWAYS have to pick a target
         const defChar = match.groups.defendingCharacter;
         const defCharInd = state[attacked].findIndex((el) => el === defChar);
+
         //Grabs values or default for stats
         const attackStat =
             match.groups.attackStat || BestStat(state.attackingCharacter);
@@ -618,6 +644,7 @@ const turn = () => {
         const temp = Number(state.currentSide.substring(4)) + 1;
         const attacked = `side${temp >= 3 ? 1 : temp}`;
         const defCharInd = diceRoll(state[attacked].length) - 1;
+        console.log(state[attacked], defCharInd);
         const defChar = state[attacked][defCharInd];
         const defendingCharacter = state.characters[defChar];
         const attackStat = BestStat(state.attackingCharacter);
@@ -1359,8 +1386,6 @@ const sattack = (arguments) => {
 
     if (state.characters[defChar].hp <= 0) {
         state.characters[defChar].hp = 0;
-        //If character's hp falls below 0, they are removed from the battle
-        state[attacked].splice(defCharInd, 1);
         //NPCs die when they are killed
         if (state.characters[defChar].isNpc) delete state.characters[defChar];
     }
@@ -2278,7 +2303,7 @@ if (!DEBUG) {
         //!fixed tests
         modifier("!addcharacter(Librun, level=5, hp=5)");
         modifier("!showstats(Librun)");
-        modifier("!addCharacter(Miguel, str=1, dex=5, int=3, hp=10)");
+        modifier("!addCharacter(Miguel, str=1, dex=5, int=3, hp=40)");
         modifier(
             "Miguel tries to evade an arrow. !skillcheck(dex, Miguel, 3) Is he blind?"
         );
@@ -2288,7 +2313,7 @@ if (!DEBUG) {
         modifier("!skillcheck(dex, Miguel, 5 : 12 : 15 : 20)");
         modifier("!This is a normal input!");
         modifier(
-            "abc !addNPC(Zuibroldun Jodem, dex = 5, magic = 11, fire's force=3, $Gigantic horn) def"
+            "abc !addNPC(Zuibroldun Jodem, str=12, dex = 5, magic = 11, fire's force=3, $Gigantic horn) def"
         );
         modifier(
             "Zuibroldun Jodem tries to die. !skillcheck(dex, Zuibroldun Jodem, 5 = lol : 10 = lmao, it 'Works. Hi 5. : 20 = You're losing.) Paparapapa."
@@ -2302,17 +2327,17 @@ if (!DEBUG) {
         modifier(
             "Miguel throws a rock at Zuibroldun Jodem. (Zuibroldun Jodem)"
         );
-        modifier("Escape!");
-        modifier("!attack(Miguel, magic, Zuibroldun Jodem, str)");
-        modifier("!showstats(Zuibroldun Jodem)");
-        modifier("!attack(Librun, magic, Zuibroldun Jodem, str)");
-        modifier("!skillcheck(str, Zuibroldun Jodem, 5)");
-        modifier(
-            "Miguel felt guilty about what he has done. !revive(Miguel, Zuibroldun Jodem, 10)"
-        );
-        modifier("!heal(Zuibroldun Jodem, 100)");
-        modifier("!levelStats(Zuibroldun Jodem, fire's force + 2)");
-        modifier("!additem(Giant horn)");
+        // modifier("Escape!");
+        // modifier("!attack(Miguel, magic, Zuibroldun Jodem, str)");
+        // modifier("!showstats(Zuibroldun Jodem)");
+        // modifier("!attack(Librun, magic, Zuibroldun Jodem, str)");
+        // modifier("!skillcheck(str, Zuibroldun Jodem, 5)");
+        // modifier(
+        //     "Miguel felt guilty about what he has done. !revive(Miguel, Zuibroldun Jodem, 10)"
+        // );
+        // modifier("!heal(Zuibroldun Jodem, 100)");
+        // modifier("!levelStats(Zuibroldun Jodem, fire's force + 2)");
+        // modifier("!additem(Giant horn)");
         // for (let i = 0; i < 30; ++i) modifier("!heal(Librun, 10:50)");
         /*modifier("!getState()");
   console.log("\n\n\n");

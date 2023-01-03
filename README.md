@@ -1,13 +1,12 @@
 ## Description
 
-This project gives you tools to play AI Dungeon like an RPG loosely based on Dungeons&Dragons.<br>
+This project gives you tools to play AI Dungeon like an RPG loosely based on Dungeons&Dragons.
+
 [Installation Guide](#installation).
 
 # COMMANDS
 
-Issue with AI not printing custom outputs have been resolved as you have voted in the questionnaire:<br>
-I've made sure that the least AI sees is a space and newline (enter) character, which forces it to generate output.<br>
-The script will utilize only the first command in the input.
+The script will utilize only the first command in the input to avoid bugs.
 
 ## !addCharacter
 
@@ -21,7 +20,7 @@ You can specify hp and level the same way.
 Allowed characters for the characters' names are: all latin characters, numbers,<br>
 whitespace characters and ' (apostrophe).
 
-Item names **must** be preceded with `$`.
+Item names **must** be preceded with `$` in addCharacter and addNPC commands.
 
 If another character already has or had a stat not mentioned here, it is set to starting value.
 
