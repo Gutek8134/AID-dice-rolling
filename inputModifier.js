@@ -115,7 +115,7 @@ class Stat {
     constructor(name, level) {
         if (
             typeof name === "string" &&
-            (typeof level === "number" || typeof level === "undefined")
+            (typeof level === "number" || level === undefined)
         ) {
             if (!isInStats(name)) {
                 state.stats.push(name);
@@ -125,6 +125,7 @@ class Stat {
                 this.experience = 0;
                 this.expToNextLvl = experienceCalculation(this.level);
             }
+            this.type = "stat";
         }
     }
     toString() {
@@ -208,7 +209,7 @@ class Item {
     //Fields:
     //slot - string representing slot name
     //effects - array of strings representing effect names
-    //others - numbers representing stat modifiers
+    //modifiers - numbers representing stat modifiers
     //type="item" - JSON doesn't hold types, so it's here just in case
     constructor(name, values) {
         this.effects = [];
@@ -282,14 +283,16 @@ const ignoredValues = [
 ];
 const CharToString = (character) => {
     let temp = levellingToOblivion
-        ? `hp: ${character.hp},\nisNPC: ${character.isNpc},\n`
-        : `hp: ${character.hp},\nlevel: ${character.level},\nskillpoints:${
-              character.skillpoints
-          },\nexperience: ${character.experience},\nto level up: ${
-              character.expToNextLvl
-          }(need ${
+        ? `hp: ${character.hp},
+        isNPC: ${character.isNpc},\n`
+        : `hp: ${character.hp},
+        level: ${character.level},
+        skillpoints:${character.skillpoints},
+          experience: ${character.experience},
+          to level up: ${character.expToNextLvl}(need ${
               character.expToNextLvl - character.experience
-          } more),\nisNpc: ${character.isNpc},\n`;
+          } more),
+          isNpc: ${character.isNpc},\n`;
     for (const key in character) {
         if (key === "hp" || ElementInArray(key, ignoredValues)) {
             continue;
@@ -317,9 +320,11 @@ const CharToString = (character) => {
 };
 
 const ItemToString = (item) => {
+    if (!item) return "none";
+
     temp = `slot: ${item.slot}\n`;
-    for (const key in item)
-        if (key !== "slot") temp += `${key}: ${item[key]},\n`;
+    for (const key of Object.keys(item.modifiers))
+        temp += `${key}: ${item.modifiers[key]},\n`;
 
     return temp.substring(0, temp.length - 2);
 };
@@ -757,12 +762,8 @@ const calcBonus = (char, stat) => {
     let mod = 0;
     //Iterates on equipmentParts array, because I don't want to put another one into characters;
     //Names are shared anyway
-    for (const el of equipmentParts) {
-        //Standard "if exists in object"
-        if (character[el] !== undefined && character[el]?.[stat] !== undefined)
-            //And adds tem up if found
-            //May want to give users choice later
-            mod += character[el][stat];
+    for (const el of character.items) {
+        mod += el;
     }
     return mod;
 };
@@ -1844,27 +1845,19 @@ addCharacter = (arguments) => {
 
     for (const i in values) {
         let curr = values[i];
-        curr.map((el) => el.trim());
-        if (curr[1][0] === "$") {
-            if (!ElementInArray(curr[1].substring(1), state.items)) {
-                state.message = `Add Character: item ${curr} doesn't exist.`;
-                return;
-            }
-            if (!ElementInArray(curr[0], equipmentParts)) {
-                state.message = `Add Character: you have no place to wear ${curr[0]}.`;
-                return;
-            }
-            curr = [curr[0].trim(), curr[1].trim().toLowerCase()];
-            continue;
-        }
-        curr = [curr[0].trim(), Number(curr[1])];
+        curr = [curr[0].trim(), Number(curr[1].trim())];
         values[i] = curr;
     }
     //End of conversion
 
     //Creates the character with stats. If none were given, every created stat is at state.startingLevel
     state.characters[char] =
-        values[0][0] === "" ? new Character() : new Character(values);
+        values[0][0] === ""
+            ? new Character()
+            : new Character(
+                  values,
+                  match.groups.startingItems.split(",").map((el) => el.trim())
+              );
 
     CutCommand();
     state.out = `\nCharacter ${char} has been created with stats\n${state.characters[char]}.`;
@@ -1893,34 +1886,21 @@ addNPC = (arguments) => {
         .split(", ")
         .map((el) => el.trim().split("="));
 
-    for (i in values) {
+    for (const i in values) {
         let curr = values[i];
-        curr = [curr[0].trim(), curr[1].trim().toLowerCase()];
-        if (curr[1][0] === "$") {
-            if (
-                !ElementInArray(curr[1].substring(1), Object.keys(state.items))
-            ) {
-                state.message = `Add NPC: item ${curr[1].substring(
-                    1
-                )} doesn't exist.`;
-                return;
-            }
-            if (!ElementInArray(curr[0], equipmentParts)) {
-                state.message = `Add NPC: you have no place to wear ${curr[1].substring(
-                    1
-                )}.`;
-                return;
-            }
-            values[i] = [curr[0].trim(), curr[1].trim().toLowerCase()];
-            continue;
-        }
-        curr = [curr[0].trim(), Number(curr[1])];
+        curr = [curr[0].trim(), Number(curr[1].trim())];
         values[i] = curr;
     }
     //End of conversion
 
     //Creates the character with stats. If none were given, every created stat is at state.startingLevel
-    state.characters[char] = values[0][0] === "" ? new NPC() : new NPC(values);
+    state.characters[char] =
+        values[0][0] === ""
+            ? new NPC()
+            : new NPC(
+                  values,
+                  match.groups.startingItems.split(",").map((el) => el.trim())
+              );
 
     CutCommand();
     state.out = `\nNon-Playable Character ${char} has been created with stats\n${state.characters[char]}.`;
