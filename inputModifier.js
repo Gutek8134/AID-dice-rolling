@@ -430,14 +430,13 @@ const BestStat = (character) => {
     const stats = {};
 
     for (let item of Object.keys(character.items)) {
-        console.log("item:", item);
         item = character.items[item];
 
-        for (const mod in state.items[item].modifiers)
-            stats[mod] += state.items[item].modifiers[mod];
+        for (const mod of Object.keys(item.modifiers))
+            stats[mod] += item.modifiers[mod];
     }
 
-    for (const key in character) {
+    for (const key of Object.keys(character)) {
         if (ElementInArray(key, ignoredValues)) continue;
         // console.log(key);
         stats[key] += character[key].level;
@@ -469,7 +468,7 @@ const turn = () => {
         }
         if (match.groups.escape) {
             state.out += "\nParty retreated from the fight.";
-            delete state.inBattle;
+            state.inBattle = false;
             delete state.attackingCharacter;
             return;
         }
@@ -492,14 +491,17 @@ const turn = () => {
             return;
         }
         defendingCharacter = state.characters[defChar];
+
+        const attBonus = calcBonus(attChar, attackStat);
+        const defBonus = calcBonus(defChar, defenseStat);
         let attCharStat =
-            state.attackingCharacter[attackStat] !== undefined
+            (state.attackingCharacter[attackStat] !== undefined
                 ? state.attackingCharacter[attackStat].level
-                : 0;
+                : 0) + attBonus;
         let defCharStat =
-            defendingCharacter[defenseStat] !== undefined
+            (defendingCharacter[defenseStat] !== undefined
                 ? defendingCharacter[defenseStat].level
-                : 0;
+                : 0) + defBonus;
         //(Unless you are not ignoring zero division. In this case zeroes are changed to ones to avoid zero division error.)
         if (!ignoreZeroDiv) {
             attCharStat = attCharStat === 0 ? 1 : attCharStat;
@@ -511,10 +513,11 @@ const turn = () => {
         state.characters[defChar].hp -= dam;
 
         //Gives the player necessary info.
-        state.out += `\n${attChar} (${attackStat}: ${attCharStat}) attacked ${defChar} (${defenseStat}: ${defCharStat}) dealing ${CustomDamageOutput(
-            dam,
-            damageOutputs
-        )} (${dam}).\n${
+        state.out += `\n${attChar} (${attackStat}: ${attCharStat}${
+            attBonus === 0 ? "" : " (bonus: " + attBonus.toString() + ")"
+        }) attacked ${defChar} (${defenseStat}: ${defCharStat}${
+            defBonus === 0 ? "" : " (bonus: " + defBonus.toString() + ")"
+        }) dealing ${CustomDamageOutput(dam, damageOutputs)} (${dam}).\n${
             state.characters[defChar].hp <= 0
                 ? defChar +
                   (state.characters[defChar].isNpc ? " died." : " retreated.")
@@ -654,11 +657,20 @@ const turn = () => {
         const defendingCharacter = state.characters[defChar];
         const attackStat = BestStat(state.attackingCharacter);
         const defenseStat = BestStat(defendingCharacter);
-        const attCharStat = state.attackingCharacter[attackStat].level;
-        const defCharStat = defendingCharacter[defenseStat].level;
+        const attBonus = calcBonus(attChar, attackStat);
+        const defBonus = calcBonus(defChar, defenseStat);
+        const attCharStat =
+            state.attackingCharacter[attackStat].level + attBonus;
+        const defCharStat = defendingCharacter[defenseStat].level + defBonus;
         if (defaultDodge) {
             if (dodge(attCharStat, defCharStat)) {
-                state.out += `\n${attChar}(${attackStat}: ${attCharStat}) attacked ${defChar}(${defenseStat}: ${defCharStat}), but missed.`;
+                state.out += `\n${attChar}(${attackStat}: ${attCharStat}${
+                    attBonus === 0
+                        ? ""
+                        : " (bonus: " + attBonus.toString() + ")"
+                }) attacked ${defChar}(${defenseStat}: ${defCharStat}${
+                    defBonus === 0 ? "" : " (bonus: " + defBonus + ")"
+                }), but missed.`;
                 continue;
             }
         }
@@ -669,10 +681,11 @@ const turn = () => {
         //Deactivating character
         state.active.splice(state.attCharInd, 1);
         //Gives the player necessary info.
-        state.out += `\n${attChar} (${attackStat}: ${attCharStat}) attacked ${defChar} (${defenseStat}: ${defCharStat}) dealing ${CustomDamageOutput(
-            dam,
-            damageOutputs
-        )} (${dam}).\n${
+        state.out += `\n${attChar} (${attackStat}: ${attCharStat}${
+            attBonus === 0 ? "" : " (bonus: " + attBonus + ")"
+        }) attacked ${defChar} (${defenseStat}: ${defCharStat}${
+            defBonus === 0 ? "" : " (bonus: " + defBonus + ")"
+        }) dealing ${CustomDamageOutput(dam, damageOutputs)} (${dam}).\n${
             state.characters[defChar].hp <= 0
                 ? defChar +
                   (state.characters[defChar].isNpc ? " died." : " retreated.")
@@ -760,10 +773,13 @@ const calcBonus = (char, stat) => {
     const character = state.characters[char];
     //Defaults to 0 - no bonus
     let mod = 0;
-    //Iterates on equipmentParts array, because I don't want to put another one into characters;
-    //Names are shared anyway
-    for (const el of character.items) {
-        mod += el;
+    //Iterates over character items
+    //Then on each item modifiers
+    //If one of them is corresponding to stat name, its value is added
+    for (const el of Object.keys(character.items)) {
+        const item = character.items[el];
+        for (const e of Object.keys(item.modifiers))
+            if (e === stat) mod += item.modifiers[e];
     }
     return mod;
 };
@@ -837,6 +853,7 @@ const skillcheck = (arguments) => {
     }
     //console.log(thresholds);
 
+    const bonus = calcBonus(char, stat);
     //Tricky part, checking every group for data
     for (key in thresholds.groups) {
         //Grabbing necessary info
@@ -848,8 +865,10 @@ const skillcheck = (arguments) => {
             currIndices !== undefined &&
             character !== undefined
         ) {
-            const score = roll + charStat;
-            let mess = `Skillcheck performed: ${char} with ${stat} ${charStat} rolled ${roll}. ${charStat} + ${roll} = ${score}. Difficulty: ${value} Outcome: `;
+            const score = roll + charStat + bonus;
+            let mess = `Skillcheck performed: ${char} with ${stat} ${charStat}${
+                bonus === 0 ? "" : " (base " + charStat.toString() + ")"
+            } rolled ${roll}. ${charStat} + ${roll} = ${score}. `;
 
             let outcome;
             let custom = false;
@@ -869,9 +888,7 @@ const skillcheck = (arguments) => {
                         .map((el) => Number(el.trim()))
                         .sort((a, b) => a - b);
 
-                    mess = `Skillcheck performed: ${char} with ${stat} ${charStat} rolled ${roll}. ${charStat} + ${roll} = ${score}. Difficulty: ${value.join(
-                        ", "
-                    )} Outcome: `;
+                    mess += `Difficulty: ${value.join(", ")} Outcome: `;
 
                     if (score >= value[1]) {
                         outcome = "success.";
@@ -889,9 +906,7 @@ const skillcheck = (arguments) => {
                         .map((el) => Number(el.trim()))
                         .sort((a, b) => a - b);
 
-                    mess = `Skillcheck performed: ${char} with ${stat} ${charStat} rolled ${roll}. ${charStat} + ${roll} = ${score}. Difficulty: ${value.join(
-                        ", "
-                    )} Outcome: `;
+                    mess += `Difficulty: ${value.join(", ")} Outcome: `;
 
                     if (score >= value[2]) {
                         outcome = "critical success.";
@@ -910,9 +925,7 @@ const skillcheck = (arguments) => {
                         .split(":")
                         .map((el) => Number(el.trim()))
                         .sort((a, b) => a - b);
-                    mess = `Skillcheck performed: ${char} with ${stat} ${charStat} rolled ${roll}. ${charStat} + ${roll} = ${score}. Difficulty: ${value.join(
-                        ", "
-                    )} Outcome: `;
+                    mess += `Difficulty: ${value.join(", ")} Outcome: `;
 
                     if (score >= value[3]) {
                         outcome = "critical success.";
@@ -934,7 +947,7 @@ const skillcheck = (arguments) => {
                         return [Number(temp[0]), temp[1]];
                     });
 
-                    mess = `Skillcheck performed: ${char} with ${stat} ${charStat} rolled ${roll}. ${charStat} + ${roll} = ${score}. Difficulty: ${CustomDifficulties(
+                    mess += `Difficulty: ${CustomDifficulties(
                         value
                     )} Outcome: `;
                     custom = true;
@@ -1145,14 +1158,16 @@ const attack = (arguments) => {
     }
 
     //Don't have a stat? No problem! You'll have a 0 instead! That's even worse than the default starting value!
+    const attBonus = calcBonus(attChar, attackStat);
+    const defBonus = calcBonus(defChar, defenseStat);
     let attCharStat =
-        attackingCharacter[attackStat] !== undefined
+        (attackingCharacter[attackStat] !== undefined
             ? attackingCharacter[attackStat].level
-            : 0;
+            : 0) + attBonus;
     let defCharStat =
-        defendingCharacter[defenseStat] !== undefined
+        (defendingCharacter[defenseStat] !== undefined
             ? defendingCharacter[defenseStat].level
-            : 0;
+            : 0) + defBonus;
 
     //(Unless you are not ignoring zero division. In this case zeroes are changed to ones to avoid zero division error.)
     if (!ignoreZeroDiv) {
@@ -1185,7 +1200,9 @@ const attack = (arguments) => {
     //Gives the player necessary info.
     modifiedText =
         modifiedText.substring(0, currIndices[0]) +
-        `${attChar} (${attackStat}: ${attCharStat}) attacked ${defChar} (${defenseStat}: ${defCharStat}) dealing ${CustomDamageOutput(
+        `${attChar} (${attackStat}: ${attCharStat}${
+            attBonus === 0 ? "" : " (bonus" + attBonus.toString() + ")"
+        }) attacked ${defChar} (${defenseStat}: ${defCharStat}) dealing ${CustomDamageOutput(
             dam,
             damageOutputs
         )} (${dam}).\n${
@@ -1338,18 +1355,21 @@ const sattack = (arguments) => {
     }
 
     //Don't have a stat? No problem! You'll have a 0 instead! That's even worse than the default starting value!
+    const attBonus = calcBonus(attChar, attackStat);
+    const defBonus = calcBonus(defChar, defenseStat);
+    const dodgeBonus = calcBonus(defChar, dodgeStat);
     let attCharStat =
-        attackingCharacter[attackStat] !== undefined
+        (attackingCharacter[attackStat] !== undefined
             ? attackingCharacter[attackStat].level
-            : 0;
+            : 0) + attBonus;
     let defCharStat =
-        defendingCharacter[defenseStat] !== undefined
+        (defendingCharacter[defenseStat] !== undefined
             ? defendingCharacter[defenseStat].level
-            : 0;
+            : 0) + defBonus;
     let defCharDodge =
-        defendingCharacter[dodgeStat] !== undefined
+        (defendingCharacter[dodgeStat] !== undefined
             ? defendingCharacter[dodgeStat].level
-            : 0;
+            : 0) + dodgeBonus;
 
     //(Unless you are not ignoring zero division. In this case zeroes are changed to ones to avoid zero division error.)
     if (!ignoreZeroDiv) {
@@ -1361,7 +1381,11 @@ const sattack = (arguments) => {
     if (dodge(attCharStat, defCharDodge)) {
         modifiedText =
             modifiedText.substring(0, currIndices[0]) +
-            `${attChar}(${attCharStat}) attacked ${defChar}(${defCharDodge}), but missed.` +
+            `${attChar}(${attCharStat}${
+                attBonus === 0 ? "" : " (bonus: " + attBonus + ")"
+            }) attacked ${defChar}(${defCharDodge}${
+                dodgeBonus === 0 ? "" : " (bonus: " + dodgeBonus + ")"
+            }), but missed.` +
             modifiedText.substring(currIndices[1]);
         state.ctxt =
             state.ctxt === undefined
@@ -1402,10 +1426,11 @@ const sattack = (arguments) => {
     //Gives the player necessary info.
     modifiedText =
         modifiedText.substring(0, currIndices[0]) +
-        `${attChar} (${attackStat}: ${attCharStat}) attacked ${defChar} (${defenseStat}: ${defCharStat}) dealing ${CustomDamageOutput(
-            dam,
-            damageOutputs
-        )} (${dam}).\n${
+        `${attChar} (${attackStat}: ${attCharStat}${
+            attBonus === 0 ? "" : " (bonus: " + attBonus + ")"
+        }) attacked ${defChar} (${defenseStat}: ${defCharStat}${
+            defBonus === 0 ? "" : " (bonus: " + defBonus + ")"
+        }) dealing ${CustomDamageOutput(dam, damageOutputs)} (${dam}).\n${
             state.characters[defChar].hp <= 0
                 ? defChar + " died."
                 : defChar + " now has " + state.characters[defChar].hp + "hp."
@@ -1608,7 +1633,7 @@ const addItem = (arguments) => {
     }
     //Looks for pattern name, slot, stat=value, target place (none by default) and character
     const exp =
-        /(?<name>[\w ']+), (?<slot>\w+)(?<bonuses>(?:, [\w ']+ *= *(?:\d+|\$[\w ']+))+)(?:, *(?<target>[inventory|equip])(?:, *(?<character>[\w\s']+))?)?/i;
+        /(?<name>[\w ']+), (?<slot>\w+)(?<bonuses>(?:, [\w ']+ *= *-?\d+)+)(?:, *(?<target>[inventory|equip])(?:, *(?<character>[\w\s']+))?)?/i;
     const match = arguments.match(exp);
 
     //Error checking
