@@ -166,9 +166,11 @@ CharacterConstructor = (_this, values, items) => {
 
     _this.items = {};
 
-    if (items !== undefined) {
+    // console.log("Items:", items);
+    if (items[0] !== "") {
         //el is item name
         for (let el of items) {
+            // console.log("item:", el);
             el = state.items[el.substring(1)];
             _this.items[el.slot] = el;
         }
@@ -267,7 +269,7 @@ const _equip = (char, item) => {
         state.inventory.push(character[item.slot].name);
     }
     //Puts the item onto character's slot
-    character.items[item.slot] = item.name;
+    character.items[item.slot] = item;
     modifiedText += `\nCharacter ${char} equipped ${item.name}.`;
 };
 
@@ -284,15 +286,15 @@ const ignoredValues = [
 const CharToString = (character) => {
     let temp = levellingToOblivion
         ? `hp: ${character.hp},
-        isNPC: ${character.isNpc},\n`
+isNPC: ${character.isNpc},\n`
         : `hp: ${character.hp},
-        level: ${character.level},
-        skillpoints:${character.skillpoints},
-          experience: ${character.experience},
-          to level up: ${character.expToNextLvl}(need ${
+level: ${character.level},
+skillpoints:${character.skillpoints},
+experience: ${character.experience}
+to level up: ${character.expToNextLvl}(need ${
               character.expToNextLvl - character.experience
           } more),
-          isNpc: ${character.isNpc},\n`;
+isNpc: ${character.isNpc},\n`;
     for (const key in character) {
         if (key === "hp" || ElementInArray(key, ignoredValues)) {
             continue;
@@ -312,7 +314,7 @@ const CharToString = (character) => {
     for (let el of Object.keys(character.items)) {
         el = character.items[el];
         const item = state.items[el];
-        temp += `${item.slot}: ${ItemToString(item)},\n`;
+        temp += `item:\n${ItemToString(item)},\n`;
     }
     return temp.substring(0, temp.length - 2) == ""
         ? "none"
@@ -514,9 +516,9 @@ const turn = () => {
 
         //Gives the player necessary info.
         state.out += `\n${attChar} (${attackStat}: ${attCharStat}${
-            attBonus === 0 ? "" : " (bonus: " + attBonus.toString() + ")"
+            attBonus === 0 ? "" : " (base: " + (attCharStat - attBonus) + ")"
         }) attacked ${defChar} (${defenseStat}: ${defCharStat}${
-            defBonus === 0 ? "" : " (bonus: " + defBonus.toString() + ")"
+            defBonus === 0 ? "" : " (base: " + (defCharStat - defBonus) + ")"
         }) dealing ${CustomDamageOutput(dam, damageOutputs)} (${dam}).\n${
             state.characters[defChar].hp <= 0
                 ? defChar +
@@ -667,9 +669,11 @@ const turn = () => {
                 state.out += `\n${attChar}(${attackStat}: ${attCharStat}${
                     attBonus === 0
                         ? ""
-                        : " (bonus: " + attBonus.toString() + ")"
+                        : " (base: " + (attCharStat - attBonus) + ")"
                 }) attacked ${defChar}(${defenseStat}: ${defCharStat}${
-                    defBonus === 0 ? "" : " (bonus: " + defBonus + ")"
+                    defBonus === 0
+                        ? ""
+                        : " (base: " + (defCharStat - defBonus) + ")"
                 }), but missed.`;
                 continue;
             }
@@ -682,9 +686,9 @@ const turn = () => {
         state.active.splice(state.attCharInd, 1);
         //Gives the player necessary info.
         state.out += `\n${attChar} (${attackStat}: ${attCharStat}${
-            attBonus === 0 ? "" : " (bonus: " + attBonus + ")"
+            attBonus === 0 ? "" : " (base: " + (attCharStat - attBonus) + ")"
         }) attacked ${defChar} (${defenseStat}: ${defCharStat}${
-            defBonus === 0 ? "" : " (bonus: " + defBonus + ")"
+            defBonus === 0 ? "" : " (base: " + (defCharStat - defBonus) + ")"
         }) dealing ${CustomDamageOutput(dam, damageOutputs)} (${dam}).\n${
             state.characters[defChar].hp <= 0
                 ? defChar +
@@ -778,8 +782,11 @@ const calcBonus = (char, stat) => {
     //If one of them is corresponding to stat name, its value is added
     for (const el of Object.keys(character.items)) {
         const item = character.items[el];
-        for (const e of Object.keys(item.modifiers))
+        // console.log("bonus item: ", item);
+        for (const e of Object.keys(item.modifiers)) {
             if (e === stat) mod += item.modifiers[e];
+            console.log(e, mod);
+        }
     }
     return mod;
 };
@@ -854,6 +861,7 @@ const skillcheck = (arguments) => {
     //console.log(thresholds);
 
     const bonus = calcBonus(char, stat);
+    // console.log("skill bonus:", bonus);
     //Tricky part, checking every group for data
     for (key in thresholds.groups) {
         //Grabbing necessary info
@@ -866,9 +874,11 @@ const skillcheck = (arguments) => {
             character !== undefined
         ) {
             const score = roll + charStat + bonus;
-            let mess = `Skillcheck performed: ${char} with ${stat} ${charStat}${
+            let mess = `Skillcheck performed: ${char} with ${stat} ${
+                charStat + bonus
+            }${
                 bonus === 0 ? "" : " (base " + charStat.toString() + ")"
-            } rolled ${roll}. ${charStat} + ${roll} = ${score}. `;
+            } rolled ${roll}. ${charStat + bonus} + ${roll} = ${score}. `;
 
             let outcome;
             let custom = false;
@@ -877,6 +887,7 @@ const skillcheck = (arguments) => {
             switch (key) {
                 //One threshold means success or failure
                 case "thresholds1":
+                    mess += `Difficulty: ${value} Outcome: `;
                     outcome =
                         score >= Number(value.trim()) ? "success." : "failure.";
                     break;
@@ -1201,11 +1212,14 @@ const attack = (arguments) => {
     modifiedText =
         modifiedText.substring(0, currIndices[0]) +
         `${attChar} (${attackStat}: ${attCharStat}${
-            attBonus === 0 ? "" : " (bonus" + attBonus.toString() + ")"
-        }) attacked ${defChar} (${defenseStat}: ${defCharStat}) dealing ${CustomDamageOutput(
-            dam,
-            damageOutputs
-        )} (${dam}).\n${
+            attBonus === 0
+                ? ""
+                : " (base" + (attCharStat - attBonus).toString() + ")"
+        }) attacked ${defChar} (${defenseStat}: ${defCharStat}${
+            defBonus === 0
+                ? ""
+                : " (base" + (defCharStat - defBonus).toString() + ")"
+        }) dealing ${CustomDamageOutput(dam, damageOutputs)} (${dam}).\n${
             state.characters[defChar].hp <= 0
                 ? defChar + " died."
                 : defChar + " now has " + state.characters[defChar].hp + "hp."
@@ -1382,9 +1396,13 @@ const sattack = (arguments) => {
         modifiedText =
             modifiedText.substring(0, currIndices[0]) +
             `${attChar}(${attCharStat}${
-                attBonus === 0 ? "" : " (bonus: " + attBonus + ")"
+                attBonus === 0
+                    ? ""
+                    : " (base: " + (attCharStat - attBonus) + ")"
             }) attacked ${defChar}(${defCharDodge}${
-                dodgeBonus === 0 ? "" : " (bonus: " + dodgeBonus + ")"
+                dodgeBonus === 0
+                    ? ""
+                    : " (base: " + (defCharDodge - dodgeBonus) + ")"
             }), but missed.` +
             modifiedText.substring(currIndices[1]);
         state.ctxt =
@@ -1427,9 +1445,9 @@ const sattack = (arguments) => {
     modifiedText =
         modifiedText.substring(0, currIndices[0]) +
         `${attChar} (${attackStat}: ${attCharStat}${
-            attBonus === 0 ? "" : " (bonus: " + attBonus + ")"
+            attBonus === 0 ? "" : " (base: " + (attCharStat - attBonus) + ")"
         }) attacked ${defChar} (${defenseStat}: ${defCharStat}${
-            defBonus === 0 ? "" : " (bonus: " + defBonus + ")"
+            defBonus === 0 ? "" : " (base: " + (defCharStat - defBonus) + ")"
         }) dealing ${CustomDamageOutput(dam, damageOutputs)} (${dam}).\n${
             state.characters[defChar].hp <= 0
                 ? defChar + " died."
@@ -1674,10 +1692,7 @@ const addItem = (arguments) => {
             state.message = `Add Item: You cannot pass item as property of another item.`;
             return;
         }
-        if (!isInStats(curr[0])) {
-            state.message = `Add Item: Stat ${curr[0]} doesn't exist`;
-            return;
-        }
+        if (!isInStats(curr[0])) state.stats.push(curr[0]);
         curr = [curr[0], Number(curr[1])];
         values[i] = curr;
     }
@@ -1686,7 +1701,7 @@ const addItem = (arguments) => {
     //End of conversion
 
     //Passes to constructor and adds received item to the object
-    const item = Item(name, values);
+    const item = new Item(name, values);
     state.items[name] = item;
     modifiedText = `Item ${name} created with attributes:\n${ItemToString(
         item
@@ -1893,7 +1908,7 @@ addCharacter = (arguments) => {
 addNPC = (arguments) => {
     //Looks for pattern !addNPC(name) or !addNPC(name, stat1=value, stat2=value, ..., statN=value)
     const exp =
-        /(?<character>[\w\s']+)(?<startingStats>(?:, [\w ']+ *= *(?:\d+|\$[\w ']+))*)/i;
+        /(?<character>[\w\s']+)(?<startingStats>(?:, [\w ']+ *= *(?:\d+|\$[\w ']+))*)(?<startingItems>(?:, *(?:\$[\w '])+)*)/i;
 
     //Matches the RegEx
     const match = arguments.match(exp);
@@ -2306,32 +2321,36 @@ if (!DEBUG) {
 } else {
     if (TESTS) {
         //!fixed tests
+        modifier("!additem(ass knife, weapon, poison=3)");
         modifier("!addcharacter(Librun, level=5, hp=5)");
+        modifier("!gainitem(ass knife)");
+        modifier("!equip(Librun, ass knife)");
         modifier("!showstats(Librun)");
-        modifier("!addCharacter(Miguel, str=1, dex=5, int=3, hp=40)");
-        modifier(
-            "Miguel tries to evade an arrow. !skillcheck(dex, Miguel, 3) Is he blind?"
-        );
-        modifier("!skillcheck(int, Miguel, 5000)");
-        modifier("!skillcheck(str, Miguel, 5 : 11)");
-        modifier("!skillcheck(str, Miguel, 25 : 14 : 22)");
-        modifier("!skillcheck(dex, Miguel, 5 : 12 : 15 : 20)");
-        modifier("!This is a normal input!");
-        modifier(
-            "abc !addNPC(Zuibroldun Jodem, str=12, dex = 5, magic = 11, fire's force=3, $Gigantic horn) def"
-        );
-        modifier(
-            "Zuibroldun Jodem tries to die. !skillcheck(dex, Zuibroldun Jodem, 5 = lol : 10 = lmao, it 'Works. Hi 5. : 20 = You're losing.) Paparapapa."
-        );
-        modifier("!skillcheck(magic, Miguel, 3)");
-        modifier("!levelStats(Miguel, str +4, magic+ 3, dex + 3)");
-        modifier("!sattack(Zuibroldun Jodem, str, Miguel, magic, magic)");
-        modifier("Setting stats... !setStats(Miguel, magic=120) Stats set");
-        modifier("!showstats(Miguel)");
-        modifier("!battle((Zuibroldun Jodem, Librun), (Miguel))");
-        modifier(
-            "Miguel throws a rock at Zuibroldun Jodem. (Zuibroldun Jodem)"
-        );
+        modifier("!skillcheck(poison, Librun, 4)");
+        // modifier("!addCharacter(Miguel, str=1, dex=5, int=3, hp=40)");
+        // modifier(
+        //     "Miguel tries to evade an arrow. !skillcheck(dex, Miguel, 3) Is he blind?"
+        // );
+        // modifier("!skillcheck(int, Miguel, 5000)");
+        // modifier("!skillcheck(str, Miguel, 5 : 11)");
+        // modifier("!skillcheck(str, Miguel, 25 : 14 : 22)");
+        // modifier("!skillcheck(dex, Miguel, 5 : 12 : 15 : 20)");
+        // modifier("!This is a normal input!");
+        // modifier(
+        //     "abc !addNPC(Zuibroldun Jodem, str=12, dex = 5, magic = 11, fire's force=3, $Gigantic horn) def"
+        // );
+        // modifier(
+        //     "Zuibroldun Jodem tries to die. !skillcheck(dex, Zuibroldun Jodem, 5 = lol : 10 = lmao, it 'Works. Hi 5. : 20 = You're losing.) Paparapapa."
+        // );
+        // modifier("!skillcheck(magic, Miguel, 3)");
+        // modifier("!levelStats(Miguel, str +4, magic+ 3, dex + 3)");
+        // modifier("!sattack(Zuibroldun Jodem, str, Miguel, magic, magic)");
+        // modifier("Setting stats... !setStats(Miguel, magic=120) Stats set");
+        // modifier("!showstats(Miguel)");
+        // modifier("!battle((Zuibroldun Jodem, Librun), (Miguel))");
+        // modifier(
+        //     "Miguel throws a rock at Zuibroldun Jodem. (Zuibroldun Jodem)"
+        // );
         // modifier("Escape!");
         // modifier("!attack(Miguel, magic, Zuibroldun Jodem, str)");
         // modifier("!showstats(Zuibroldun Jodem)");
