@@ -1655,7 +1655,7 @@ const addItem = (arguments) => {
     }
     //Looks for pattern name, slot, stat=value, target place (none by default) and character
     const exp =
-        /(?<name>[\w ']+), (?<slot>\w+)(?<bonuses>(?:, [\w ']+ *= *-?\d+)+)(?:, *(?<target>inventory|equip)(?:, *(?<character>[\w\s']+))?)?/i;
+        /(?<name>[\w ']+), (?<slot>[\w\s]+)(?<bonuses>(?:, [\w ']+ *= *-?\d+)+)(?:, *(?<target>inventory|equip)(?:, *(?<character>[\w\s']+))?)?/i;
     const match = arguments.match(exp);
 
     //Error checking
@@ -1811,7 +1811,7 @@ const unequip = (arguments) => {
         return;
     }
 
-    const exp = /(?<character>[\w\s']+)(?<slots>(?:, *[\w ']+)+)/i;
+    const exp = /(?<character>[\w\s']+)(?<slots>(?:, *[\w ]+)+)/i;
     const match = arguments.match(exp);
 
     //Error checking
