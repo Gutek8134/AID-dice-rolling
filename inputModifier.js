@@ -48,8 +48,11 @@ const damageOutputs = [
     [15, "medium damage"],
     [30, "significant damage"],
     [60, "heavy damage"],
-    [100, "killing blow"],
+    [100, "a killing blow"],
 ];
+
+//Contains every type of equipment you can wear and have
+const equipmentParts = ["helmet", "armor", "leggins", "weapon", "artifact"];
 
 //!Does not check whether stats are equal to 0 when attacking. Change only if your damage function does not contain division or you've checked it properly.
 const ignoreZeroDiv = false;
@@ -70,9 +73,9 @@ const defendingCharacterLevels = false;
 const DEBUG = false;
 
 //!Executes automated tests before enabling CLI
-const TESTS = false;
+const TESTS = true;
 
-//!Turns on CLI when testing as stand-alone; used only if DEBUG is true
+//!Turns on CLI when testing as stand-alone
 const CLI = false;
 
 //Comment this if statement when debugging. End at line 272.
@@ -86,6 +89,14 @@ if (DEBUG) {
         characters: {},
         punishment: 5,
         skillpointsOnLevelUp: 5,
+        items: {},
+        inventory: [],
+        ctxt: "",
+        out: "",
+        message: "",
+        inBattle: false,
+        side1: [],
+        side2: [],
     };
 
     //!Since I cannot import shared library locally, I will copy everything here. Debug purposes only.
@@ -104,7 +115,7 @@ if (DEBUG) {
         constructor(name, level) {
             if (
                 typeof name === "string" &&
-                (typeof level === "number" || typeof level === "undefined")
+                (typeof level === "number" || level === undefined)
             ) {
                 if (!isInStats(name)) {
                     state.stats.push(name);
@@ -114,6 +125,7 @@ if (DEBUG) {
                     this.experience = 0;
                     this.expToNextLvl = experienceCalculation(this.level);
                 }
+                this.type = "stat";
             }
         }
         toString() {
@@ -125,31 +137,58 @@ if (DEBUG) {
         }
     }
 
+    CharacterConstructor = (_this, values, items) => {
+        //Initializes every previously created stat
+        state.stats.forEach((stat) => {
+            _this[stat] = new Stat(stat, state.startingLevel);
+        });
+
+        //Initializes hp and character level
+        _this.hp = state.startingHP;
+        _this.level = 1;
+
+        //Null check, just to be sure
+        if (values !== undefined) {
+            //el in format ["attribute/stat", value], because I didn't like converting array to object
+            //Sanitized beforehand
+            for (const el of values) {
+                //Hp and level need to be double checked to not make a stat of them
+                if (el[0] === "hp") {
+                    _this.hp = el[1];
+                    continue;
+                }
+                if (el[0] === "level") {
+                    _this.level = el[1];
+                    continue;
+                }
+                //It's not hp, level, nor item, so it might as well be a stat
+                _this[el[0]] = new Stat(el[0], el[1]);
+            }
+        }
+
+        _this.items = {};
+
+        // console.log("Items:", items);
+        if (items[0] !== "") {
+            //el is item name
+            for (let el of items) {
+                // console.log("item:", el);
+                el = state.items[el.substring(1)];
+                _this.items[el.slot] = el;
+            }
+        }
+
+        //No overrides for these starting values
+        _this.experience = 0;
+        _this.expToNextLvl = experienceCalculation(_this.level);
+        _this.skillpoints = 0;
+        _this.type = "character";
+    };
+
     //Blank character with starting level stats
     class Character {
-        constructor(values) {
-            state.stats.forEach((stat) => {
-                this[stat] = new Stat(stat, state.startingLevel);
-            });
-            this.hp = state.startingHP;
-            this.level = 1;
-
-            if (values !== undefined) {
-                for (const el of values) {
-                    if (el[0] === "hp") {
-                        this.hp = el[1];
-                        continue;
-                    }
-                    if (el[0] === "level") {
-                        this.level = el[1];
-                        continue;
-                    }
-                    this[el[0]] = new Stat(el[0], el[1]);
-                }
-            }
-            this.experience = 0;
-            this.expToNextLvl = experienceCalculation(this.level);
-            this.skillpoints = 0;
+        constructor(values, items) {
+            CharacterConstructor(this, values, items);
             this.isNpc = false;
         }
 
@@ -159,34 +198,50 @@ if (DEBUG) {
     }
 
     class NPC {
-        constructor(values) {
-            state.stats.forEach((stat) => {
-                this[stat] = new Stat(stat, state.startingLevel);
-            });
-            this.hp = state.startingHP;
-            this.level = 1;
-
-            if (values !== undefined) {
-                for (const el of values) {
-                    if (el[0] === "hp") {
-                        this.hp = el[1];
-                        continue;
-                    }
-                    if (el[0] === "level") {
-                        this.level = el[1];
-                        continue;
-                    }
-                    this[el[0]] = new Stat(el[0], el[1]);
-                }
-            }
-            this.experience = 0;
-            this.expToNextLvl = experienceCalculation(this.level);
-            this.skillpoints = 0;
+        constructor(values, items) {
+            CharacterConstructor(this, values, items);
             this.isNpc = true;
         }
 
         toString() {
             return CharToString(this);
+        }
+    }
+
+    class Item {
+        //Item structure:
+        //Fields:
+        //slot - string representing slot name
+        //effects - array of strings representing effect names
+        //modifiers - numbers representing stat modifiers
+        //type="item" - JSON doesn't hold types, so it's here just in case
+        constructor(name, values) {
+            this.effects = [];
+
+            this.modifiers = {};
+
+            if (values !== undefined) {
+                //el in format ["slot/stat", "equipmentPart"/statObj]
+                //Sanitized beforehand
+                for (const el of values) {
+                    //Slot and effects are strings, everything else must be a number
+                    //Until buffs and debuffs will be extended to items
+                    if (el[0] === "slot") {
+                        this.slot = el[1];
+                        continue;
+                    }
+                    if (el[0] === "effect") {
+                        this.effects.push(el[1]);
+                    }
+                    //It's not slot name nor effect, so it's a stat modifier
+                    this.modifiers[el[0]] = el[1];
+                }
+            }
+
+            this.name = name;
+
+            //Since you can't save object type to JSON, this has to do (just in case)
+            this.type = "item";
         }
     }
 
@@ -204,6 +259,23 @@ if (DEBUG) {
         return Math.floor(Math.random() * maxValue) + 1;
     };
 
+    //Equips item for a character
+    const _equip = (char, item) => {
+        //Grabs character
+        const character = state.characters[char];
+        //If character has an already equipped item, it is put back into inventory
+        if (character.items[item.slot]) {
+            modifiedText += `\nCharacter ${char} unequipped ${
+                character.items[item.slot]
+            }.`;
+            state.inventory.push(character[item.slot].name);
+        }
+        //Puts the item onto character's slot and removes them from inventory
+        character.items[item.slot] = item;
+        modifiedText += `\nCharacter ${char} equipped ${item.name}.`;
+        state.inventory.splice(state.inventory.indexOf(item.name), 1);
+    };
+
     const ignoredValues = [
         "hp",
         "level",
@@ -211,21 +283,26 @@ if (DEBUG) {
         "expToNextLvl",
         "skillpoints",
         "isNpc",
+        "items",
+        "type",
     ];
     const CharToString = (character) => {
         let temp = levellingToOblivion
-            ? `hp: ${character.hp},\nisNPC: ${character.isNpc},\n`
-            : `hp: ${character.hp},\nlevel: ${character.level},\nskillpoints:${
-                  character.skillpoints
-              },\nexperience: ${character.experience},\nto level up: ${
-                  character.expToNextLvl
-              }(need ${
+            ? `hp: ${character.hp},
+isNPC: ${character.isNpc},\n`
+            : `hp: ${character.hp},
+level: ${character.level},
+skillpoints:${character.skillpoints},
+experience: ${character.experience}
+to level up: ${character.expToNextLvl}(need ${
                   character.expToNextLvl - character.experience
-              } more),\nisNpc: ${character.isNpc},\n`;
+              } more),
+isNpc: ${character.isNpc},\n`;
         for (const key in character) {
             if (key === "hp" || ElementInArray(key, ignoredValues)) {
                 continue;
             }
+
             const value = character[key];
             if (levellingToOblivion) {
                 temp += `${key}: level=${value.level}, exp=${
@@ -237,9 +314,26 @@ if (DEBUG) {
                 temp += `${key}: ${value.level},\n`;
             }
         }
+        temp += "\nItems:";
+        if (Object.keys(character.items).length > 0)
+            for (let el of Object.keys(character.items)) {
+                el = character.items[el];
+                temp += `\n${ItemToString(el)},\n`;
+            }
+        else temp += "\nnone  ";
         return temp.substring(0, temp.length - 2) == ""
             ? "none"
             : temp.substring(0, temp.length - 2);
+    };
+
+    const ItemToString = (item) => {
+        if (!item) return "none";
+
+        temp = `${item.name}:\nslot: ${item.slot}\n`;
+        for (const key of Object.keys(item.modifiers))
+            temp += `${key}: ${item.modifiers[key]},\n`;
+
+        return temp.substring(0, temp.length - 2);
     };
 
     //Returns whether character exists and has more than 0 HP, returns bool
@@ -318,6 +412,8 @@ const SetupState = () => {
             state.startingHP === undefined ? 100 : state.startingHP;
         state.characters =
             state.characters === undefined ? {} : state.characters;
+        state.items = state.items === undefined ? {} : state.items;
+        state.inventory = state.inventory === undefined ? [] : state.inventory;
         state.punishment =
             state.punishment === undefined ? 5 : state.punishment;
         state.skillpointsOnLevelUp =
@@ -339,21 +435,33 @@ const CutCommand = () => {
 };
 
 const BestStat = (character) => {
-    let bestStat;
-    for (const key in character) {
-        if (ElementInArray(key, ignoredValues)) continue;
-        else if (
-            character[key]?.level > character[bestStat]?.level ||
-            character[bestStat]?.level === undefined
-        )
-            bestStat = key;
+    const stats = {};
+
+    for (let item of Object.keys(character.items)) {
+        item = character.items[item];
+
+        for (const mod of Object.keys(item.modifiers))
+            stats[mod] += item.modifiers[mod];
     }
+
+    for (const key of Object.keys(character)) {
+        if (ElementInArray(key, ignoredValues)) continue;
+        // console.log(key);
+        stats[key] += character[key].level;
+    }
+    // console.log(stats);
+
+    let bestStat;
+    for (const el of Object.keys(stats))
+        if (stats[el] > stats[bestStat] || stats[bestStat] === undefined)
+            bestStat = el;
+
     return bestStat ?? state.stats[0];
 };
 
 //#region turn
 const turn = () => {
-    console.log(state.active);
+    console.log("Active: ", state.active);
     if (
         !state.attackingCharacter?.isNpc &&
         state.attackingCharacter !== undefined
@@ -368,16 +476,18 @@ const turn = () => {
         }
         if (match.groups.escape) {
             state.out += "\nParty retreated from the fight.";
-            delete state.inBattle;
+            state.inBattle = false;
             delete state.attackingCharacter;
             return;
         }
         const temp = Number(state.currentSide.substring(4)) + 1;
         const attacked = `side${temp >= 3 ? 1 : temp}`;
         const attChar = state.activeCharacterName;
+
         //You ALWAYS have to pick a target
         const defChar = match.groups.defendingCharacter;
         const defCharInd = state[attacked].findIndex((el) => el === defChar);
+
         //Grabs values or default for stats
         const attackStat =
             match.groups.attackStat || BestStat(state.attackingCharacter);
@@ -389,14 +499,17 @@ const turn = () => {
             return;
         }
         defendingCharacter = state.characters[defChar];
+
+        const attBonus = calcBonus(attChar, attackStat);
+        const defBonus = calcBonus(defChar, defenseStat);
         let attCharStat =
-            state.attackingCharacter[attackStat] !== undefined
+            (state.attackingCharacter[attackStat] !== undefined
                 ? state.attackingCharacter[attackStat].level
-                : 0;
+                : 0) + attBonus;
         let defCharStat =
-            defendingCharacter[defenseStat] !== undefined
+            (defendingCharacter[defenseStat] !== undefined
                 ? defendingCharacter[defenseStat].level
-                : 0;
+                : 0) + defBonus;
         //(Unless you are not ignoring zero division. In this case zeroes are changed to ones to avoid zero division error.)
         if (!ignoreZeroDiv) {
             attCharStat = attCharStat === 0 ? 1 : attCharStat;
@@ -408,10 +521,11 @@ const turn = () => {
         state.characters[defChar].hp -= dam;
 
         //Gives the player necessary info.
-        state.out += `\n${attChar} (${attackStat}: ${attCharStat}) attacked ${defChar} (${defenseStat}: ${defCharStat}) dealing ${CustomDamageOutput(
-            dam,
-            damageOutputs
-        )} (${dam}).\n${
+        state.out += `\n${attChar} (${attackStat}: ${attCharStat}${
+            attBonus === 0 ? "" : " (base: " + (attCharStat - attBonus) + ")"
+        }) attacked ${defChar} (${defenseStat}: ${defCharStat}${
+            defBonus === 0 ? "" : " (base: " + (defCharStat - defBonus) + ")"
+        }) dealing ${CustomDamageOutput(dam, damageOutputs)} (${dam}).\n${
             state.characters[defChar].hp <= 0
                 ? defChar +
                   (state.characters[defChar].isNpc ? " died." : " retreated.")
@@ -546,15 +660,27 @@ const turn = () => {
         const temp = Number(state.currentSide.substring(4)) + 1;
         const attacked = `side${temp >= 3 ? 1 : temp}`;
         const defCharInd = diceRoll(state[attacked].length) - 1;
+        console.log(state[attacked], defCharInd);
         const defChar = state[attacked][defCharInd];
         const defendingCharacter = state.characters[defChar];
         const attackStat = BestStat(state.attackingCharacter);
         const defenseStat = BestStat(defendingCharacter);
-        const attCharStat = state.attackingCharacter[attackStat].level;
-        const defCharStat = defendingCharacter[defenseStat].level;
+        const attBonus = calcBonus(attChar, attackStat);
+        const defBonus = calcBonus(defChar, defenseStat);
+        const attCharStat =
+            state.attackingCharacter[attackStat].level + attBonus;
+        const defCharStat = defendingCharacter[defenseStat].level + defBonus;
         if (defaultDodge) {
             if (dodge(attCharStat, defCharStat)) {
-                state.out += `\n${attChar}(${attackStat}: ${attCharStat}) attacked ${defChar}(${defenseStat}: ${defCharStat}), but missed.`;
+                state.out += `\n${attChar}(${attackStat}: ${attCharStat}${
+                    attBonus === 0
+                        ? ""
+                        : " (base: " + (attCharStat - attBonus) + ")"
+                }) attacked ${defChar}(${defenseStat}: ${defCharStat}${
+                    defBonus === 0
+                        ? ""
+                        : " (base: " + (defCharStat - defBonus) + ")"
+                }), but missed.`;
                 continue;
             }
         }
@@ -565,10 +691,11 @@ const turn = () => {
         //Deactivating character
         state.active.splice(state.attCharInd, 1);
         //Gives the player necessary info.
-        state.out += `\n${attChar} (${attackStat}: ${attCharStat}) attacked ${defChar} (${defenseStat}: ${defCharStat}) dealing ${CustomDamageOutput(
-            dam,
-            damageOutputs
-        )} (${dam}).\n${
+        state.out += `\n${attChar} (${attackStat}: ${attCharStat}${
+            attBonus === 0 ? "" : " (base: " + (attCharStat - attBonus) + ")"
+        }) attacked ${defChar} (${defenseStat}: ${defCharStat}${
+            defBonus === 0 ? "" : " (base: " + (defCharStat - defBonus) + ")"
+        }) dealing ${CustomDamageOutput(dam, damageOutputs)} (${dam}).\n${
             state.characters[defChar].hp <= 0
                 ? defChar +
                   (state.characters[defChar].isNpc ? " died." : " retreated.")
@@ -645,9 +772,30 @@ const turn = () => {
         }
     }
     state.message = `Current turn: ${state.activeCharacterName}`;
-    console.log(state.active);
+    console.log("Active: ", state.active);
 };
 //#endregion turn
+
+//#region bonus
+//Calculates sum of item stat bonuses
+const calcBonus = (char, stat) => {
+    //Grabs character
+    const character = state.characters[char];
+    //Defaults to 0 - no bonus
+    let mod = 0;
+    //Iterates over character items
+    //Then on each item modifiers
+    //If one of them is corresponding to stat name, its value is added
+    for (const el of Object.keys(character.items)) {
+        const item = character.items[el];
+        // console.log("bonus item: ", item);
+        for (const e of Object.keys(item.modifiers)) {
+            if (e === stat) mod += item.modifiers[e];
+        }
+    }
+    return mod;
+};
+//#endregion bonus
 
 //#region skillcheck
 const skillcheck = (arguments) => {
@@ -705,6 +853,7 @@ const skillcheck = (arguments) => {
         state.message = `Skillcheck: Testing against dead character. Punishment: -${state.punishment} (temporary).`;
         charStat -= state.punishment;
     }
+
     //console.log(char + ", " + stat + ": "+ charStat);
 
     //Grabs thresholds
@@ -716,6 +865,8 @@ const skillcheck = (arguments) => {
     }
     //console.log(thresholds);
 
+    const bonus = calcBonus(char, stat);
+    // console.log("skill bonus:", bonus);
     //Tricky part, checking every group for data
     for (key in thresholds.groups) {
         //Grabbing necessary info
@@ -727,8 +878,12 @@ const skillcheck = (arguments) => {
             currIndices !== undefined &&
             character !== undefined
         ) {
-            const score = roll + charStat;
-            let mess = `Skillcheck performed: ${char} with ${stat} ${charStat} rolled ${roll}. ${charStat} + ${roll} = ${score}. Difficulty: ${value} Outcome: `;
+            const score = roll + charStat + bonus;
+            let mess = `Skillcheck performed: ${char} with ${stat} ${
+                charStat + bonus
+            }${
+                bonus === 0 ? "" : " (base " + charStat.toString() + ")"
+            } rolled ${roll}. ${charStat + bonus} + ${roll} = ${score}. `;
 
             let outcome;
             let custom = false;
@@ -737,6 +892,7 @@ const skillcheck = (arguments) => {
             switch (key) {
                 //One threshold means success or failure
                 case "thresholds1":
+                    mess += `Difficulty: ${value} Outcome: `;
                     outcome =
                         score >= Number(value.trim()) ? "success." : "failure.";
                     break;
@@ -748,9 +904,7 @@ const skillcheck = (arguments) => {
                         .map((el) => Number(el.trim()))
                         .sort((a, b) => a - b);
 
-                    mess = `Skillcheck performed: ${char} with ${stat} ${charStat} rolled ${roll}. ${charStat} + ${roll} = ${score}. Difficulty: ${value.join(
-                        ", "
-                    )} Outcome: `;
+                    mess += `Difficulty: ${value.join(", ")} Outcome: `;
 
                     if (score >= value[1]) {
                         outcome = "success.";
@@ -768,9 +922,7 @@ const skillcheck = (arguments) => {
                         .map((el) => Number(el.trim()))
                         .sort((a, b) => a - b);
 
-                    mess = `Skillcheck performed: ${char} with ${stat} ${charStat} rolled ${roll}. ${charStat} + ${roll} = ${score}. Difficulty: ${value.join(
-                        ", "
-                    )} Outcome: `;
+                    mess += `Difficulty: ${value.join(", ")} Outcome: `;
 
                     if (score >= value[2]) {
                         outcome = "critical success.";
@@ -789,9 +941,7 @@ const skillcheck = (arguments) => {
                         .split(":")
                         .map((el) => Number(el.trim()))
                         .sort((a, b) => a - b);
-                    mess = `Skillcheck performed: ${char} with ${stat} ${charStat} rolled ${roll}. ${charStat} + ${roll} = ${score}. Difficulty: ${value.join(
-                        ", "
-                    )} Outcome: `;
+                    mess += `Difficulty: ${value.join(", ")} Outcome: `;
 
                     if (score >= value[3]) {
                         outcome = "critical success.";
@@ -813,7 +963,7 @@ const skillcheck = (arguments) => {
                         return [Number(temp[0]), temp[1]];
                     });
 
-                    mess = `Skillcheck performed: ${char} with ${stat} ${charStat} rolled ${roll}. ${charStat} + ${roll} = ${score}. Difficulty: ${CustomDifficulties(
+                    mess += `Difficulty: ${CustomDifficulties(
                         value
                     )} Outcome: `;
                     custom = true;
@@ -1024,14 +1174,16 @@ const attack = (arguments) => {
     }
 
     //Don't have a stat? No problem! You'll have a 0 instead! That's even worse than the default starting value!
+    const attBonus = calcBonus(attChar, attackStat);
+    const defBonus = calcBonus(defChar, defenseStat);
     let attCharStat =
-        attackingCharacter[attackStat] !== undefined
+        (attackingCharacter[attackStat] !== undefined
             ? attackingCharacter[attackStat].level
-            : 0;
+            : 0) + attBonus;
     let defCharStat =
-        defendingCharacter[defenseStat] !== undefined
+        (defendingCharacter[defenseStat] !== undefined
             ? defendingCharacter[defenseStat].level
-            : 0;
+            : 0) + defBonus;
 
     //(Unless you are not ignoring zero division. In this case zeroes are changed to ones to avoid zero division error.)
     if (!ignoreZeroDiv) {
@@ -1050,11 +1202,7 @@ const attack = (arguments) => {
         damageOutputs
     )}.${state.characters[defChar].hp <= 0 ? "\n" + defChar + " died." : ""}`;
 
-    if (state.characters[defChar].hp <= 0) {
-        state.characters[defChar].hp = 0;
-        //NPCs die when they are killed
-        if (state.characters[defChar].isNpc) delete state.characters[defChar];
-    }
+    if (state.characters[defChar].hp <= 0) state.characters[defChar].hp = 0;
 
     state.ctxt =
         state.ctxt !== ""
@@ -1068,10 +1216,15 @@ const attack = (arguments) => {
     //Gives the player necessary info.
     modifiedText =
         modifiedText.substring(0, currIndices[0]) +
-        `${attChar} (${attackStat}: ${attCharStat}) attacked ${defChar} (${defenseStat}: ${defCharStat}) dealing ${CustomDamageOutput(
-            dam,
-            damageOutputs
-        )} (${dam}).\n${
+        `${attChar} (${attackStat}: ${attCharStat}${
+            attBonus === 0
+                ? ""
+                : " (base" + (attCharStat - attBonus).toString() + ")"
+        }) attacked ${defChar} (${defenseStat}: ${defCharStat}${
+            defBonus === 0
+                ? ""
+                : " (base" + (defCharStat - defBonus).toString() + ")"
+        }) dealing ${CustomDamageOutput(dam, damageOutputs)} (${dam}).\n${
             state.characters[defChar].hp <= 0
                 ? defChar + " died."
                 : defChar + " now has " + state.characters[defChar].hp + "hp."
@@ -1221,18 +1374,21 @@ const sattack = (arguments) => {
     }
 
     //Don't have a stat? No problem! You'll have a 0 instead! That's even worse than the default starting value!
+    const attBonus = calcBonus(attChar, attackStat);
+    const defBonus = calcBonus(defChar, defenseStat);
+    const dodgeBonus = calcBonus(defChar, dodgeStat);
     let attCharStat =
-        attackingCharacter[attackStat] !== undefined
+        (attackingCharacter[attackStat] !== undefined
             ? attackingCharacter[attackStat].level
-            : 0;
+            : 0) + attBonus;
     let defCharStat =
-        defendingCharacter[defenseStat] !== undefined
+        (defendingCharacter[defenseStat] !== undefined
             ? defendingCharacter[defenseStat].level
-            : 0;
+            : 0) + defBonus;
     let defCharDodge =
-        defendingCharacter[dodgeStat] !== undefined
+        (defendingCharacter[dodgeStat] !== undefined
             ? defendingCharacter[dodgeStat].level
-            : 0;
+            : 0) + dodgeBonus;
 
     //(Unless you are not ignoring zero division. In this case zeroes are changed to ones to avoid zero division error.)
     if (!ignoreZeroDiv) {
@@ -1244,7 +1400,15 @@ const sattack = (arguments) => {
     if (dodge(attCharStat, defCharDodge)) {
         modifiedText =
             modifiedText.substring(0, currIndices[0]) +
-            `${attChar}(${attCharStat}) attacked ${defChar}(${defCharDodge}), but missed.` +
+            `${attChar}(${attCharStat}${
+                attBonus === 0
+                    ? ""
+                    : " (base: " + (attCharStat - attBonus) + ")"
+            }) attacked ${defChar}(${defCharDodge}${
+                dodgeBonus === 0
+                    ? ""
+                    : " (base: " + (defCharDodge - dodgeBonus) + ")"
+            }), but missed.` +
             modifiedText.substring(currIndices[1]);
         state.ctxt =
             state.ctxt === undefined
@@ -1270,8 +1434,6 @@ const sattack = (arguments) => {
 
     if (state.characters[defChar].hp <= 0) {
         state.characters[defChar].hp = 0;
-        //If character's hp falls below 0, they are removed from the battle
-        state[attacked].splice(defCharInd, 1);
         //NPCs die when they are killed
         if (state.characters[defChar].isNpc) delete state.characters[defChar];
     }
@@ -1287,10 +1449,11 @@ const sattack = (arguments) => {
     //Gives the player necessary info.
     modifiedText =
         modifiedText.substring(0, currIndices[0]) +
-        `${attChar} (${attackStat}: ${attCharStat}) attacked ${defChar} (${defenseStat}: ${defCharStat}) dealing ${CustomDamageOutput(
-            dam,
-            damageOutputs
-        )} (${dam}).\n${
+        `${attChar} (${attackStat}: ${attCharStat}${
+            attBonus === 0 ? "" : " (base: " + (attCharStat - attBonus) + ")"
+        }) attacked ${defChar} (${defenseStat}: ${defCharStat}${
+            defBonus === 0 ? "" : " (base: " + (defCharStat - defBonus) + ")"
+        }) dealing ${CustomDamageOutput(dam, damageOutputs)} (${dam}).\n${
             state.characters[defChar].hp <= 0
                 ? defChar + " died."
                 : defChar + " now has " + state.characters[defChar].hp + "hp."
@@ -1482,11 +1645,224 @@ const revive = (arguments) => {
 };
 //#endregion revive
 
+//#region addItem
+const addItem = (arguments) => {
+    CutCommand();
+    //Error checking
+    if (arguments === undefined || arguments === null || arguments === "") {
+        state.message = "Add Item: No arguments found.";
+        return;
+    }
+    //Looks for pattern name, slot, stat=value, target place (none by default) and character
+    const exp =
+        /(?<name>[\w ']+), (?<slot>[\w\s]+)(?<bonuses>(?:, [\w ']+ *= *-?\d+)+)(?:, *(?<target>inventory|equip)(?:, *(?<character>[\w\s']+))?)?/i;
+    const match = arguments.match(exp);
+
+    //Error checking
+    if (match === null) {
+        state.message = "Add Item: No matching arguments found.";
+        return;
+    }
+
+    if (match.groups.target === "equip") {
+        if (match.groups.character === undefined) {
+            state.message =
+                "Add Item: You must specify who will equip the item when you choose so.";
+            return;
+        }
+        if (
+            !ElementInArray(
+                match.groups.character,
+                Object.keys(state.characters)
+            )
+        ) {
+            state.message = `Add Item: Character ${match.groups.character} doesn't exist.`;
+            return;
+        }
+    }
+
+    const name = match.groups.name.trim();
+
+    //Converts values to format [[stat, val], [stat2, val], ... [statN, val]]
+    let values = match.groups.bonuses
+        .substring(2)
+        .split(", ")
+        .map((el) => el.trim().split("="));
+
+    for (const i in values) {
+        let curr = values[i].map((el) => el.trim());
+        if (curr[1][0] === "$") {
+            state.message = `Add Item: You cannot pass item as property of another item.`;
+            return;
+        }
+        if (!isInStats(curr[0])) state.stats.push(curr[0]);
+        curr = [curr[0], Number(curr[1])];
+        values[i] = curr;
+    }
+    //Adds slot
+    values.push(["slot", match.groups.slot]);
+    //End of conversion
+
+    //Passes to constructor and adds received item to the object
+    const item = new Item(name, values);
+    state.items[name] = item;
+    modifiedText = `Item ${name} created with attributes:\n${ItemToString(
+        item
+    )}`;
+    if (match.groups.target === "equip") _equip(match.groups.character, item);
+    else if (match.groups.target === "inventory") {
+        state.inventory.push(name);
+        `Item ${name} put into inventory`;
+    }
+};
+//#endregion addItem
+
+//#region gainItem
+//TODO: test
+const gainItem = (arguments) => {
+    CutCommand();
+    //Error checking
+    if (arguments === undefined || arguments === null || arguments === "") {
+        state.message = "Gain Item: No arguments found.";
+        return;
+    }
+
+    const exp = /(?<name>[\w ']+)(?:, *(?<character>[\w\s']+))?/i;
+    const match = arguments.match(exp);
+
+    //Error checking
+    if (match === null) {
+        state.message = "Gain Item: No matching arguments found.";
+        return;
+    }
+
+    const char = match.groups.character,
+        name = match.groups.name;
+
+    if (!ElementInArray(name, Object.keys(state.items))) {
+        state.message = `Gain Item: Item ${name} doesn't exist.`;
+        return;
+    }
+
+    //If the character has been specified, it must exist
+    if (
+        char !== undefined &&
+        !ElementInArray(char, Object.keys(state.characters))
+    ) {
+        state.message = `Gain Item: Character ${char} doesn't exist.`;
+        return;
+    }
+
+    state.inventory.push(name);
+    if (char !== undefined) {
+        modifiedText = "";
+        _equip(char, state.items[name]);
+    } else modifiedText = `Item ${name} was put into inventory.`;
+};
+//#endregion gainItem
+
+//#region equip
+const equip = (arguments) => {
+    CutCommand();
+    //Error checking
+    if (arguments === undefined || arguments === null || arguments === "") {
+        state.message = "Equip Item: No arguments found.";
+        return;
+    }
+
+    const exp = /(?<character>[\w\s']+)(?<items>(?:, *[\w ']+)+)/i;
+    const match = arguments.match(exp);
+
+    //Error checking
+    if (match === null) {
+        state.message = "Equip Item: No matching arguments found.";
+        return;
+    }
+
+    const char = match.groups.character,
+        items = match.groups.items
+            .substring(1)
+            .trim()
+            .split(/, */)
+            .map((x) => x.trim());
+
+    if (!ElementInArray(char, Object.keys(state.characters))) {
+        state.message = `Equip Item: Character ${char} doesn't exist.`;
+        return;
+    }
+    for (const el of items)
+        if (!ElementInArray(el, Object.keys(state.items))) {
+            state.message = `Equip Item: Item ${el} isn't in your inventory.`;
+            return;
+        }
+
+    for (const el of items) _equip(char, state.items[el]);
+
+    modifiedText += "\nItem(s) successfully equipped.";
+};
+//#endregion equip
+
+//#region unequip
+const unequip = (arguments) => {
+    CutCommand();
+    //Error checking
+    if (arguments === undefined || arguments === null || arguments === "") {
+        state.message = "Unequip Item: No arguments found.";
+        return;
+    }
+
+    const exp = /(?<character>[\w\s']+)(?<slots>(?:, *[\w ]+)+)/i;
+    const match = arguments.match(exp);
+
+    //Error checking
+    if (match === null) {
+        state.message = "Unequip Item: No matching arguments found.";
+        return;
+    }
+
+    //Grabs character name
+    const char = match.groups.character;
+
+    //Checks if character exists
+    if (!ElementInArray(char, Object.keys(state.characters))) {
+        state.message = `Unequip Item: Character ${char} doesn't exist.`;
+        return;
+    }
+
+    //Puts items from slots back into inventory
+    for (const slot of match.groups.slots
+        .substring(1)
+        .trim()
+        .split(",")
+        .map((x) => x.trim())) {
+        if (state.characters[char].items[slot]) {
+            state.inventory.push(state.characters[char].items[slot].name);
+            modifiedText += `\n${char} unequipped ${state.characters[char].items[slot].name}`;
+            state.characters[char].items[slot] = undefined;
+        }
+    }
+};
+//#endregion unequip
+
+//#region showInventory
+//TODO: test
+const showInventory = (arguments) => {
+    if (arguments !== "") {
+        state.message =
+            "Show Inventory: showInventory doesn't take any arguments";
+        return;
+    }
+    console.log(state.inventory);
+    modifiedText =
+        "Currently your inventory holds: " + state.inventory.join(", ") + ".";
+};
+//#endregion showInventory
+
 //#region addCharacter
 addCharacter = (arguments) => {
     //Looks for pattern !addCharacter(name) or !addCharacter(name, stat1=value, stat2=value, ..., statN=value)
     const exp =
-        /(?<character>[\w\s']+)(?<startingStats>(?:, [\w ']+ *= *\d+)*)/i;
+        /(?<character>[\w\s']+)(?<startingStats>(?:, [\w ']+ *= *(?:\d+|\$[\w ']+))*)(?<startingItems>(?:, *(?:\$[\w '])+)*)/i;
 
     //Matches the RegEx
     const match = arguments.match(exp);
@@ -1502,20 +1878,25 @@ addCharacter = (arguments) => {
 
     //Converts values to format [[stat, val], [stat2, val], ... [statN, val]]
     let values = match.groups.startingStats
-        .substring(2, match.groups.startingStats.length)
+        .substring(2)
         .split(", ")
         .map((el) => el.trim().split("="));
 
-    for (i in values) {
-        curr = values[i];
-        curr = [curr[0].trim(), Number(curr[1])];
+    for (const i in values) {
+        let curr = values[i];
+        curr = [curr[0].trim(), Number(curr[1].trim())];
         values[i] = curr;
     }
     //End of conversion
 
     //Creates the character with stats. If none were given, every created stat is at state.startingLevel
     state.characters[char] =
-        values[0][0] === "" ? new Character() : new Character(values);
+        values[0][0] === ""
+            ? new Character()
+            : new Character(
+                  values,
+                  match.groups.startingItems.split(",").map((el) => el.trim())
+              );
 
     CutCommand();
     state.out = `\nCharacter ${char} has been created with stats\n${state.characters[char]}.`;
@@ -1526,7 +1907,7 @@ addCharacter = (arguments) => {
 addNPC = (arguments) => {
     //Looks for pattern !addNPC(name) or !addNPC(name, stat1=value, stat2=value, ..., statN=value)
     const exp =
-        /(?<character>[\w\s']+)(?<startingStats>(?:, [\w ']+ *= *\d+)*)/i;
+        /(?<character>[\w\s']+)(?<startingStats>(?:, [\w ']+ *= *(?:\d+|\$[\w ']+))*)(?<startingItems>(?:, *(?:\$[\w '])+)*)/i;
 
     //Matches the RegEx
     const match = arguments.match(exp);
@@ -1544,15 +1925,21 @@ addNPC = (arguments) => {
         .split(", ")
         .map((el) => el.trim().split("="));
 
-    for (i in values) {
-        curr = values[i];
-        curr = [curr[0].trim(), Number(curr[1])];
+    for (const i in values) {
+        let curr = values[i];
+        curr = [curr[0].trim(), Number(curr[1].trim())];
         values[i] = curr;
     }
     //End of conversion
 
     //Creates the character with stats. If none were given, every created stat is at state.startingLevel
-    state.characters[char] = values[0][0] === "" ? new NPC() : new NPC(values);
+    state.characters[char] =
+        values[0][0] === ""
+            ? new NPC()
+            : new NPC(
+                  values,
+                  match.groups.startingItems.split(",").map((el) => el.trim())
+              );
 
     CutCommand();
     state.out = `\nNon-Playable Character ${char} has been created with stats\n${state.characters[char]}.`;
@@ -1562,7 +1949,8 @@ addNPC = (arguments) => {
 //#region setStats
 setStats = (arguments) => {
     //Looks for pattern !addCharacter(name) or !addCharacter(name, stat1=value, stat2=value, ..., statN=value)
-    const exp = /(?<character>[\w\s']+)(?<stats>(?:, [\w ']+ *= *\d+)+)/i;
+    const exp =
+        /(?<character>[\w\s']+)(?<stats>(?:, [\w ']+ *= *(?:\d+|[\w ']+))+)/i;
 
     //Matches the RegEx
     const match = arguments.match(exp);
@@ -1586,7 +1974,20 @@ setStats = (arguments) => {
             .map((el) => el.trim().split("="));
 
         for (i in values) {
-            curr = values[i];
+            let curr = values[i];
+            curr.map((el) => el.trim());
+            if (curr[1][0] === "$") {
+                if (!ElementInArray(curr[1].substring(1), state.items)) {
+                    state.message = `Set Stats: item ${i} doesn't exist.`;
+                    return;
+                }
+                if (!ElementInArray(curr[0], equipmentParts)) {
+                    state.message = `Set Stats: you have no place to wear ${i[0]}.`;
+                    return;
+                }
+                values[i] = [curr[0].trim(), curr[1].trim().toLowerCase()];
+                continue;
+            }
             curr = [curr[0].trim(), Number(curr[1])];
             values[i] = curr;
         }
@@ -1852,6 +2253,26 @@ const modifier = (text) => {
                 revive(globalMatch.groups.arguments);
                 break;
 
+            case "additem":
+                addItem(globalMatch.groups.arguments);
+                break;
+
+            case "gainitem":
+                gainItem(globalMatch.groups.arguments);
+                break;
+
+            case "equip":
+                equip(globalMatch.groups.arguments);
+                break;
+
+            case "unequip":
+                unequip(globalMatch.groups.arguments);
+                break;
+
+            case "showinventory":
+                showInventory(globalMatch.groups.arguments);
+                break;
+
             case "addcharacter":
                 addCharacter(globalMatch.groups.arguments);
                 break;
@@ -1899,9 +2320,21 @@ if (!DEBUG) {
 } else {
     if (TESTS) {
         //!fixed tests
-        // modifier("!addcharacter(Librun, level=5, hp=5)");
-        // modifier("!showstats(Librun)");
-        // modifier("!addCharacter(Miguel, str=1, dex=5, int=3, hp=10)");
+        modifier("!additem(ass knife, weapon, poison=3)");
+        modifier("!addcharacter(Librun, level=5, hp=5)");
+        modifier("!showstats(Librun)");
+        modifier("!gainitem(ass knife)");
+        modifier("!equip(Librun, ass knife)");
+        modifier("!showstats(Librun)");
+        modifier(
+            "!additem(bbq sauce, artifact, poison=10, chef=2, equip, Librun)"
+        );
+        modifier("!showstats(Librun)");
+        modifier("!skillcheck(poison, Librun, 4)");
+        modifier("!skillcheck(chef, Librun, 4)");
+        modifier("!unequip(Librun, weapon, artifact)");
+        modifier("!showinventory()");
+        // modifier("!addCharacter(Miguel, str=1, dex=5, int=3, hp=40)");
         // modifier(
         //     "Miguel tries to evade an arrow. !skillcheck(dex, Miguel, 3) Is he blind?"
         // );
@@ -1911,7 +2344,7 @@ if (!DEBUG) {
         // modifier("!skillcheck(dex, Miguel, 5 : 12 : 15 : 20)");
         // modifier("!This is a normal input!");
         // modifier(
-        //     "abc !addNPC(Zuibroldun Jodem, dex = 5, magic = 11, fire's force=3) def"
+        //     "abc !addNPC(Zuibroldun Jodem, str=12, dex = 5, magic = 11, fire's force=3, $Gigantic horn) def"
         // );
         // modifier(
         //     "Zuibroldun Jodem tries to die. !skillcheck(dex, Zuibroldun Jodem, 5 = lol : 10 = lmao, it 'Works. Hi 5. : 20 = You're losing.) Paparapapa."
@@ -1935,6 +2368,7 @@ if (!DEBUG) {
         // );
         // modifier("!heal(Zuibroldun Jodem, 100)");
         // modifier("!levelStats(Zuibroldun Jodem, fire's force + 2)");
+        // modifier("!additem(Giant horn)");
         // for (let i = 0; i < 30; ++i) modifier("!heal(Librun, 10:50)");
         /*modifier("!getState()");
   console.log("\n\n\n");

@@ -1,17 +1,16 @@
 ## Description
 
-This project gives you tools to play AI Dungeon like an RPG loosely based on Dungeons&Dragons.<br>
+This project gives you tools to play AI Dungeon like an RPG loosely based on Dungeons&Dragons.
+
 [Installation Guide](#installation).
 
 # COMMANDS
 
-Issue with AI not printing custom outputs have been resolved as you have voted in the questionnaire:<br>
-I've made sure that the least AI sees is a space and newline (enter) character, which forces it to generate output.<br>
-The script will utilize only the first command in the input.
+The script will utilize only the first command in the input to avoid bugs.
 
 ## !addCharacter
 
-Syntax: `!addCharacter(name, stat = value, stat2=value, stat3 = value, ..., statN=value)`
+Syntax: `!addCharacter(name, stat = value, stat2=value, stat3 = value, ..., statN=value, $item1, $item2..., $itemN)`
 
 Creates a character with given stats.
 There can be additional whitespace around "=" sign, but nowhere else.
@@ -21,11 +20,13 @@ You can specify hp and level the same way.
 Allowed characters for the characters' names are: all latin characters, numbers,<br>
 whitespace characters and ' (apostrophe).
 
+Item names **must** be preceded with `$` in addCharacter and addNPC commands.
+
 If another character already has or had a stat not mentioned here, it is set to starting value.
 
 ## !addNPC
 
-Syntax: `!addNPC(name, stat = value, stat2=value, stat3 = value, ..., statN=value)`
+Syntax: `!addNPC(name, stat = value, stat2=value, stat3 = value, ..., statN=value, $item1, $item2..., $itemN)`
 
 Creates an NPC with given stats.
 
@@ -75,6 +76,46 @@ Stat must be an already created one. Stats are automatically created when they a
 
 If you use skillcheck on a dead character, they are tested as if all of their stats were <br>5 levels lower (adjustable by `!setstate`).<br>
 Can be also turned off in the code.
+
+## !addItem
+
+Syntax: `!addItem(name, slot, stat = value, stat2=value, stat3 = value, ..., statN=value[, target, character])`
+
+Creates an item with given bonuses.
+
+Target (optional) - can be either `inventory` or `equip`. When unspecified item will be simply created, `inventory` will put it into party's inventory, and `equip` will instantly equip it on specified character.
+
+Character (must be given when target is set to `equip`) - specifies which character will equip the item.
+
+If a character has something in the slot, the item will be unequipped to inventory.
+
+## !gainItem
+
+Syntax: `!gainItem(name[, character])`
+
+Puts a previously created item in inventory, or a character equips it when `character` is specified.
+
+If a character has something in the slot, the item will be unequipped to inventory.
+
+## !equip
+
+Syntax: `!equip(character, items)`
+
+Character equips items from inventory.
+
+If a character has something in the slot, the item will be unequipped to inventory.
+
+## !unequip
+
+Syntax: `!unequip(character, slots)`
+
+Puts items from slots into inventory.
+
+## !showInventory
+
+Syntax: `!showInventory()`
+
+Shows inventory's contents.
 
 ## !attack
 
