@@ -225,7 +225,7 @@ The amount of skillpoints granted for level up can be adjusted by `!setstate`.
 
 # Custom states
 
-## Section moved to [Developers note](/Developers%20note.md#explainations)
+## Section moved to [Developers note](/Developers%20note.md#explanations)
 
 # Feature roadmap
 
