@@ -2,21 +2,36 @@ import { Item } from "../Shared Library/Item";
 import { Character } from "../Shared Library/Character";
 
 export const state: {
+    //Options
     stats: string[];
     dice: number;
     startingLevel: number;
     startingHP: number;
-    characters: { [key: string]: Character };
     punishment: number;
     skillpointsOnLevelUp: number;
-    items: { [key: string]: Item };
+
+    //Data
     inventory: string[];
+    items: { [key: string]: Item };
+    characters: { [key: string]: Character };
+
+    //Used in modifiers other than Input
+    in: string;
     ctxt: string;
     out: string;
     message: string;
+
+    //Battle related
     inBattle: boolean;
-    side1: string[];
-    side2: string[];
+    side1?: string[];
+    side2?: string[];
+    active?: string[];
+    currentSide?: string;
+    activeCharacterName?: string;
+    attackingCharacter?: Character;
+
+    //Just so there won't be errors when accessing by [] op
+    [key: string]: any;
 } = {
     stats: [],
     dice: 20,
@@ -27,10 +42,9 @@ export const state: {
     skillpointsOnLevelUp: 5,
     items: {},
     inventory: [],
+    in: "",
     ctxt: "",
     out: "",
     message: "",
     inBattle: false,
-    side1: [],
-    side2: [],
 };

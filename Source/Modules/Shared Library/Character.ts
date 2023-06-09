@@ -16,7 +16,7 @@ export class Character {
     isNpc: boolean;
     stats: { [key: string]: Stat } = {};
 
-    constructor(values: Array<[string, any]>, itemNames: string[]) {
+    constructor(values: [string, number][], itemNames: string[]) {
         //Initializes every previously created stat
         state.stats.forEach((stat) => {
             this.stats[stat] = new Stat(stat, state.startingLevel);
@@ -30,25 +30,25 @@ export class Character {
         if (values !== undefined) {
             //el in format ["attribute/stat", value], because I didn't like converting array to object
             //Sanitized beforehand
-            for (const el of values) {
+            for (const [name, value] of values) {
                 //Hp and level need to be double checked to not make a stat of them
-                if (el[0] === "hp") {
-                    this.hp = el[1];
+                if (name === "hp") {
+                    this.hp = value;
                     continue;
                 }
-                if (el[0] === "level") {
-                    this.level = el[1];
+                if (name === "level") {
+                    this.level = value;
                     continue;
                 }
                 //It's not hp, level, nor item, so it might as well be a stat
-                this.stats[el[0]] = new Stat(el[0], el[1]);
+                this.stats[name] = new Stat(name, value);
             }
         }
 
         this.items = {};
 
         // console.log("Items:", items);
-        if (itemNames[0] !== "") {
+        if (itemNames[0] !== "" && itemNames.length > 0) {
             for (let name of itemNames) {
                 // console.log("item:", el);
                 const item: Item = state.items[name.substring(1)];
@@ -70,7 +70,7 @@ export class Character {
 }
 
 export class NPC extends Character {
-    constructor(values: Array<[string, any]>, items: string[]) {
+    constructor(values: Array<[string, number]>, items: string[]) {
         super(values, items);
         this.isNpc = true;
     }

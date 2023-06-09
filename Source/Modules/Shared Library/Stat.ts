@@ -1,4 +1,6 @@
-import { state } from "../Tests/proxy_state.ts";
+import { state } from "../Tests/proxy_state";
+import { isInStats, experienceCalculation } from "./Utils";
+import { levellingToOblivion } from "../Input Modifier/constants";
 
 export class Stat {
     level: number;

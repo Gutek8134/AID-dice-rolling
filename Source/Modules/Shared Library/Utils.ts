@@ -1,12 +1,14 @@
 import { state } from "../Tests/proxy_state";
 import { Character } from "./Character";
 import { Item } from "./Item";
-import { levellingToOblivion } from "../Input Modifier/constants";
-let modifiedText: string = "";
+import {
+    levellingToOblivion,
+    ignoredValues,
+} from "../Input Modifier/constants";
 
 //!Function for calculating damage. Adjust it to your heart's content.
 //!Just make sure it won't divide by 0 (finally putting all the hours spent on learning math in high school to good use).
-export const damage = (attackStat: number, defenseStat: number) => {
+export const damage = (attackStat: number, defenseStat: number): number => {
     let dam =
         /*You can edit from here*/ attackStat +
         diceRoll(20) -
@@ -29,10 +31,11 @@ export const damage = (attackStat: number, defenseStat: number) => {
     return dam;
 };
 
-export const dodge = (attackStat: number, dodgeStat: number) => {
+export const dodge = (attackStat: number, dodgeStat: number): boolean => {
     let dodged =
-        /*You can edit from here*/ attackStat + diceRoll(5) <
-        dodgeStat + diceRoll(5); /*to here*/
+        /*You can edit from here*/
+        attackStat + diceRoll(5) < dodgeStat + diceRoll(5);
+    /*to here*/
 
     //attackStat means attacker's statistic picked on calling !attack()
     //dodgeStat is accordingly, defender's statistic used for dodge
@@ -45,7 +48,7 @@ export const dodge = (attackStat: number, dodgeStat: number) => {
 };
 
 //!Function for calculating experience needed to level up. Adjust it to your heart's content
-export const experienceCalculation = (level: number) => {
+export const experienceCalculation = (level: number): number => {
     //Don't change it here, but in the shared library
     //level is the current character/stat's level
     const experience = /*You can edit from here*/ 2 * level; /*to here*/
@@ -53,22 +56,21 @@ export const experienceCalculation = (level: number) => {
     return experience;
 };
 
-export const isInStats = (name: string) => {
-    for (let i in state.stats) {
-        if (name == state.stats[i]) {
-            return true;
-        }
-    }
-    return false;
+export const isInStats = (name: string): boolean => {
+    return state.stats.indexOf(name) > -1;
 };
 
 //Generates a value between 1 and maxValue
-export const diceRoll = (maxValue: number) => {
+export const diceRoll = (maxValue: number): number => {
     return Math.floor(Math.random() * maxValue) + 1;
 };
 
 //Equips item for a character
-export const _equip = (char: string, item: Item) => {
+export const _equip = (
+    char: string,
+    item: Item,
+    modifiedText: string
+): void => {
     //Grabs character
     const character = state.characters[char];
     //If character has an already equipped item, it is put back into inventory
@@ -84,17 +86,7 @@ export const _equip = (char: string, item: Item) => {
     state.inventory.splice(state.inventory.indexOf(item.name), 1);
 };
 
-export const ignoredValues = [
-    "hp",
-    "level",
-    "experience",
-    "expToNextLvl",
-    "skillpoints",
-    "isNpc",
-    "items",
-    "type",
-];
-export const CharToString = (character: Character) => {
+export const CharToString = (character: Character): string => {
     let temp = levellingToOblivion
         ? `hp: ${character.hp},
 isNPC: ${character.isNpc},\n`
@@ -134,7 +126,7 @@ isNpc: ${character.isNpc},\n`;
         : temp.substring(0, temp.length - 2);
 };
 
-export const ItemToString = (item: Item) => {
+export const ItemToString = (item: Item): string => {
     if (!item) return "none";
 
     let temp = `${item.name}:\nslot: ${item.slot}\n`;
@@ -144,20 +136,13 @@ export const ItemToString = (item: Item) => {
     return temp.substring(0, temp.length - 2);
 };
 
-//Returns whether character exists and has more than 0 HP, returns bool
-export const CharLives = (character: string) => {
+//Returns whether character exists and has more than 0 HP
+export const CharLives = (character: string): boolean => {
     if (!ElementInArray(character, Object.keys(state.characters))) return false;
 
     return state.characters[character].hp > 0;
 };
 
-export const ElementInArray = (element: any, array: any[]) => {
-    let ret = false;
-    for (const el of array) {
-        if (el === element) {
-            ret = true;
-            break;
-        }
-    }
-    return ret;
+export const ElementInArray = (element: any, array: any[]): boolean => {
+    return array.indexOf(element) > -1;
 };
