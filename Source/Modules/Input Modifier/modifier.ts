@@ -2,7 +2,7 @@ import { state } from "../Tests/proxy_state";
 import SetupState from "./setupstate";
 import { turn } from "./turn";
 
-const DEBUG = false;
+export const DEBUG: boolean = false;
 
 //#region logs
 const logs = () => {

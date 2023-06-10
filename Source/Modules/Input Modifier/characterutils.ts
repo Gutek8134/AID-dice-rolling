@@ -2,6 +2,7 @@ import { state } from "../Tests/proxy_state";
 import { Character } from "../Shared Library/Character";
 import { Item } from "../Shared Library/Item";
 import { experienceCalculation } from "../Shared Library/Utils";
+import { levellingToOblivion } from "./constants";
 
 export const BestStat = (character: Character): string => {
     let bestStat: string = "",
@@ -27,12 +28,29 @@ export const GetStatWithMods = (character: Character, stat: string): number => {
     return character.stats[stat].level + itemModifiersSum;
 };
 
-export const IncrementExp = (
-    characterName: Character,
-    statName: string
-): void => {};
+export const IncrementExp = (characterName: string, statName: string): void => {
+    if (state.characters[characterName].isNpc) return;
 
-const IncrementExpOnCharacter = (character: Character): void => {};
+    if (levellingToOblivion) {
+        IncrementExpOnStat(characterName, statName);
+    } else {
+        IncrementExpOnCharacter(characterName);
+    }
+};
+
+const IncrementExpOnCharacter = (characterName: string): void => {
+    const character: Character = state.characters[characterName];
+    //Increases experience by 1 and checks whether it's enough to level the character up
+    if (++character.experience >= character.expToNextLvl) {
+        //If it is, experience is set to 0,
+        character.experience = 0;
+        //level increased and expToNextLevel re-calculated
+        character.expToNextLvl = experienceCalculation(++character.level);
+        //In the case of attackingCharacter levelling up, it also gains free skillpoints
+        character.skillpoints += state.skillpointsOnLevelUp;
+        state.out += ` ${characterName} has levelled up to level ${character.level} (free skillpoints: ${character.skillpoints})!`;
+    }
+};
 
 const IncrementExpOnStat = (characterName: string, statName: string) => {
     const character: Character = state.characters[characterName];

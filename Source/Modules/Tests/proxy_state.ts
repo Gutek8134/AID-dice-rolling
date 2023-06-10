@@ -28,7 +28,7 @@ export const state: {
     active?: string[];
     currentSide?: string;
     activeCharacterName?: string;
-    attackingCharacter?: Character;
+    activeCharacter?: Character;
 
     //Just so there won't be errors when accessing by [] op
     [key: string]: any;
