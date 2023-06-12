@@ -16,7 +16,7 @@ export const BestStat = (character: Character): string => {
 };
 
 export const GetStatWithMods = (character: Character, stat: string): number => {
-    if (!character || !stat) return 0;
+    if (!character || !stat || character.stats[stat] === undefined) return 0;
 
     let itemModifiersSum: number = 0;
 
@@ -28,17 +28,20 @@ export const GetStatWithMods = (character: Character, stat: string): number => {
     return character.stats[stat].level + itemModifiersSum;
 };
 
-export const IncrementExp = (characterName: string, statName: string): void => {
-    if (state.characters[characterName].isNpc) return;
+export const IncrementExp = (
+    characterName: string,
+    statName: string
+): string => {
+    if (state.characters[characterName].isNpc) return "";
 
     if (levellingToOblivion) {
-        IncrementExpOnStat(characterName, statName);
+        return IncrementExpOnStat(characterName, statName);
     } else {
-        IncrementExpOnCharacter(characterName);
+        return IncrementExpOnCharacter(characterName);
     }
 };
 
-const IncrementExpOnCharacter = (characterName: string): void => {
+const IncrementExpOnCharacter = (characterName: string): string => {
     const character: Character = state.characters[characterName];
     //Increases experience by 1 and checks whether it's enough to level the character up
     if (++character.experience >= character.expToNextLvl) {
@@ -48,11 +51,15 @@ const IncrementExpOnCharacter = (characterName: string): void => {
         character.expToNextLvl = experienceCalculation(++character.level);
         //In the case of attackingCharacter levelling up, it also gains free skillpoints
         character.skillpoints += state.skillpointsOnLevelUp;
-        state.out += ` ${characterName} has levelled up to level ${character.level} (free skillpoints: ${character.skillpoints})!`;
+        return ` ${characterName} has levelled up to level ${character.level} (free skillpoints: ${character.skillpoints})!`;
     }
+    return "";
 };
 
-const IncrementExpOnStat = (characterName: string, statName: string) => {
+const IncrementExpOnStat = (
+    characterName: string,
+    statName: string
+): string => {
     const character: Character = state.characters[characterName];
     //Increases experience by 1 and checks whether it's enough to level the stat up
     if (
@@ -65,6 +72,7 @@ const IncrementExpOnStat = (characterName: string, statName: string) => {
         character.stats[statName].expToNextLvl = experienceCalculation(
             ++character.stats[statName].level
         );
-        state.out += ` ${characterName}'s ${statName} has levelled up to level ${character.stats[statName].level}!`;
+        return ` ${characterName}'s ${statName} has levelled up to level ${character.stats[statName].level}!`;
     }
+    return "";
 };

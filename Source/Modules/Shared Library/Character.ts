@@ -16,7 +16,7 @@ export class Character {
     isNpc: boolean;
     stats: { [key: string]: Stat } = {};
 
-    constructor(values: [string, number][], itemNames: string[]) {
+    constructor(values: [string, number][] = [], itemNames: string[] = []) {
         //Initializes every previously created stat
         state.stats.forEach((stat) => {
             this.stats[stat] = new Stat(stat, state.startingLevel);

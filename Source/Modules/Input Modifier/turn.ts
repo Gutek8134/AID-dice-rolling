@@ -17,7 +17,7 @@ import { ExitBattle } from "./exitbattle";
 import { CustomDamageOutput } from "./fightutils";
 import { DEBUG } from "./modifier";
 
-export const turn = (textCopy: string) => {
+export const turn = (proxy: { textCopy: string }) => {
     if (DEBUG) console.log("Active: ", state.active);
 
     if (!state.activeCharacter) {
@@ -42,7 +42,7 @@ export const turn = (textCopy: string) => {
         const expression: RegExp =
             /(?:(?<escape>retreat|escape|exit)|(?:\((?<attackStat>[\w ']+), *)?(?<defendingCharacter>[\w\s']+)(?:, *(?<defenseStat>[\w ']+))?\))/i;
 
-        const match: RegExpMatchArray | null = textCopy.match(expression);
+        const match: RegExpMatchArray | null = proxy.textCopy.match(expression);
 
         // Player written something wrong
         if (!match || !match?.groups) {
@@ -241,10 +241,10 @@ const takeTurn = (
     }`;
 
     //Always grants 1 Exp to attacking character, for defending it's up to user
-    IncrementExp(attackingCharacterName, attackStat);
+    state.out += IncrementExp(attackingCharacterName, attackStat);
 
     if (defendingCharacterLevels) {
-        IncrementExp(defendingCharacterName, defenseStat);
+        state.out += IncrementExp(defendingCharacterName, defenseStat);
     }
 
     //If character's hp falls below 0, they are removed from the battle
