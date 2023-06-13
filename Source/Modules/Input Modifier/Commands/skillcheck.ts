@@ -3,13 +3,14 @@ import { ElementInArray, diceRoll } from "../../Shared Library/Utils";
 import { state } from "../../Tests/proxy_state";
 import { GetStatWithMods, IncrementExp } from "../characterutils";
 import { shouldPunish } from "../constants";
-import { CutCommand } from "./commandutils";
+import { CutCommandFromContext } from "./commandutils";
 
 const skillcheck = (
     commandArguments: string,
     currIndices: number[],
-    references: { modifiedText: string }
-) => {
+    modifiedText: string
+): string => {
+    CutCommandFromContext(modifiedText, currIndices);
     //Error checking
     if (
         commandArguments === undefined ||
@@ -17,11 +18,10 @@ const skillcheck = (
         commandArguments === ""
     ) {
         state.message = "No arguments found.";
-        CutCommand(references.modifiedText, currIndices);
-        return;
+        return modifiedText;
     }
 
-    const textCopy: string = references.modifiedText;
+    const textCopy: string = modifiedText;
 
     //Checks for format stat, character, thresholds , outputs groups character and thresholds, that are matched later
     const exp: RegExp =
@@ -38,8 +38,7 @@ const skillcheck = (
     if (match === null || !match.groups) {
         state.message =
             "Skillcheck: Arguments were not given in proper format.";
-        CutCommand(references.modifiedText, currIndices);
-        return;
+        return modifiedText;
     }
 
     //Regex matched, so program is rolling the dice
@@ -52,8 +51,7 @@ const skillcheck = (
     //Testing if stat exists, throwing error otherwise
     if (!ElementInArray(statName, state.stats)) {
         state.message = "Skillcheck: Specified stat does not exist";
-        CutCommand(references.modifiedText, currIndices);
-        return;
+        return modifiedText;
     }
 
     //Shortening access path to character object
@@ -84,8 +82,7 @@ const skillcheck = (
     const thresholds = commandArguments.match(thresholdCheck);
     if (thresholds === null) {
         state.message = "Thresholds are not in proper format";
-        CutCommand(references.modifiedText, currIndices);
-        return;
+        return modifiedText;
     }
     //console.log(thresholds);
 
@@ -98,156 +95,150 @@ const skillcheck = (
         const thresholdsAsString: string = thresholds.groups[key];
 
         //null check
-        if (
-            thresholdsAsString !== undefined &&
-            currIndices !== undefined &&
-            character !== undefined
-        ) {
-            const score: number = roll + usedCharacterStatLevel;
-            let mess: string = `Skillcheck performed: ${characterName} with ${statName}: ${usedCharacterStatLevel}${
-                bonus === 0
-                    ? ""
-                    : " (base " + character.stats[statName].level + ")"
-            } rolled ${roll}. ${usedCharacterStatLevel} + ${roll} = ${score}. `;
+        if (!thresholdsAsString) continue;
 
-            let outcome: string = "";
-            let custom: boolean = false;
+        const score: number = roll + usedCharacterStatLevel;
+        let mess: string = `Skillcheck performed: ${characterName} with ${statName}: ${usedCharacterStatLevel}${
+            bonus === 0 ? "" : " (base " + character.stats[statName].level + ")"
+        } rolled ${roll}. ${usedCharacterStatLevel} + ${roll} = ${score}. `;
 
-            let thresholdsAsNumberStringArr: Array<[number, string]> = [];
+        let outcome: string = "";
+        let custom: boolean = false;
 
-            //#region threshold check
-            //Handling the skillcheck
-            switch (key) {
-                //One threshold means success or failure
-                case "thresholds1": {
-                    mess += `Difficulty: ${thresholdsAsString} Outcome: `;
-                    outcome =
-                        score >= Number(thresholdsAsString.trim())
-                            ? "success."
-                            : "failure.";
-                    break;
-                }
+        let thresholdsAsNumberStringArr: Array<[number, string]> = [];
 
-                //Two of them - success, nothing, failure
-                case "thresholds2": {
-                    const thresholdsAsNumberArr: number[] = thresholdsAsString
-                        .split(":")
-                        .map((el) => Number(el.trim()))
-                        .sort((a, b) => a - b);
-
-                    mess += `Difficulty: ${thresholdsAsNumberArr.join(
-                        ", "
-                    )} Outcome: `;
-
-                    if (score >= thresholdsAsNumberArr[1]) {
-                        outcome = "success.";
-                    } else if (score >= thresholdsAsNumberArr[0]) {
-                        outcome = "nothing happens.";
-                    } else {
-                        outcome = "failure.";
-                    }
-                    break;
-                }
-
-                //Three of them - critical success, success, failure or critical failure
-                case "thresholds3": {
-                    const thresholdsAsNumberArr = thresholdsAsString
-                        .split(":")
-                        .map((el) => Number(el.trim()))
-                        .sort((a, b) => a - b);
-
-                    mess += `Difficulty: ${thresholdsAsNumberArr.join(
-                        ", "
-                    )} Outcome: `;
-
-                    if (score >= thresholdsAsNumberArr[2]) {
-                        outcome = "critical success.";
-                    } else if (score >= thresholdsAsNumberArr[1]) {
-                        outcome = "success.";
-                    } else if (score >= thresholdsAsNumberArr[0]) {
-                        outcome = "failure.";
-                    } else {
-                        outcome = "critical failure.";
-                    }
-                    break;
-                }
-
-                //Four of them - critical success, success, nothing, failure or critical failure
-                case "thresholds4": {
-                    const thresholdsAsNumberArr: number[] = thresholdsAsString
-                        .split(":")
-                        .map((el) => Number(el.trim()))
-                        .sort((a, b) => a - b);
-                    mess += `Difficulty: ${thresholdsAsNumberArr.join(
-                        ", "
-                    )} Outcome: `;
-
-                    if (score >= thresholdsAsNumberArr[3]) {
-                        outcome = "critical success.";
-                    } else if (score >= thresholdsAsNumberArr[2]) {
-                        outcome = "success.";
-                    } else if (score >= thresholdsAsNumberArr[1]) {
-                        outcome = "nothing happens.";
-                    } else if (score >= thresholdsAsNumberArr[0]) {
-                        outcome = "failure.";
-                    } else {
-                        outcome = "critical failure.";
-                    }
-                    break;
-                }
-
-                //Custom thresholds with outcomes
-                case "thresholdsC":
-                    //Converts n1=s1 : n2=s2 to [[n1, s1], [n2, s2]]
-                    thresholdsAsNumberStringArr = thresholdsAsString
-                        .split(":")
-                        .map((el) => {
-                            const temp = el.split("=").map((el) => el.trim());
-                            return [Number(temp[0]), temp[1]];
-                        });
-
-                    mess += `Difficulty: ${CustomDifficulties(
-                        thresholdsAsNumberStringArr
-                    )} Outcome: `;
-                    custom = true;
-                    break;
-
-                //Read message
-                default:
-                    console.error("WTF is this?!");
-                    state.message =
-                        "Skillcheck: no group has been matched. \nIDK how did you make it, but think about creating an issue.";
-                    return;
+        //#region threshold check
+        //Handling the skillcheck
+        switch (key) {
+            //One threshold means success or failure
+            case "thresholds1": {
+                mess += `Difficulty: ${thresholdsAsString} Outcome: `;
+                outcome =
+                    score >= Number(thresholdsAsString.trim())
+                        ? "success."
+                        : "failure.";
+                break;
             }
-            //#endregion threshold check
 
-            //Modifying context and input. Custom thresholds are handled differently, so they are separated
-            if (!custom) {
-                state.ctxt =
-                    references.modifiedText.substring(0, currIndices[0]) +
-                    "Outcome: " +
-                    outcome +
-                    references.modifiedText.substring(currIndices[1]);
+            //Two of them - success, nothing, failure
+            case "thresholds2": {
+                const thresholdsAsNumberArr: number[] = thresholdsAsString
+                    .split(":")
+                    .map((el) => Number(el.trim()))
+                    .sort((a, b) => a - b);
 
-                references.modifiedText =
-                    references.modifiedText.substring(0, currIndices[0]) +
-                    mess +
-                    outcome;
-            } else {
-                state.ctxt =
-                    references.modifiedText.substring(0, currIndices[0]) +
-                    CustomOutcome(score, thresholdsAsNumberStringArr) +
-                    references.modifiedText.substring(currIndices[1]);
+                mess += `Difficulty: ${thresholdsAsNumberArr.join(
+                    ", "
+                )} Outcome: `;
 
-                references.modifiedText =
-                    references.modifiedText.substring(0, currIndices[0]) +
-                    mess +
-                    CustomOutcome(score, thresholdsAsNumberStringArr);
+                if (score >= thresholdsAsNumberArr[1]) {
+                    outcome = "success.";
+                } else if (score >= thresholdsAsNumberArr[0]) {
+                    outcome = "nothing happens.";
+                } else {
+                    outcome = "failure.";
+                }
+                break;
             }
+
+            //Three of them - critical success, success, failure or critical failure
+            case "thresholds3": {
+                const thresholdsAsNumberArr = thresholdsAsString
+                    .split(":")
+                    .map((el) => Number(el.trim()))
+                    .sort((a, b) => a - b);
+
+                mess += `Difficulty: ${thresholdsAsNumberArr.join(
+                    ", "
+                )} Outcome: `;
+
+                if (score >= thresholdsAsNumberArr[2]) {
+                    outcome = "critical success.";
+                } else if (score >= thresholdsAsNumberArr[1]) {
+                    outcome = "success.";
+                } else if (score >= thresholdsAsNumberArr[0]) {
+                    outcome = "failure.";
+                } else {
+                    outcome = "critical failure.";
+                }
+                break;
+            }
+
+            //Four of them - critical success, success, nothing, failure or critical failure
+            case "thresholds4": {
+                const thresholdsAsNumberArr: number[] = thresholdsAsString
+                    .split(":")
+                    .map((el) => Number(el.trim()))
+                    .sort((a, b) => a - b);
+                mess += `Difficulty: ${thresholdsAsNumberArr.join(
+                    ", "
+                )} Outcome: `;
+
+                if (score >= thresholdsAsNumberArr[3]) {
+                    outcome = "critical success.";
+                } else if (score >= thresholdsAsNumberArr[2]) {
+                    outcome = "success.";
+                } else if (score >= thresholdsAsNumberArr[1]) {
+                    outcome = "nothing happens.";
+                } else if (score >= thresholdsAsNumberArr[0]) {
+                    outcome = "failure.";
+                } else {
+                    outcome = "critical failure.";
+                }
+                break;
+            }
+
+            //Custom thresholds with outcomes
+            case "thresholdsC":
+                //Converts n1=s1 : n2=s2 to [[n1, s1], [n2, s2]]
+                thresholdsAsNumberStringArr = thresholdsAsString
+                    .split(":")
+                    .map((el) => {
+                        const temp = el.split("=").map((el) => el.trim());
+                        return [Number(temp[0]), temp[1]];
+                    });
+
+                mess += `Difficulty: ${CustomDifficulties(
+                    thresholdsAsNumberStringArr
+                )} Outcome: `;
+                custom = true;
+                break;
+
+            //Read message
+            default:
+                console.error("WTF is this?!");
+                state.message =
+                    "Skillcheck: no group has been matched. \nIDK how did you make it, but think about creating an issue.";
+                return modifiedText;
+        }
+        //#endregion threshold check
+
+        //Modifying context and input. Custom thresholds are handled differently, so they are separated
+        if (!custom) {
+            state.ctxt =
+                modifiedText.substring(0, currIndices[0]) +
+                "Outcome: " +
+                outcome +
+                modifiedText.substring(currIndices[1]);
+
+            modifiedText =
+                modifiedText.substring(0, currIndices[0]) + mess + outcome;
+        } else {
+            state.ctxt =
+                modifiedText.substring(0, currIndices[0]) +
+                CustomOutcome(score, thresholdsAsNumberStringArr) +
+                modifiedText.substring(currIndices[1]);
+
+            modifiedText =
+                modifiedText.substring(0, currIndices[0]) +
+                mess +
+                CustomOutcome(score, thresholdsAsNumberStringArr);
         }
     }
-    references.modifiedText += IncrementExp(characterName, statName);
-    references.modifiedText += textCopy.substring(currIndices[1]);
+    modifiedText += IncrementExp(characterName, statName);
+    modifiedText += textCopy.substring(currIndices[1]);
+
+    return modifiedText;
 };
 
 const CustomOutcome = (

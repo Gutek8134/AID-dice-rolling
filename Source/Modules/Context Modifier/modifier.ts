@@ -3,7 +3,7 @@ import { state } from "../Tests/proxy_state";
 export const modifier = (text: string): { text: string; stop?: boolean } => {
     const temp = text.lastIndexOf(state.in);
     return {
-        //Returns normally if context wasn't set in state, else whatever was set
+        //Returns normally if context wasn't set in state, else whatever was set + previous context
         text:
             state.ctxt === undefined || state.ctxt === ""
                 ? text

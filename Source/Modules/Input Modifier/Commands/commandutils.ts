@@ -1,6 +1,9 @@
 import { state } from "../../Tests/proxy_state";
 
-export const CutCommand = (modifiedText: string, currIndices: number[]) => {
+export const CutCommandFromContext = (
+    modifiedText: string,
+    currIndices: number[]
+) => {
     state.ctxt =
         state.ctxt !== ""
             ? state.ctxt.substring(0, currIndices[0]) +

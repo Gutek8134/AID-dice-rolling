@@ -13,11 +13,10 @@ import {
     defendingCharacterLevels,
     defaultDodge,
 } from "./constants";
-import { ExitBattle } from "./exitbattle";
 import { CustomDamageOutput } from "./fightutils";
 import { DEBUG } from "./modifier";
 
-export const turn = (proxy: { textCopy: string }) => {
+export const turn = (textCopy: string): void => {
     if (DEBUG) console.log("Active: ", state.active);
 
     if (!state.activeCharacter) {
@@ -42,7 +41,7 @@ export const turn = (proxy: { textCopy: string }) => {
         const expression: RegExp =
             /(?:(?<escape>retreat|escape|exit)|(?:\((?<attackStat>[\w ']+), *)?(?<defendingCharacter>[\w\s']+)(?:, *(?<defenseStat>[\w ']+))?\))/i;
 
-        const match: RegExpMatchArray | null = proxy.textCopy.match(expression);
+        const match: RegExpMatchArray | null = textCopy.match(expression);
 
         // Player written something wrong
         if (!match || !match?.groups) {
@@ -301,4 +300,11 @@ const EndTurn = (): void => {
     state.activeCharacterName = activeCharacterName;
     state.activeCharacter = state.characters[state.activeCharacterName];
     state.message = `Current turn: ${state.activeCharacterName}`;
+};
+
+const ExitBattle = (): void => {
+    state.inBattle = false;
+    delete state.attackingCharacter, state.activeCharacterName;
+    delete state.side1, state.side2;
+    delete state.currentSide;
 };

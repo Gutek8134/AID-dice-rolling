@@ -3,6 +3,9 @@ import SetupState from "./SetupState";
 import { turn } from "./turn";
 import { defaultDodge } from "./constants";
 import skillcheck from "./Commands/skillcheck";
+import { battle } from "./Commands/battle";
+import attack from "./Commands/attack";
+import sattack from "./Commands/sattack";
 
 export const DEBUG: boolean = false;
 
@@ -70,23 +73,50 @@ export const modifier = (text: string): { text: string; stop?: boolean } => {
         //Matches the command and forwards arguments to them
         switch (globalMatch.groups.command.toLowerCase()) {
             case "skillcheck":
-                skillcheck(globalMatch.groups.arguments, currIndices, {
-                    modifiedText,
-                });
+                modifiedText = skillcheck(
+                    globalMatch.groups.arguments,
+                    currIndices,
+                    modifiedText
+                );
                 break;
 
             case "battle":
-                battle(globalMatch.groups.arguments);
+                modifiedText = battle(
+                    globalMatch.groups.arguments,
+                    modifiedText
+                );
                 break;
 
             case "attack":
-                if (!defaultDodge) attack(globalMatch.groups.arguments);
-                else sattack(globalMatch.groups.arguments);
+                modifiedText = !defaultDodge
+                    ? attack(
+                          globalMatch.groups.arguments,
+                          currIndices,
+                          textCopy,
+                          modifiedText
+                      )
+                    : sattack(
+                          globalMatch.groups.arguments,
+                          currIndices,
+                          textCopy,
+                          modifiedText
+                      );
                 break;
 
             case "sattack":
-                if (defaultDodge) attack(globalMatch.groups.arguments);
-                else sattack(globalMatch.groups.arguments);
+                modifiedText = defaultDodge
+                    ? attack(
+                          globalMatch.groups.arguments,
+                          currIndices,
+                          textCopy,
+                          modifiedText
+                      )
+                    : sattack(
+                          globalMatch.groups.arguments,
+                          currIndices,
+                          textCopy,
+                          modifiedText
+                      );
                 break;
 
             case "heal":
