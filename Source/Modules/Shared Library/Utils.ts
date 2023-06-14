@@ -1,10 +1,8 @@
 import { state } from "../Tests/proxy_state";
 import { Character } from "./Character";
 import { Item } from "./Item";
-import {
-    levellingToOblivion,
-    ignoredValues,
-} from "../Input Modifier/constants";
+import { levellingToOblivion } from "../Input Modifier/constants";
+import { Stat } from "./Stat";
 
 //!Function for calculating damage. Adjust it to your heart's content.
 //!Just make sure it won't divide by 0 (finally putting all the hours spent on learning math in high school to good use).
@@ -65,29 +63,32 @@ export const diceRoll = (maxValue: number): number => {
     return Math.floor(Math.random() * maxValue) + 1;
 };
 
-//Equips item for a character
+/**Equips item for a character and removes it from state.inventory*/
 export const _equip = (
-    char: string,
+    characterName: string,
     item: Item,
     modifiedText: string
-): void => {
+): string => {
     //Grabs character
-    const character = state.characters[char];
+    const character: Character = state.characters[characterName];
+
     //If character has an already equipped item, it is put back into inventory
     if (character.items[item.slot]) {
-        modifiedText += `\nCharacter ${char} unequipped ${
+        modifiedText += `\nCharacter ${characterName} unequipped ${
             character.items[item.slot]
         }.`;
         state.inventory.push(character.items[item.slot].name);
     }
     //Puts the item onto character's slot and removes them from inventory
     character.items[item.slot] = item;
-    modifiedText += `\nCharacter ${char} equipped ${item.name}.`;
-    state.inventory.splice(state.inventory.indexOf(item.name), 1);
+    modifiedText += `\nCharacter ${characterName} equipped ${item.name}.`;
+    if (ElementInArray(item.name, state.inventory))
+        state.inventory.splice(state.inventory.indexOf(item.name), 1);
+    return modifiedText;
 };
 
 export const CharToString = (character: Character): string => {
-    let temp = levellingToOblivion
+    let temp: string = levellingToOblivion
         ? `hp: ${character.hp},
 isNPC: ${character.isNpc},\n`
         : `hp: ${character.hp},
@@ -98,12 +99,9 @@ to level up: ${character.expToNextLvl}(need ${
               character.expToNextLvl - character.experience
           } more),
 isNpc: ${character.isNpc},\n`;
-    for (const key in character) {
-        if (key === "hp" || ElementInArray(key, ignoredValues)) {
-            continue;
-        }
 
-        const value = character.stats[key];
+    for (const key in character.stats) {
+        const value: Stat = character.stats[key];
         if (levellingToOblivion) {
             temp += `${key}: level=${value.level}, exp=${
                 value.experience
@@ -114,9 +112,10 @@ isNpc: ${character.isNpc},\n`;
             temp += `${key}: ${value.level},\n`;
         }
     }
+
     temp += "\nItems:";
     if (Object.keys(character.items).length > 0)
-        for (let el of Object.keys(character.items)) {
+        for (const el of Object.keys(character.items)) {
             const item: Item = character.items[el];
             temp += `\n${ItemToString(item)},\n`;
         }

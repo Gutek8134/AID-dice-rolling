@@ -16,6 +16,10 @@ import {
 import { CustomDamageOutput } from "./fightutils";
 import { DEBUG } from "./modifier";
 
+/**
+ * Executes next battle turn until player can take action.
+ * Does not modify text
+ */
 export const turn = (textCopy: string): void => {
     if (DEBUG) console.log("Active: ", state.active);
 

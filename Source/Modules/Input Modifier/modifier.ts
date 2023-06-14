@@ -3,9 +3,16 @@ import SetupState from "./SetupState";
 import { turn } from "./turn";
 import { defaultDodge } from "./constants";
 import skillcheck from "./Commands/skillcheck";
-import { battle } from "./Commands/battle";
+import battle from "./Commands/battle";
 import attack from "./Commands/attack";
 import sattack from "./Commands/sattack";
+import heal from "./Commands/heal";
+import revive from "./Commands/revive";
+import addItem from "./Commands/additem";
+import gainItem from "./Commands/gainitem";
+import equip from "./Commands/equip";
+import unequip from "./Commands/unequip";
+import showInventory from "./Commands/showinventory";
 
 export const DEBUG: boolean = false;
 
@@ -52,7 +59,7 @@ export const modifier = (text: string): { text: string; stop?: boolean } => {
             const side: string[] = state[state.currentSide];
             state.active = [...side];
         }
-        turn({ textCopy });
+        turn(textCopy);
         logs();
         return { text: modifiedText };
     }
@@ -120,31 +127,58 @@ export const modifier = (text: string): { text: string; stop?: boolean } => {
                 break;
 
             case "heal":
-                heal(globalMatch.groups.arguments);
+                modifiedText = heal(
+                    globalMatch.groups.arguments,
+                    currIndices,
+                    modifiedText
+                );
                 break;
 
             case "revive":
-                revive(globalMatch.groups.arguments);
+                modifiedText = revive(
+                    globalMatch.groups.arguments,
+                    currIndices,
+                    modifiedText
+                );
                 break;
 
             case "additem":
-                addItem(globalMatch.groups.arguments);
+                modifiedText = addItem(
+                    globalMatch.groups.arguments,
+                    currIndices,
+                    modifiedText
+                );
                 break;
 
             case "gainitem":
-                gainItem(globalMatch.groups.arguments);
+                modifiedText = gainItem(
+                    globalMatch.groups.arguments,
+                    currIndices,
+                    modifiedText
+                );
                 break;
 
             case "equip":
-                equip(globalMatch.groups.arguments);
+                modifiedText = equip(
+                    globalMatch.groups.arguments,
+                    currIndices,
+                    modifiedText
+                );
                 break;
 
             case "unequip":
-                unequip(globalMatch.groups.arguments);
+                modifiedText = unequip(
+                    globalMatch.groups.arguments,
+                    currIndices,
+                    modifiedText
+                );
                 break;
 
             case "showinventory":
-                showInventory(globalMatch.groups.arguments);
+                modifiedText = showInventory(
+                    globalMatch.groups.arguments,
+                    modifiedText
+                );
                 break;
 
             case "addcharacter":
