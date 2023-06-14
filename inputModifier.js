@@ -425,7 +425,7 @@ const SetupState = () => {
 };
 
 //Purges the command from context
-const CutCommand = () => {
+const CutCommandFromContext = () => {
     state.ctxt =
         state.ctxt !== ""
             ? state.ctxt.substring(0, currIndices[0]) +
@@ -802,7 +802,7 @@ const skillcheck = (arguments) => {
     //Error checking
     if (arguments === undefined || arguments === null || arguments === "") {
         state.message = "No arguments found.";
-        CutCommand();
+        CutCommandFromContext();
         return;
     }
 
@@ -820,7 +820,7 @@ const skillcheck = (arguments) => {
     if (match === null) {
         state.message =
             "Skillcheck: Arguments were not given in proper format.";
-        CutCommand();
+        CutCommandFromContext();
         return;
     }
     //Regex matched, so program is rolling the dice
@@ -833,7 +833,7 @@ const skillcheck = (arguments) => {
     //Testing if stat exists, throwing error otherwise
     if (!ElementInArray(stat, state.stats)) {
         state.message = "Skillcheck: Specified stat does not exist";
-        CutCommand();
+        CutCommandFromContext();
         return;
     }
 
@@ -860,7 +860,7 @@ const skillcheck = (arguments) => {
     const thresholds = arguments.match(thresholdCheck);
     if (thresholds === null) {
         state.message = "Thresholds are not in proper format";
-        CutCommand();
+        CutCommandFromContext();
         return;
     }
     //console.log(thresholds);
@@ -1115,7 +1115,7 @@ const attack = (arguments) => {
     //Error checking
     if (arguments === undefined || arguments === null || arguments === "") {
         state.message = "Attack: No arguments found.";
-        CutCommand();
+        CutCommandFromContext();
         return;
     }
 
@@ -1128,19 +1128,19 @@ const attack = (arguments) => {
     //Error checking
     if (match === null) {
         state.message = "Attack: No matching arguments found.";
-        CutCommand();
+        CutCommandFromContext();
         return;
     }
 
     //Checks if stats exist
     if (!ElementInArray(match.groups.attackStat, state.stats)) {
         state.message = "Attack: Attacking stat was not created.";
-        CutCommand();
+        CutCommandFromContext();
         return;
     }
     if (!ElementInArray(match.groups.defenseStat, state.stats)) {
         state.message = "Attack: Defending stat was not created.";
-        CutCommand();
+        CutCommandFromContext();
         return;
     }
 
@@ -1160,7 +1160,7 @@ const attack = (arguments) => {
         attackingCharacter = state.characters[attChar];
     } else if (attackingCharacter.hp <= 0) {
         state.message = `Attack: ${attChar} cannot attack, because they are dead.`;
-        CutCommand();
+        CutCommandFromContext();
         return;
     }
 
@@ -1169,7 +1169,7 @@ const attack = (arguments) => {
         defendingCharacter = state.characters[defChar];
     } else if (defendingCharacter.hp <= 0) {
         state.message = `Attack: ${defChar} cannot be attacked, because they are dead.`;
-        CutCommand();
+        CutCommandFromContext();
         return;
     }
 
@@ -1314,7 +1314,7 @@ const sattack = (arguments) => {
     //Error checking
     if (arguments === undefined || arguments === null || arguments === "") {
         state.message = "sAttack: No arguments found.";
-        CutCommand();
+        CutCommandFromContext();
         return;
     }
 
@@ -1327,19 +1327,19 @@ const sattack = (arguments) => {
     //Error checking
     if (match === null) {
         state.message = "sAttack: No matching arguments found.";
-        CutCommand();
+        CutCommandFromContext();
         return;
     }
 
     //Checks if stats exist
     if (!ElementInArray(match.groups.attackStat, state.stats)) {
         state.message = "sAttack: Attacking stat was not created.";
-        CutCommand();
+        CutCommandFromContext();
         return;
     }
     if (!ElementInArray(match.groups.defenseStat, state.stats)) {
         state.message = "sAttack: Defending stat was not created.";
-        CutCommand();
+        CutCommandFromContext();
         return;
     }
 
@@ -1360,7 +1360,7 @@ const sattack = (arguments) => {
         attackingCharacter = state.characters[attChar];
     } else if (attackingCharacter.hp <= 0) {
         state.message = `sAttack: ${attChar} cannot attack, because they are dead.`;
-        CutCommand();
+        CutCommandFromContext();
         return;
     }
 
@@ -1369,7 +1369,7 @@ const sattack = (arguments) => {
         defendingCharacter = state.characters[defChar];
     } else if (defendingCharacter.hp <= 0) {
         state.message = `sAttack: ${defChar} cannot be attacked, because they are dead.`;
-        CutCommand();
+        CutCommandFromContext();
         return;
     }
 
@@ -1539,7 +1539,7 @@ const sattack = (arguments) => {
 
 //#region heal
 const heal = (arguments) => {
-    CutCommand();
+    CutCommandFromContext();
     //Looks for character, (d)number pattern. If d exists, dice is rolled, else number is used as is.
     const exp = /(?<character>[\w\s']+), *(?<value>(?:\d+ *: *\d+)|(?:d?\d+))/i;
     const match = arguments.match(exp);
@@ -1596,7 +1596,7 @@ const heal = (arguments) => {
 
 //#region revive
 const revive = (arguments) => {
-    CutCommand();
+    CutCommandFromContext();
     //Looks for pattern reviving character, revived character, revive value
     const exp =
         /(?<revivingCharacter>[\w\s']+), *(?<revivedCharacter>[\w\s']+), *(?<value>\d+)/i;
@@ -1647,7 +1647,7 @@ const revive = (arguments) => {
 
 //#region addItem
 const addItem = (arguments) => {
-    CutCommand();
+    CutCommandFromContext();
     //Error checking
     if (arguments === undefined || arguments === null || arguments === "") {
         state.message = "Add Item: No arguments found.";
@@ -1720,7 +1720,7 @@ const addItem = (arguments) => {
 //#region gainItem
 //TODO: test
 const gainItem = (arguments) => {
-    CutCommand();
+    CutCommandFromContext();
     //Error checking
     if (arguments === undefined || arguments === null || arguments === "") {
         state.message = "Gain Item: No arguments found.";
@@ -1763,7 +1763,7 @@ const gainItem = (arguments) => {
 
 //#region equip
 const equip = (arguments) => {
-    CutCommand();
+    CutCommandFromContext();
     //Error checking
     if (arguments === undefined || arguments === null || arguments === "") {
         state.message = "Equip Item: No arguments found.";
@@ -1804,7 +1804,7 @@ const equip = (arguments) => {
 
 //#region unequip
 const unequip = (arguments) => {
-    CutCommand();
+    CutCommandFromContext();
     //Error checking
     if (arguments === undefined || arguments === null || arguments === "") {
         state.message = "Unequip Item: No arguments found.";
@@ -1898,7 +1898,7 @@ addCharacter = (arguments) => {
                   match.groups.startingItems.split(",").map((el) => el.trim())
               );
 
-    CutCommand();
+    CutCommandFromContext();
     state.out = `\nCharacter ${char} has been created with stats\n${state.characters[char]}.`;
 };
 //#endregion addCharacter
@@ -1941,7 +1941,7 @@ addNPC = (arguments) => {
                   match.groups.startingItems.split(",").map((el) => el.trim())
               );
 
-    CutCommand();
+    CutCommandFromContext();
     state.out = `\nNon-Playable Character ${char} has been created with stats\n${state.characters[char]}.`;
 };
 //#endregion addNPC
@@ -1962,7 +1962,7 @@ setStats = (arguments) => {
         if (!ElementInArray(char, Object.keys(state.characters))) {
             state.message =
                 "Character has not been created and its stats cannot be altered.";
-            CutCommand();
+            CutCommandFromContext();
             return;
         }
         let character = state.characters[char];
@@ -2006,14 +2006,14 @@ setStats = (arguments) => {
 
         state.characters[char] = character;
 
-        CutCommand();
+        CutCommandFromContext();
 
         state.out = `\n${char}'s stats has been changed\nfrom\n${oldStats}\nto\n${CharToString(
             character
         )}.`;
     } else {
         state.message = "Invalid arguments.";
-        CutCommand();
+        CutCommandFromContext();
         return;
     }
 };
@@ -2032,12 +2032,12 @@ showStats = (arguments) => {
             state.message =
                 "Character has not been created and its stats cannot be shown.";
             //Removing command from context
-            CutCommand();
+            CutCommandFromContext();
             return;
         }
         const character = state.characters[char];
 
-        CutCommand();
+        CutCommandFromContext();
         //Sets info to print out
         state.out = `\n${char}'s current stats are:\n${CharToString(
             character
@@ -2048,7 +2048,7 @@ showStats = (arguments) => {
 
 //#region levelStats
 const levelStats = (arguments) => {
-    CutCommand();
+    CutCommandFromContext();
     if (levellingToOblivion) {
         state.message =
             "Level Stats: this command will work only when you are levelling your characters.\nIn current mode stats are levelling by themselves when you are using them.";
@@ -2123,7 +2123,7 @@ const levelStats = (arguments) => {
 
 //#region getState
 getState = (arguments) => {
-    CutCommand();
+    CutCommandFromContext();
     if (arguments !== "") {
         state.message =
             "Get State: getState command doesn't take any arguments.";
@@ -2137,7 +2137,7 @@ getState = (arguments) => {
 
 //#region setState
 setState = (arguments) => {
-    CutCommand();
+    CutCommandFromContext();
     //Looks for pattern !setState(anything)
     const exp = /(?<json>.+)/i;
     match = arguments.match(exp);
