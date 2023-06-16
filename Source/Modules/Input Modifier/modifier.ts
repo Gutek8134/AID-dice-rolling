@@ -13,6 +13,13 @@ import gainItem from "./Commands/gainitem";
 import equip from "./Commands/equip";
 import unequip from "./Commands/unequip";
 import showInventory from "./Commands/showinventory";
+import addCharacter from "./Commands/addcharacter";
+import addNPC from "./Commands/addnpc";
+import setStats from "./Commands/setstats";
+import showStats from "./Commands/showstats";
+import levelStats from "./Commands/levelStats";
+import getState from "./Commands/getstate";
+import setState from "./Commands/setstate";
 
 export const DEBUG: boolean = false;
 
@@ -71,7 +78,7 @@ export const modifier = (text: string): { text: string; stop?: boolean } => {
     const globalMatch = text.match(globalExp);
 
     //If something matched, calls functions with further work
-    if (globalMatch !== null && globalMatch.groups) {
+    if (globalMatch && globalMatch.groups) {
         const temp = text.indexOf(globalMatch[0]);
 
         //Creates indices, because d flag is not allowed
@@ -182,31 +189,59 @@ export const modifier = (text: string): { text: string; stop?: boolean } => {
                 break;
 
             case "addcharacter":
-                addCharacter(globalMatch.groups.arguments);
+                modifiedText = addCharacter(
+                    globalMatch.groups.arguments,
+                    currIndices,
+                    modifiedText
+                );
                 break;
 
             case "addnpc":
-                addNPC(globalMatch.groups.arguments);
+                modifiedText = addNPC(
+                    globalMatch.groups.arguments,
+                    currIndices,
+                    modifiedText
+                );
                 break;
 
             case "setstats":
-                setStats(globalMatch.groups.arguments);
+                modifiedText = setStats(
+                    globalMatch.groups.arguments,
+                    currIndices,
+                    modifiedText
+                );
                 break;
 
             case "showstats":
-                showStats(globalMatch.groups.arguments);
+                modifiedText = showStats(
+                    globalMatch.groups.arguments,
+                    currIndices,
+                    modifiedText
+                );
                 break;
 
             case "levelstats":
-                levelStats(globalMatch.groups.arguments);
+                modifiedText = levelStats(
+                    globalMatch.groups.arguments,
+                    currIndices,
+                    modifiedText
+                );
                 break;
 
             case "getstate":
-                getState(globalMatch.groups.arguments);
+                modifiedText = getState(
+                    globalMatch.groups.arguments,
+                    currIndices,
+                    modifiedText
+                );
                 break;
 
             case "setstate":
-                setState(globalMatch.groups.arguments);
+                modifiedText = setState(
+                    globalMatch.groups.arguments,
+                    currIndices,
+                    modifiedText
+                );
                 break;
 
             default:

@@ -19,7 +19,7 @@ export const state: {
     in: string;
     ctxt: string;
     out: string;
-    message: string;
+    message: string | { text: string; stop: boolean }[];
 
     //Battle related
     inBattle: boolean;
