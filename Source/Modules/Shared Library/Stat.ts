@@ -4,15 +4,16 @@ import { levellingToOblivion } from "../Input Modifier/constants";
 
 export class Stat {
     level: number;
-    experience: number = 0;
-    expToNextLvl: number = 0;
-    type?: "character" | "item" | "stat";
+    experience?: number;
+    expToNextLvl?: number;
+    type: "character" | "item" | "stat";
+    [key: string]: number | string | (() => string);
 
-    constructor(name: string, level: number) {
+    constructor(name: string, level?: number) {
         if (!isInStats(name)) {
             state.stats.push(name);
         }
-        this.level = level === undefined ? state.startingLevel : level;
+        this.level = level ?? state.startingLevel;
         if (levellingToOblivion) {
             this.experience = 0;
             this.expToNextLvl = experienceCalculation(this.level);
@@ -21,8 +22,10 @@ export class Stat {
     }
 
     toString() {
-        return `level = ${this.level} exp = ${this.experience} exp to lvl up=${
-            this.expToNextLvl
-        }(${this.expToNextLvl - this.experience})`;
+        return levellingToOblivion || !(this.expToNextLvl && this.experience)
+            ? String(this.level)
+            : `level = ${this.level} exp = ${this.experience} exp to lvl up=${
+                  this.expToNextLvl
+              }(${this.expToNextLvl - this.experience})`;
     }
 }

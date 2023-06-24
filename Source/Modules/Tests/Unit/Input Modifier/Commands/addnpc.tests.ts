@@ -1,0 +1,3 @@
+describe("Command add npc", () => {
+    //
+});

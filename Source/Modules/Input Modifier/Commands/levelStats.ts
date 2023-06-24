@@ -1,6 +1,6 @@
 import { Character } from "../../Shared Library/Character";
 import { Stat } from "../../Shared Library/Stat";
-import { CharToString, ElementInArray } from "../../Shared Library/Utils";
+import { CharacterToString, ElementInArray } from "../../Shared Library/Utils";
 import { state } from "../../Tests/proxy_state";
 import { ignoredValues, levellingToOblivion } from "../constants";
 import { CutCommandFromContext } from "./commandutils";
@@ -56,7 +56,7 @@ const levelStats = (
     }
 
     //Caches old stats to show
-    const oldStats: string = CharToString(character);
+    const oldStats: string = CharacterToString(character);
 
     //Changes stats
     for (const el of values) {
@@ -72,7 +72,7 @@ const levelStats = (
         character.skillpoints -= el[1];
     }
 
-    state.out = `\n${characterName}'s stats has been levelled\nfrom\n${oldStats}\nto\n${CharToString(
+    state.out = `\n${characterName}'s stats has been levelled\nfrom\n${oldStats}\nto\n${CharacterToString(
         character
     )}.`;
     return modifiedText;

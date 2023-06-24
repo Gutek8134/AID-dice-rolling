@@ -4,7 +4,8 @@ export class Item {
     effects: string[];
     modifiers: { [key: string]: number };
     name: string;
-    type?: "character" | "item" | "stat";
+    type: "character" | "item" | "stat";
+    [key: string]: string | string[] | { [key: string]: number };
 
     constructor(name: string, values: [string, string | number][]) {
         this.effects = [];
@@ -23,6 +24,7 @@ export class Item {
                 }
                 if (name === "effect") {
                     this.effects.push(String(value));
+                    continue;
                 }
                 //It's not slot name nor effect, so it's a stat modifier
                 this.modifiers[name] = Number(value);

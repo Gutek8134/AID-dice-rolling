@@ -1,4 +1,4 @@
-import { CharToString, ElementInArray } from "../../Shared Library/Utils";
+import { CharacterToString, ElementInArray } from "../../Shared Library/Utils";
 import { state } from "../../Tests/proxy_state";
 import { CutCommandFromContext } from "./commandutils";
 
@@ -28,7 +28,7 @@ const showStats = (
     const character = state.characters[characterName];
 
     //Sets info to print out
-    state.out = `\n${characterName}'s current stats are:\n${CharToString(
+    state.out = `\n${characterName}'s current stats are:\n${CharacterToString(
         character
     )}.`;
     return modifiedText;

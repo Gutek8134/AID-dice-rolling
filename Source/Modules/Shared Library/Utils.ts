@@ -87,7 +87,7 @@ export const _equip = (
     return modifiedText;
 };
 
-export const CharToString = (character: Character): string => {
+export const CharacterToString = (character: Character): string => {
     let temp: string = levellingToOblivion
         ? `hp: ${character.hp},
 isNPC: ${character.isNpc},\n`
@@ -102,7 +102,7 @@ isNpc: ${character.isNpc},\n`;
 
     for (const key in character.stats) {
         const value: Stat = character.stats[key];
-        if (levellingToOblivion) {
+        if (levellingToOblivion && value.expToNextLvl && value.experience) {
             temp += `${key}: level=${value.level}, exp=${
                 value.experience
             }, to lvl up=${value.expToNextLvl}(need ${

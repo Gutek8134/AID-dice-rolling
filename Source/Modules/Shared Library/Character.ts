@@ -1,7 +1,7 @@
 import { state } from "../Tests/proxy_state";
 import { Item } from "./Item";
 import { Stat } from "./Stat";
-import { experienceCalculation, CharToString } from "./Utils";
+import { experienceCalculation, CharacterToString } from "./Utils";
 
 //Blank character with starting level stats
 export class Character {
@@ -12,7 +12,7 @@ export class Character {
     expToNextLvl: number;
     skillpoints: number;
     items: { [key: string]: Item };
-    type?: "character" | "item" | "stat";
+    type: "character" | "item" | "stat";
     isNpc: boolean;
     stats: { [key: string]: Stat } = {};
     [key: string]:
@@ -64,6 +64,7 @@ export class Character {
             for (let name of initialItemNames) {
                 // console.log("item:", el);
                 const item: Item = state.items[name.substring(1)];
+                if (!item) continue;
                 this.items[item.slot] = item;
             }
         }
@@ -77,7 +78,7 @@ export class Character {
     }
 
     toString(): string {
-        return CharToString(this);
+        return CharacterToString(this);
     }
 }
 
