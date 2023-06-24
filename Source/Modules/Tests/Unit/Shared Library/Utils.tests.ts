@@ -47,9 +47,107 @@ describe("Utilities", () => {
             experience: 0,
             to level up: ${experienceCalculation(
                 1
-            )}(need ${experienceCalculation(1)} more)
+            )}(need ${experienceCalculation(1)} more),
             isNPC: false`
         );
         SetLevellingToOblivion(true);
+        state.stats = [];
+        state.startingHP = 100;
+        state.startingLevel = 1;
+        character = new Character();
+        expect(CharacterToString(character)).toEqual(
+            `hp: 100,
+            isNPC: false`
+        );
     });
+
+    it("Character to String - custom stats", () => {
+        SetLevellingToOblivion(false);
+        state.stats = [];
+        state.startingHP = 100;
+        state.startingLevel = 1;
+        let character = new Character([
+            ["dexterity", 5],
+            ["strength", 2],
+        ]);
+        expect(CharacterToString(character)).toEqual(
+            `hp: 100,
+            level: 1,
+            skillpoints: 0,
+            experience: 0,
+            to level up: ${experienceCalculation(
+                1
+            )}(need ${experienceCalculation(1)} more),
+            isNPC: false,
+            dexterity: 5,
+            strength: 2`
+        );
+
+        SetLevellingToOblivion(true);
+        state.stats = [];
+        state.startingHP = 100;
+        state.startingLevel = 1;
+        character = new Character([
+            ["dexterity", 5],
+            ["strength", 2],
+        ]);
+        expect(CharacterToString(character)).toEqual(
+            `hp: 100,
+            isNPC: false,
+            dexterity: level=5, exp=0, to lvl up=${experienceCalculation(
+                5
+            )}(need ${experienceCalculation(5)} more),
+            strength: level=2, exp=0, to lvl up=${experienceCalculation(
+                2
+            )}(need ${experienceCalculation(2)} more),`
+        );
+    });
+
+    it("Character to String - items", () => {
+        SetLevellingToOblivion(false);
+        state.stats = [];
+        state.items = {
+            "Staff of Zalos": new Item("Staff of Zalos", [
+                ["slot", "head"],
+                ["dexterity", -5],
+                ["nano machines", 3],
+            ]),
+        };
+        state.startingHP = 100;
+        state.startingLevel = 1;
+        let character = new Character([], ["Staff of Zalos"]);
+        expect(CharacterToString(character)).toEqual(
+            `hp: 100,
+            level: 1,
+            skillpoints: 0,
+            experience: 0,
+            to level up: ${experienceCalculation(
+                1
+            )}(need ${experienceCalculation(1)} more),
+            isNPC: false,
+            Items:
+            Staff of Zalos:
+            slot: head
+            dexterity: -5
+            nano machines: 3`
+        );
+
+        SetLevellingToOblivion(true);
+        state.stats = [];
+        state.startingHP = 100;
+        state.startingLevel = 1;
+        character = new Character([], []);
+        expect(CharacterToString(character)).toEqual(
+            `hp: 100,
+            isNPC: false,
+            Items:
+            Staff of Zalos:
+            slot: head
+            dexterity: -5
+            nano machines: 3`
+        );
+        state.items = {};
+    });
+
+    it("Internal Equip", () => {});
 });
