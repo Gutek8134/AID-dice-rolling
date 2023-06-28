@@ -5,6 +5,7 @@ import {
     CharacterToString,
     ElementInArray,
     ItemToString,
+    _equip,
     experienceCalculation,
 } from "../../../Shared Library/Utils";
 import { state } from "../../proxy_state";
@@ -149,5 +150,34 @@ describe("Utilities", () => {
         state.items = {};
     });
 
-    it("Internal Equip", () => {});
+    it("Internal Equip", () => {
+        state.items = {
+            "Staff of Zalos": new Item("Staff of Zalos", [
+                ["slot", "head"],
+                ["dexterity", -5],
+                ["nano machines", 3],
+            ]),
+            "Staff of Żulos": new Item("Staff of Żulos", [
+                ["slot", "head"],
+                ["dexterity", -10],
+                ["nano machines", -3],
+            ]),
+        };
+
+        state.characters = {
+            Zuibroldun: new Character([], ["Staff of Żulos"]),
+        };
+
+        let modifiedText = "";
+        expect(
+            _equip("Zuibroldun", state.items["Staff of Zalos"], modifiedText)
+        ).toEqual(
+            "\nCharacter Zuibroldun unequipped Staff of Żulos.\nCharacter Zuibroldun equipped Staff of Zalos."
+        );
+        expect(state.inventory).toEqual(["Staff of Żulos"]);
+
+        state.items = {};
+        state.characters = {};
+        state.inventory = [];
+    });
 });

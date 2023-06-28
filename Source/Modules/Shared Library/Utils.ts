@@ -18,7 +18,7 @@ export const damage = (attackStat: number, defenseStat: number): number => {
     //Use only natural numbers, as the script will break otherwise
 
     //Other example
-    //const dam = (attackStat / defenseStat) * diceRoll(20);
+    //let dam = (attackStat / defenseStat) * diceRoll(20);
     //Where "*" means multiplication and "/" means division
 
     //Raising to the power can be done using number1 ** number2
@@ -47,7 +47,6 @@ export const dodge = (attackStat: number, dodgeStat: number): boolean => {
 
 //!Function for calculating experience needed to level up. Adjust it to your heart's content
 export const experienceCalculation = (level: number): number => {
-    //Don't change it here, but in the shared library
     //level is the current character/stat's level
     const experience = /*You can edit from here*/ 2 * level; /*to here*/
 
