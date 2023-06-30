@@ -8,7 +8,7 @@ import {
 import { state } from "../../../proxy_state";
 
 describe("Command add character", () => {
-    it("Improper args", () => {
+    it("Invalid args error", () => {
         expect(addCharacter("", [0, 0], "Test message")).toEqual(
             "Test message"
         );
@@ -17,7 +17,7 @@ describe("Command add character", () => {
         );
     });
 
-    it("Creating default character", () => {
+    it("Should create default character", () => {
         state.stats = [];
         state.characters = {};
         const commandArguments =
@@ -54,7 +54,7 @@ describe("Command add character", () => {
         state.characters = {};
     });
 
-    it("Creating character with stats", () => {
+    it("Should create character with stats", () => {
         state.stats = [];
         state.characters = {};
         const commandArguments =
@@ -96,7 +96,7 @@ describe("Command add character", () => {
         state.characters = {};
     });
 
-    it("Create character with items", () => {
+    it("Should create character with items", () => {
         state.stats = [];
         state.characters = {};
         let testItem = new Item("Staff of Zalos", [

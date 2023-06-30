@@ -30,7 +30,7 @@ const addItem = (
 
     //Error checking
     if (!match || !match.groups) {
-        state.message = "Add Item: No matching arguments found.";
+        state.message = "Add Item: Arguments were not given in proper format.";
         return modifiedText;
     }
 
@@ -78,12 +78,12 @@ const addItem = (
     state.items[itemName] = item;
     modifiedText = `Item ${itemName} created with attributes:\n${ItemToString(
         item
-    )}`;
+    )}.`;
     if (match.groups.target === "equip")
         modifiedText = _equip(match.groups.character, item, modifiedText);
     else if (match.groups.target === "inventory") {
         state.inventory.push(itemName);
-        `Item ${itemName} put into inventory`;
+        modifiedText += `\nItem ${itemName} was put into inventory.`;
     }
     return modifiedText;
 };

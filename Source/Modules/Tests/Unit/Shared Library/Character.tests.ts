@@ -133,7 +133,7 @@ describe("Character creation", () => {
         }
     });
 
-    it("Default items", () => {
+    it("Should create character with Default items", () => {
         let testItem = new Item("Staff of Zalos", [
             ["slot", "head"],
             ["dexterity", -5],
