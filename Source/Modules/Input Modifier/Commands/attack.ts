@@ -35,11 +35,11 @@ const attack = (
 
     //Checks if stats exist
     if (!ElementInArray(match.groups.attackStat, state.stats)) {
-        state.message = "Attack: Attacking stat was not created.";
+        state.message = `Attack: Stat ${match.groups.attackStat} was not created.`;
         return modifiedText;
     }
     if (!ElementInArray(match.groups.defenseStat, state.stats)) {
-        state.message = "Attack: Defending stat was not created.";
+        state.message = `Attack: Stat ${match.groups.defenseStat} was not created.`;
         return modifiedText;
     }
 
@@ -48,6 +48,20 @@ const attack = (
     const attackStat: string = match.groups.attackStat;
     const defendingCharacterName: string = match.groups.defendingCharacter;
     const defenseStat: string = match.groups.defenseStat;
+
+    if (
+        !ElementInArray(attackingCharacterName, Object.keys(state.characters))
+    ) {
+        state.message = `Attack: Character ${attackingCharacterName} does not exist`;
+        return modifiedText;
+    }
+
+    if (
+        !ElementInArray(defendingCharacterName, Object.keys(state.characters))
+    ) {
+        state.message = `Attack: Character ${defendingCharacterName} does not exist.`;
+        return modifiedText;
+    }
 
     const { attackOutput, levelOutput, contextOutput } = DealDamage(
         attackingCharacterName,
@@ -60,6 +74,7 @@ const attack = (
     //Gives the player necessary info.
     modifiedText =
         modifiedText.substring(0, currIndices[0]) +
+        "\n" +
         attackOutput +
         " " +
         levelOutput +

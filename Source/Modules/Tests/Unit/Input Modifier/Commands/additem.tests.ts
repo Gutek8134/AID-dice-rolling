@@ -148,7 +148,7 @@ describe("Command add item", () => {
         );
 
         expect(state.items).toContainEqual(testItem);
-        expect(state.inventory).toEqual({});
+        expect(state.inventory).toEqual([]);
         expect(state.characters["Zuibroldun Jodem"].items).toEqual({
             "Staff of Zalos": testItem,
         });
