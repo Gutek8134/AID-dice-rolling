@@ -97,7 +97,9 @@ export const DealDamage = (
     state.characters[defendingCharacterName].hp -= damageInflicted;
 
     if (state.characters[defendingCharacterName].hp <= 0)
-        state.characters[defendingCharacterName].hp = 0;
+        if (!defendingCharacter.isNpc)
+            state.characters[defendingCharacterName].hp = 0;
+        else delete state.characters[defendingCharacterName];
 
     //Gives the player necessary info.
     const attackOutput = `${attackingCharacterName} (${attackStatName}: ${attackingCharacterStatLevelWithMods}${
