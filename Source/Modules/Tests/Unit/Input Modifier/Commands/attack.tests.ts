@@ -86,7 +86,7 @@ describe("Command attack", () => {
             "Attack: Character Zuibroldun does not exist."
         );
     });
-    //TODO: check context
+
     it("Should decrease defendant HP", () => {
         state.stats = ["fireproof", "explosion"];
 
@@ -112,6 +112,9 @@ describe("Command attack", () => {
         expect(state.characters["Miguel Booble"].hp).toBeLessThan(
             state.startingHP
         );
+
+        expect(state.ctxt).toMatch(`Test message.
+        Zuibroldun Jodem attacked Miguel Booble dealing \\w+ damage.`);
     });
 
     it("Should increase xp", () => {
@@ -226,6 +229,9 @@ describe("Command attack", () => {
         Miguel Booble now has \\d+ hp.
         Zuibroldun Jodem levelled up to level 2 \\(free skillpoints: ${state.skillpointsOnLevelUp}\\)!`);
 
+        expect(state.ctxt).toMatch(`Test message.
+        Zuibroldun Jodem attacked Miguel Booble dealing \\w+ damage.`);
+
         expect(state.characters["Zuibroldun Jodem"].experience).toEqual(0);
         expect(state.characters["Zuibroldun Jodem"].level).toEqual(2);
         expect(state.characters["Zuibroldun Jodem"].expToNextLvl).toEqual(
@@ -265,6 +271,9 @@ describe("Command attack", () => {
         Miguel Booble now has \\d+ hp.
         Zuibroldun Jodem levelled up to level 2 \\(free skillpoints: ${state.skillpointsOnLevelUp}\\)!
         Miguel Booble levelled up to level 2 \\(free skillpoints: ${state.skillpointsOnLevelUp}\\)!`);
+
+        expect(state.ctxt).toMatch(`Test message.
+        Zuibroldun Jodem attacked Miguel Booble dealing \\w+ damage.`);
 
         expect(state.characters["Zuibroldun Jodem"].experience).toEqual(0);
         expect(state.characters["Zuibroldun Jodem"].level).toEqual(2);
@@ -311,6 +320,9 @@ describe("Command attack", () => {
         Zuibroldun Jodem \\(explosion: 1\\) attacked Miguel Booble \\(fireproof: 1\\) dealing \\w+ damage \\(\\d+\\).
         Miguel Booble now has \\d+ hp.
         Zuibroldun Jodem's explosion levelled up to level 2!`);
+
+        expect(state.ctxt).toMatch(`Test message.
+        Zuibroldun Jodem attacked Miguel Booble dealing \\w+ damage.`);
 
         expect(
             state.characters["Zuibroldun Jodem"].stats["explosion"].experience
@@ -371,6 +383,9 @@ describe("Command attack", () => {
         Zuibroldun Jodem's explosion levelled up to level 2!
         Miguel Booble's fireproof levelled up to level 2!`);
 
+        expect(state.ctxt).toMatch(`Test message.
+        Zuibroldun Jodem attacked Miguel Booble dealing \\w+ damage.`);
+
         expect(
             state.characters["Zuibroldun Jodem"].stats["explosion"].experience
         ).toEqual(0);
@@ -424,6 +439,10 @@ describe("Command attack", () => {
         Zuibroldun Jodem \\(explosion: 1\\) attacked Miguel Booble \\(fireproof: 1\\) dealing \\w+ damage \\(\\d+\\).
         Miguel Booble has retreated.`);
 
+        expect(state.ctxt).toMatch(`Test message.
+        Zuibroldun Jodem attacked Miguel Booble dealing \\w+ damage.
+        Miguel Booble has retreated.`);
+
         expect(state.characters["Miguel Booble"].hp).toEqual(0);
 
         expect(
@@ -436,6 +455,10 @@ describe("Command attack", () => {
         ).toMatch(`Test message.
         Zuibroldun Jodem \\(explosion: 1\\) attacked Miguel Bootle \\(fireproof: 1\\) dealing \\w+ damage \\(\\d+\\).
         Miguel Bootle has died.`);
+
+        expect(state.ctxt).toMatch(`Test message.
+        Zuibroldun Jodem attacked Miguel Booble dealing \\w+ damage.
+        Miguel Booble has died.`);
 
         expect(state.characters).not.toHaveProperty("Miguel Bootle");
     });
