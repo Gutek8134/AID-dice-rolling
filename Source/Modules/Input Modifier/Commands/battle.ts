@@ -20,7 +20,7 @@ const battle = (commandArguments: string, modifiedText: string): string => {
 
     //Error checking
     if (match === null || !match.groups) {
-        state.message = "Battle: No matching arguments found.";
+        state.message = "Battle: Arguments were not given in proper format.";
         return modifiedText;
     }
 
@@ -53,18 +53,18 @@ const battle = (commandArguments: string, modifiedText: string): string => {
     for (const characterName of side1CharactersNames) {
         if (ElementInArray(characterName, Object.keys(state.characters))) {
             if (ElementInArray(characterName, side2CharactersNames)) {
-                state.message = `Battle: character ${characterName} cannot belong to both sides of the battle.`;
+                state.message = `Battle: Character ${characterName} cannot belong to both sides of the battle.`;
                 return modifiedText;
             }
         } else {
             //console.log(`${el}\n\n${state.characters}`);
-            state.message = `Battle: character ${characterName} doesn't exist.`;
+            state.message = `Battle: Character ${characterName} doesn't exist.`;
             return modifiedText;
         }
     }
     for (const characterName of side2CharactersNames) {
         if (!ElementInArray(characterName, Object.keys(state.characters))) {
-            state.message = `Battle: character ${characterName} doesn't exist.`;
+            state.message = `Battle: Character ${characterName} doesn't exist.`;
             return modifiedText;
         }
     }

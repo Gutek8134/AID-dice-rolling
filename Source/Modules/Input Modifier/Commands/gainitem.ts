@@ -23,7 +23,7 @@ const gainItem = (
 
     //Error checking
     if (!match || !match.groups) {
-        state.message = "Gain Item: No matching arguments found.";
+        state.message = "Gain Item: Arguments were not given in proper format.";
         return modifiedText;
     }
 

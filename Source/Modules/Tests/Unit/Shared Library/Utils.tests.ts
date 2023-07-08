@@ -175,6 +175,9 @@ describe("Utilities", () => {
             "\nCharacter Zuibroldun unequipped Staff of Żulos.\nCharacter Zuibroldun equipped Staff of Zalos."
         );
         expect(state.inventory).toEqual(["Staff of Żulos"]);
+        expect(state.characters.Zuibroldun.items["head"]).toEqual(
+            state.items["Staff of Zalos"]
+        );
 
         state.items = {};
         state.characters = {};

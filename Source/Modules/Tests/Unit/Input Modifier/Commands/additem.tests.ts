@@ -29,6 +29,22 @@ describe("Command add item", () => {
         expect(state.inventory).toEqual([]);
     });
 
+    it("Item already exists error", () => {
+        state.stats = ["int"];
+        state.items = { stick: new Item("stick", []) };
+        addItem("stick, slot, int=1", [0, 0], "");
+        expect(state.message).toEqual(
+            "Add Item: Item stick already exists. Maybe you should use gainItem or equip instead?"
+        );
+    });
+
+    it("Stat doesn't exist error", () => {
+        state.stats = [];
+        state.items = {};
+        addItem("stick, slot, int=1", [0, 0], "");
+        expect(state.message).toEqual("Add Item: Stat int does not exist.");
+    });
+
     it("Equip errors", () => {
         state.items = {};
         state.stats = ["wizardry", "strength"];

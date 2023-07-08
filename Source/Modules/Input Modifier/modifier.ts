@@ -20,6 +20,7 @@ import showStats from "./Commands/showstats";
 import levelStats from "./Commands/levelStats";
 import getState from "./Commands/getstate";
 import setState from "./Commands/setstate";
+import alterItem from "./Commands/alterItem";
 
 export const DEBUG: boolean = false;
 
@@ -151,6 +152,14 @@ export const modifier = (text: string): { text: string; stop?: boolean } => {
 
             case "additem":
                 modifiedText = addItem(
+                    globalMatch.groups.arguments,
+                    currIndices,
+                    modifiedText
+                );
+                break;
+
+            case "alteritem":
+                modifiedText = alterItem(
                     globalMatch.groups.arguments,
                     currIndices,
                     modifiedText

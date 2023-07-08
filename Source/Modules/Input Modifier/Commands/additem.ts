@@ -34,6 +34,11 @@ const addItem = (
         return modifiedText;
     }
 
+    if (ElementInArray(match.groups.name, Object.keys(state.items))) {
+        state.message = `Add Item: Item ${match.groups.name} already exists. Maybe you should use gainItem or equip instead?`;
+        return modifiedText;
+    }
+
     if (match.groups.target === "equip") {
         if (match.groups.character === undefined) {
             state.message =

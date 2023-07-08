@@ -14,12 +14,14 @@ const equip = (
         return modifiedText;
     }
 
+    //Looks for character, item1, item2, ..., itemN
     const exp: RegExp = /(?<character>[\w\s']+)(?<items>(?:, *[\w ']+)+)/i;
     const match: RegExpMatchArray | null = commandArguments.match(exp);
 
     //Error checking
     if (!match || !match?.groups) {
-        state.message = "Equip Item: No matching arguments found.";
+        state.message =
+            "Equip Item: Arguments were not given in proper format.";
         return modifiedText;
     }
 
@@ -41,7 +43,7 @@ const equip = (
         }
 
         if (!ElementInArray(itemNames, Object.keys(state.inventory))) {
-            state.message = `Equip Item: Item ${name} isn't in your inventory.`;
+            state.message = `Equip Item: You don't have item ${name} in your inventory.`;
             return modifiedText;
         }
     }
@@ -49,7 +51,9 @@ const equip = (
     for (const name of itemNames)
         modifiedText = _equip(characterName, state.items[name], modifiedText);
 
-    modifiedText += "\nItem(s) successfully equipped.";
+    modifiedText += `\nItem${
+        itemNames.length > 1 ? "s" : ""
+    } successfully equipped.`;
     return modifiedText;
 };
 
