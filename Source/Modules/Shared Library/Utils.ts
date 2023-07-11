@@ -57,7 +57,7 @@ export const isInStats = (name: string): boolean => {
     return state.stats.indexOf(name) > -1;
 };
 
-//Generates a value between 1 and maxValue
+/**Generates a value between 1 and maxValue*/
 export const diceRoll = (maxValue: number): number => {
     return Math.floor(Math.random() * maxValue) + 1;
 };

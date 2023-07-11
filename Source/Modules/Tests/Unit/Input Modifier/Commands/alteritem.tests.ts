@@ -1,6 +1,5 @@
 import alterItem from "../../../../Input Modifier/Commands/alterItem";
 import { Item } from "../../../../Shared Library/Item";
-import { ItemToString } from "../../../../Shared Library/Utils";
 import { state } from "../../../proxy_state";
 
 describe("Command alter item", () => {
