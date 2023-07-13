@@ -2,7 +2,7 @@ import { Character } from "../../Shared Library/Character";
 import { Stat } from "../../Shared Library/Stat";
 import { CharacterToString, ElementInArray } from "../../Shared Library/Utils";
 import { state } from "../../Tests/proxy_state";
-import { ignoredValues } from "../constants";
+import { restrictedStatNames } from "../constants";
 import { CutCommandFromContext } from "./commandutils";
 
 const setStats = (
@@ -48,7 +48,7 @@ const setStats = (
 
     //Changes stats
     for (const el of values) {
-        if (ElementInArray(el[0], ignoredValues)) {
+        if (ElementInArray(el[0], restrictedStatNames)) {
             character[el[0]] = el[1];
             continue;
         }

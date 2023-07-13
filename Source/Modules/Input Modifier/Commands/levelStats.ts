@@ -2,7 +2,7 @@ import { Character } from "../../Shared Library/Character";
 import { Stat } from "../../Shared Library/Stat";
 import { CharacterToString, ElementInArray } from "../../Shared Library/Utils";
 import { state } from "../../Tests/proxy_state";
-import { ignoredValues, levellingToOblivion } from "../constants";
+import { restrictedStatNames, levellingToOblivion } from "../constants";
 import { CutCommandFromContext } from "./commandutils";
 
 const levelStats = (
@@ -13,7 +13,7 @@ const levelStats = (
     CutCommandFromContext(modifiedText, currIndices);
     if (levellingToOblivion) {
         state.message =
-            "Level Stats: this command will work only when you are levelling your characters.\nIn current mode stats are levelling by themselves when you are using them.";
+            "Level Stats: This command will work only when you are levelling your characters.\nIn current mode stats are levelling by themselves when you are using them.";
         return modifiedText;
     }
 
@@ -51,7 +51,7 @@ const levelStats = (
         return modifiedText;
     }
     if (character.skillpoints < usedSkillpoints) {
-        state.message = `Level Stats: ${characterName} doesn't have enough skillpoints (${character.skillpoints}/${usedSkillpoints})`;
+        state.message = `Level Stats: ${characterName} doesn't have enough skillpoints (${character.skillpoints}/${usedSkillpoints}).`;
         return modifiedText;
     }
 
@@ -60,7 +60,7 @@ const levelStats = (
 
     //Changes stats
     for (const el of values) {
-        if (ElementInArray(el[0], ignoredValues)) {
+        if (ElementInArray(el[0], restrictedStatNames)) {
             state.message += `\nLevel Stats: ${el[0]} cannot be levelled up.`;
             continue;
         }
@@ -72,7 +72,7 @@ const levelStats = (
         character.skillpoints -= el[1];
     }
 
-    state.out = `\n${characterName}'s stats has been levelled\nfrom\n${oldStats}\nto\n${CharacterToString(
+    state.out = `${characterName}'s stats has been levelled\nfrom\n${oldStats}\nto\n${CharacterToString(
         character
     )}.`;
     return modifiedText;

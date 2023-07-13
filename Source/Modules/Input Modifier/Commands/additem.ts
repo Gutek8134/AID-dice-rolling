@@ -6,6 +6,7 @@ import {
     isInStats,
 } from "../../Shared Library/Utils";
 import { state } from "../../Tests/proxy_state";
+import { restrictedStatNames } from "../constants";
 import { CutCommandFromContext } from "./commandutils";
 
 const addItem = (
@@ -67,8 +68,12 @@ const addItem = (
             return [temp[0].trim(), Number(temp[1].trim())];
         });
 
-    //Stats must exist prior
     for (const modifier of initValues) {
+        if (ElementInArray(modifier[0], restrictedStatNames)) {
+            state.message = `Add Item: ${modifier[0]} cannot be set.`;
+            return modifiedText;
+        }
+        //Stats must exist prior
         if (!isInStats(modifier[0])) {
             state.message = `Add Item: Stat ${modifier[0]} does not exist.`;
             return modifiedText;

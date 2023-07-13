@@ -22,7 +22,7 @@ export let equipmentParts: string[] = [
     "artifact",
 ];
 
-export let ignoredValues: string[] = [
+export let restrictedStatNames: string[] = [
     "hp",
     "level",
     "experience",
@@ -31,6 +31,7 @@ export let ignoredValues: string[] = [
     "isNpc",
     "items",
     "type",
+    "name",
 ];
 
 //!Does not check whether stats are equal to 0 when attacking. Change only if your damage function does not contain division or you've checked it properly.
@@ -56,7 +57,7 @@ export const SetEquipmentParts = (inValue: string[]) => {
     if (DEBUG) equipmentParts = inValue;
 };
 export const SetIgnoredValues = (inValue: string[]) => {
-    if (DEBUG) ignoredValues = inValue;
+    if (DEBUG) restrictedStatNames = inValue;
 };
 export const SetIgnoreZeroDiv = (inValue: boolean) => {
     if (DEBUG) ignoreZeroDiv = inValue;

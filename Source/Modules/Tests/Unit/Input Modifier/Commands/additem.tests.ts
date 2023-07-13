@@ -38,6 +38,15 @@ describe("Command add item", () => {
         );
     });
 
+    it("Restricted name error", () => {
+        state.stats = [];
+        state.items = { stick: new Item("stick", []) };
+        addItem("stick, slot, hp=2, skillpoints=1", [], "");
+        expect(state.message).toEqual(
+            "\nAdd Item: hp cannot be altered.\nAdd Item: skillpoints cannot be altered."
+        );
+    });
+
     it("Stat doesn't exist error", () => {
         state.stats = [];
         state.items = {};

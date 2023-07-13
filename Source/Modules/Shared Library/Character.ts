@@ -1,3 +1,4 @@
+import { restrictedStatNames } from "../Input Modifier/constants";
 import { state } from "../Tests/proxy_state";
 import { Item } from "./Item";
 import { Stat } from "./Stat";
@@ -44,16 +45,12 @@ export class Character {
             //Sanitized beforehand
             for (const [name, value] of initialStats) {
                 //Hp and level need to be double checked to not make a stat of them
-                if (name === "hp") {
-                    this.hp = value;
+                if (name in ["hp", "level"]) {
+                    this[name] = value;
                     continue;
-                }
-                if (name === "level") {
-                    this.level = value;
-                    continue;
-                }
+                } else if (name in restrictedStatNames) continue;
                 //It's not hp, level, nor item, so it might as well be a stat
-                this.stats[name] = new Stat(name, value);
+                else this.stats[name] = new Stat(name, value);
             }
         }
 

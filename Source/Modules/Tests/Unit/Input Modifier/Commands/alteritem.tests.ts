@@ -33,9 +33,18 @@ describe("Command alter item", () => {
 
     it("Stat doesn't exist error", () => {
         state.stats = [];
-        state.items = {};
+        state.items = { stick: new Item("stick", []) };
         alterItem("stick, slot, int=1", [0, 0], "");
         expect(state.message).toEqual("Add Item: Stat int does not exist.");
+    });
+
+    it("Restricted name error", () => {
+        state.stats = [];
+        state.items = { stick: new Item("stick", []) };
+        alterItem("stick, slot, hp=2, skillpoints=1", [], "");
+        expect(state.message).toEqual(
+            "\nAdd Item: hp cannot be altered.\nAdd Item: skillpoints cannot be altered."
+        );
     });
 
     it("Should alter item's attributes", () => {

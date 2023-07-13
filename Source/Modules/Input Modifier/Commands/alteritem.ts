@@ -4,6 +4,7 @@ import {
     isInStats,
 } from "../../Shared Library/Utils";
 import { state } from "../../Tests/proxy_state";
+import { restrictedStatNames } from "../constants";
 import { CutCommandFromContext } from "./commandutils";
 
 const alterItem = (
@@ -55,6 +56,10 @@ const alterItem = (
 
     item.slot = match.groups.slot.substring(2);
     for (const modifier of initValues) {
+        if (ElementInArray(modifier[0], restrictedStatNames)) {
+            state.message += `\nAlter Item: ${modifier[0]} cannot be altered.`;
+            continue;
+        }
         if (modifier[1] === 0) delete item.modifiers[modifier[0]];
         else item.modifiers[modifier[0]] = modifier[1];
     }
