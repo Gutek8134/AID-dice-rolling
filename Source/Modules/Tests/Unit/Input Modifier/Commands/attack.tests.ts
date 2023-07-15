@@ -87,6 +87,45 @@ describe("Command attack", () => {
         );
     });
 
+    it("Dead characters error", () => {
+        state.stats = ["fireproof", "explosion"];
+
+        state.characters = {
+            "Zuibroldun Jodem": new Character(),
+            "Miguel Booble": new Character(),
+        };
+
+        state.characters["Zuibroldun Jodem"].hp = 0;
+
+        expect(
+            attack(
+                "explosion, Zuibroldun Jodem, fireproof, Miguel Bootle",
+                [0, 0],
+                "Test message",
+                "Test message"
+            )
+        ).toEqual("Test message");
+
+        expect(state.message).toEqual(
+            "Attack: Character Zuibroldun Jodem cannot attack, because they are dead."
+        );
+
+        state.characters["Zuibroldun Jodem"].hp = 100;
+        state.characters["Miguel Booble"].hp = 0;
+        expect(
+            attack(
+                "explosion, Zuibroldun, fireproof, Miguel Booble",
+                [0, 0],
+                "Test message",
+                "Test message"
+            )
+        ).toEqual("Test message");
+
+        expect(state.message).toEqual(
+            "Attack: Character Miguel Booble cannot be attacked, because they are dead."
+        );
+    });
+
     it("Should decrease defendant HP", () => {
         state.stats = ["fireproof", "explosion"];
 
@@ -457,8 +496,8 @@ describe("Command attack", () => {
         Miguel Bootle has died.`);
 
         expect(state.ctxt).toMatch(`Test message.
-        Zuibroldun Jodem attacked Miguel Booble dealing \\w+ damage.
-        Miguel Booble has died.`);
+        Zuibroldun Jodem attacked Miguel Bootle dealing \\w+ damage.
+        Miguel Bootle has died.`);
 
         expect(state.characters).not.toHaveProperty("Miguel Bootle");
     });

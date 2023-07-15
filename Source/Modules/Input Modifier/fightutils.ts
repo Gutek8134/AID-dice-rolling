@@ -48,7 +48,7 @@ export const DealDamage = (
         state.characters[attackingCharacterName] = new Character();
         attackingCharacter = state.characters[attackingCharacterName];
     } else if (attackingCharacter.hp <= 0) {
-        state.message = `${debugPrefix}: ${attackingCharacterName} cannot attack, because they are dead.`;
+        state.message = `${debugPrefix}: Character ${attackingCharacterName} cannot attack, because they are dead.`;
         return { attackOutput: "", levelOutput: "", contextOutput: "" };
     }
 
@@ -56,7 +56,7 @@ export const DealDamage = (
         state.characters[defendingCharacterName] = new Character();
         defendingCharacter = state.characters[defendingCharacterName];
     } else if (defendingCharacter.hp <= 0) {
-        state.message = `${debugPrefix}: ${defendingCharacterName} cannot be attacked, because they are dead.`;
+        state.message = `${debugPrefix}: Character ${defendingCharacterName} cannot be attacked, because they are dead.`;
         return { attackOutput: "", levelOutput: "", contextOutput: "" };
     }
 
@@ -179,7 +179,7 @@ export const DealDamageIfNotDodged = (
         state.characters[attackingCharacterName] = new Character();
         attackingCharacter = state.characters[attackingCharacterName];
     } else if (attackingCharacter.hp <= 0) {
-        state.message = `${debugPrefix}: ${attackingCharacterName} cannot attack, because they are dead.`;
+        state.message = `${debugPrefix}: Character ${attackingCharacterName} cannot attack, because they are dead.`;
         return { attackOutput: "", levelOutput: "", contextOutput: "" };
     }
 
@@ -187,7 +187,7 @@ export const DealDamageIfNotDodged = (
         state.characters[defendingCharacterName] = new Character();
         defendingCharacter = state.characters[defendingCharacterName];
     } else if (defendingCharacter.hp <= 0) {
-        state.message = `${debugPrefix}: ${defendingCharacterName} cannot be attacked, because they are dead.`;
+        state.message = `${debugPrefix}: Character ${defendingCharacterName} cannot be attacked, because they are dead.`;
         return { attackOutput: "", levelOutput: "", contextOutput: "" };
     }
 

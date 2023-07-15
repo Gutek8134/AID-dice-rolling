@@ -3,6 +3,7 @@ import { Character } from "./Character";
 import { Item } from "./Item";
 import { levellingToOblivion } from "../Input Modifier/constants";
 import { Stat } from "./Stat";
+import { DEBUG } from "../Input Modifier/modifier";
 
 //!Function for calculating damage. Adjust it to your heart's content.
 //!Just make sure it won't divide by 0 (finally putting all the hours spent on learning math in high school to good use).
@@ -29,7 +30,8 @@ export const damage = (attackStat: number, defenseStat: number): number => {
     return dam;
 };
 
-export const dodge = (attackStat: number, dodgeStat: number): boolean => {
+export let dodge = (attackStat: number, dodgeStat: number): boolean => {
+    if (DEBUG && disableDodge) return false;
     let dodged =
         /*You can edit from here*/
         attackStat + diceRoll(5) < dodgeStat + diceRoll(5);
@@ -143,4 +145,11 @@ export const CharLives = (character: string): boolean => {
 
 export const ElementInArray = (element: any, array: any[]): boolean => {
     return array.indexOf(element) > -1;
+};
+
+//Debug purposes only
+let disableDodge = false;
+
+export const SetDisableDodge = (newValue: boolean) => {
+    if (DEBUG) disableDodge = newValue;
 };
