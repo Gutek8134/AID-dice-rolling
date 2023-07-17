@@ -11,7 +11,9 @@ const showInventory = (
     }
     //console.log(state.inventory);
     return (
-        "Currently your inventory holds: " + state.inventory.join(", ") + "."
+        "Currently your inventory holds: " +
+        (state.inventory.length ? state.inventory.join(", ") : "nothing") +
+        "."
     );
 };
 

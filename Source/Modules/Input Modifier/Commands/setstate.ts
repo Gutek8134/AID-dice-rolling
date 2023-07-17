@@ -20,6 +20,7 @@ const setState = (
     }
 
     //Ensuring data won't be accidentally purged along with error handling
+    //TODO: Still can override it poorly and break everything :p
     let cache: any;
     try {
         cache = JSON.parse(match.groups.json);

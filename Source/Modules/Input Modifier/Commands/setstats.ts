@@ -27,7 +27,7 @@ const setStats = (
     //Grabbing info
     const characterName = match.groups.character;
     if (!ElementInArray(characterName, Object.keys(state.characters))) {
-        state.message = `Set Stats: Character ${characterName} has not been found.`;
+        state.message = `Set Stats: Character ${characterName} doesn't exist.`;
         return modifiedText;
     }
 

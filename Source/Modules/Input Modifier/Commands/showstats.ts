@@ -15,14 +15,15 @@ const showStats = (
 
     //Null check
     if (!match || !match.groups) {
-        state.message = "Show Stats: No matching arguments found.";
+        state.message =
+            "Show Stats: Arguments were not given in proper format.";
         return modifiedText;
     }
 
     //Grabbing info
     const characterName = match.groups.character;
     if (!ElementInArray(characterName, Object.keys(state.characters))) {
-        state.message = `Show Stats: Character ${characterName} has not been created.`;
+        state.message = `Show Stats: Character ${characterName} doesn't exist.`;
         return modifiedText;
     }
     const character = state.characters[characterName];
