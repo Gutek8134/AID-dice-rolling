@@ -11,15 +11,6 @@ const skillcheck = (
     modifiedText: string
 ): string => {
     CutCommandFromContext(modifiedText, currIndices);
-    //Error checking
-    if (
-        commandArguments === undefined ||
-        commandArguments === null ||
-        commandArguments === ""
-    ) {
-        state.message = "No arguments found.";
-        return modifiedText;
-    }
 
     const textCopy: string = modifiedText;
 
@@ -50,17 +41,16 @@ const skillcheck = (
 
     //Testing if stat exists, throwing error otherwise
     if (!ElementInArray(statName, state.stats)) {
-        state.message = "Skillcheck: Specified stat does not exist";
+        state.message = "Skillcheck: Specified stat does not exist.";
         return modifiedText;
     }
 
     //Shortening access path to character object
     let character: Character | undefined = state.characters[characterName];
 
-    //If you didn't create a character earlier, they get all stats at starting level from state
-    if (character === undefined) {
-        state.characters[characterName] = new Character();
-        character = state.characters[characterName];
+    if (!character) {
+        state.message = `Skillcheck: Character ${characterName} doesn't exist.`;
+        return modifiedText;
     }
 
     //Don't have a stat? No problem! You'll have a 0 instead! That's even worse than the default starting value!
@@ -68,20 +58,20 @@ const skillcheck = (
         character,
         statName
     );
-    let usedCharacterStatLevel = characterStatLevelWithMods;
+    let effectiveCharacterStatLevel = characterStatLevelWithMods;
 
     //Punishing
     if (character.hp < 1 && shouldPunish) {
         state.message = `Skillcheck: Testing against dead character. Punishment: -${state.punishment} (temporary).`;
-        usedCharacterStatLevel -= state.punishment;
+        effectiveCharacterStatLevel -= state.punishment;
     }
 
     //console.log(char + ", " + stat + ": "+ charStat);
 
     //Grabs thresholds
     const thresholds = commandArguments.match(thresholdCheck);
-    if (thresholds === null) {
-        state.message = "Thresholds are not in proper format";
+    if (!thresholds || !thresholds.groups) {
+        state.message = "Skillcheck: Thresholds are not in proper format.";
         return modifiedText;
     }
     //console.log(thresholds);
@@ -97,10 +87,10 @@ const skillcheck = (
         //null check
         if (!thresholdsAsString) continue;
 
-        const score: number = roll + usedCharacterStatLevel;
-        let mess: string = `Skillcheck performed: ${characterName} with ${statName}: ${usedCharacterStatLevel}${
+        const score: number = roll + effectiveCharacterStatLevel;
+        let mess: string = `Skillcheck performed: ${characterName} with ${statName}: ${effectiveCharacterStatLevel}${
             bonus === 0 ? "" : " (base " + character.stats[statName].level + ")"
-        } rolled ${roll}. ${usedCharacterStatLevel} + ${roll} = ${score}. `;
+        } rolled ${roll}. ${effectiveCharacterStatLevel} + ${roll} = ${score}. `;
 
         let outcome: string = "";
         let custom: boolean = false;
@@ -208,7 +198,7 @@ const skillcheck = (
             default:
                 console.error("WTF is this?!");
                 state.message =
-                    "Skillcheck: no group has been matched. \nIDK how did you make it, but think about creating an issue.";
+                    "Skillcheck: no group has been matched.\nIDK how did you make it, but think about creating an issue.";
                 return modifiedText;
         }
         //#endregion threshold check

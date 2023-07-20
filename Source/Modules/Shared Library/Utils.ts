@@ -61,6 +61,8 @@ export const isInStats = (name: string): boolean => {
 
 /**Generates a value between 1 and maxValue*/
 export const diceRoll = (maxValue: number): number => {
+    if (overrideRollOutcome) return overrideValue;
+
     return Math.floor(Math.random() * maxValue) + 1;
 };
 
@@ -149,7 +151,23 @@ export const ElementInArray = (element: any, array: any[]): boolean => {
 
 //Debug purposes only
 let disableDodge = false;
+let overrideRollOutcome = false;
+let overrideValue: number;
 
 export const SetDisableDodge = (newValue: boolean) => {
     if (DEBUG) disableDodge = newValue;
+};
+
+export const SetFixedRollOutcome = (
+    shouldOverride: boolean,
+    newValue?: number
+) => {
+    if (DEBUG) {
+        if (shouldOverride && newValue) {
+            overrideRollOutcome = true;
+            overrideValue = newValue;
+        } else if (!shouldOverride) {
+            overrideRollOutcome = false;
+        }
+    }
 };

@@ -58,10 +58,15 @@ export class Character {
 
         // console.log("Items:", items);
         if (initialItemNames[0] !== "" && initialItemNames.length > 0) {
-            for (let name of initialItemNames) {
+            for (const name of initialItemNames) {
                 // console.log("item:", el);
                 const item: Item = state.items[name.substring(1)];
-                if (!item) continue;
+                if (!item) {
+                    state.message += `\nCharacter Creation Internal Error: Item ${name} was not found.
+                    Please submit a bug report including the original command and output from !getState.
+                    Skipping to the next item.`;
+                    continue;
+                }
                 this.items[item.slot] = item;
             }
         }

@@ -9,11 +9,6 @@ const unequip = (
     modifiedText: string
 ): string => {
     CutCommandFromContext(modifiedText, currIndices);
-    //Error checking
-    if (!commandArguments) {
-        state.message = "Unequip Item: No arguments found.";
-        return modifiedText;
-    }
 
     const exp: RegExp =
         /(?<character>[\w\s']+)(?<slots>(?:(?:, [\w ]+)+|, all))/i;
@@ -21,7 +16,7 @@ const unequip = (
 
     //Error checking
     if (!match || !match.groups) {
-        state.message = "Unequip Item: No matching arguments found.";
+        state.message = "Unequip: Arguments were not given in proper format.";
         return modifiedText;
     }
 
@@ -30,7 +25,7 @@ const unequip = (
 
     //Checks if character exists
     if (!ElementInArray(characterName, Object.keys(state.characters))) {
-        state.message = `Unequip Item: Character ${characterName} doesn't exist.`;
+        state.message = `Unequip: Character ${characterName} doesn't exist.`;
         return modifiedText;
     }
 
