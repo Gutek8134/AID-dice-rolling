@@ -214,13 +214,13 @@ export const DealDamageIfNotDodged = (
             defendingCharacterStatLevelWithMods
         )
     ) {
-        const attackOutput: string = `${attackingCharacterName}(${attackingCharacterStatLevelWithMods}${
+        const attackOutput: string = `${attackingCharacterName} (${attackingCharacterStatLevelWithMods}${
             attackModifier === 0
                 ? ""
                 : " (base: " +
                   (attackingCharacterStatLevelWithMods - attackModifier) +
                   ")"
-        }) attacked ${defendingCharacterName}(${defendingCharacterStatLevelWithMods}${
+        }) attacked ${defendingCharacterName} (${defendingCharacterStatLevelWithMods}${
             defenseModifier === 0
                 ? ""
                 : " (base: " +

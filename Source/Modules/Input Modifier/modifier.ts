@@ -20,7 +20,7 @@ import showStats from "./Commands/showstats";
 import levelStats from "./Commands/levelStats";
 import getState from "./Commands/getstate";
 import setState from "./Commands/setstate";
-import alterItem from "./Commands/alterItem";
+import alterItem from "./Commands/alteritem";
 
 export const DEBUG: boolean = false;
 
