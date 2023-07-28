@@ -24,17 +24,19 @@ const addNPC = (
     const characterName = match.groups.character;
 
     //Converts values to format [[stat, val], [stat2, val], ... [statN, val]]
-    const values: [string, number][] = match.groups.startingStats
-        .substring(2)
-        .split(", ")
-        .map((el) => {
-            const temp: string[] = el.trim().split("=");
-            return [temp[0].trim(), Number(temp[1].trim())];
-        });
+    let values: [string, number][] = match.groups.startingStats
+        ? match.groups.startingStats
+              .substring(2)
+              .split(", ")
+              .map((el) => {
+                  const temp: string[] = el.trim().split("=");
+                  return [temp[0].trim(), Number(temp[1].trim())];
+              })
+        : [];
 
     //Creates the character with stats. If none were given, every created stat is at state.startingLevel
     state.characters[characterName] =
-        !values[0][0] || !values
+        !values || !values[0][0]
             ? new NPC()
             : new NPC(
                   values,
@@ -42,7 +44,7 @@ const addNPC = (
               );
 
     CutCommandFromContext(modifiedText, currIndices);
-    state.out = `\nNon-playable Character ${characterName} has been created with stats\n${state.characters[characterName]}.`;
+    state.out = `\nNon-Playable Character ${characterName} has been created with stats\n${state.characters[characterName]}.`;
     return modifiedText;
 };
 

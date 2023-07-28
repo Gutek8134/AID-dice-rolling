@@ -1,5 +1,6 @@
 import { ElementInArray, _equip } from "../../Shared Library/Utils";
 import { state } from "../../Tests/proxy_state";
+import { DEBUG } from "../modifier";
 import { CutCommandFromContext } from "./commandutils";
 
 const equip = (
@@ -11,7 +12,7 @@ const equip = (
     //Error checking
     if (!commandArguments) {
         state.message = "Equip Item: No arguments found.";
-        return modifiedText;
+        return DEBUG ? "error" : modifiedText;
     }
 
     //Looks for character, item1, item2, ..., itemN
@@ -22,7 +23,7 @@ const equip = (
     if (!match || !match?.groups) {
         state.message =
             "Equip Item: Arguments were not given in proper format.";
-        return modifiedText;
+        return DEBUG ? "error" : modifiedText;
     }
 
     const characterName: string = match.groups.character,
@@ -34,17 +35,17 @@ const equip = (
 
     if (!ElementInArray(characterName, Object.keys(state.characters))) {
         state.message = `Equip Item: Character ${characterName} doesn't exist.`;
-        return modifiedText;
+        return DEBUG ? "error" : modifiedText;
     }
     for (const name of itemNames) {
         if (!ElementInArray(name, Object.keys(state.items))) {
             state.message = `Equip Item: Item ${name} doesn't exist.`;
-            return modifiedText;
+            return DEBUG ? "error" : modifiedText;
         }
 
         if (!ElementInArray(itemNames, Object.keys(state.inventory))) {
             state.message = `Equip Item: You don't have item ${name} in your inventory.`;
-            return modifiedText;
+            return DEBUG ? "error" : modifiedText;
         }
     }
 

@@ -11,6 +11,7 @@ describe("Command level stats", () => {
         expect(state.message).toEqual(
             "Level Stats: This command will work only when you are levelling your characters.\nIn current mode stats are levelling by themselves when you are using them."
         );
+        state.message = "";
     });
 
     beforeEach(() => SetLevellingToOblivion(false));
@@ -20,6 +21,7 @@ describe("Command level stats", () => {
         expect(state.message).toEqual(
             "Level Stats: Arguments were not given in proper format."
         );
+        state.message = "";
     });
 
     it("Nonexistent character error", () => {
@@ -27,6 +29,7 @@ describe("Command level stats", () => {
         expect(state.message).toEqual(
             "Level Stats: Nonexistent characters can't level up."
         );
+        state.message = "";
     });
 
     it("No skillpoints used error", () => {
@@ -35,6 +38,7 @@ describe("Command level stats", () => {
         expect(state.message).toEqual(
             "Level Stats: You need to use at least one skillpoint."
         );
+        state.message = "";
     });
 
     it("Not enough skillpoints error", () => {
@@ -44,6 +48,7 @@ describe("Command level stats", () => {
         expect(state.message).toEqual(
             "Level Stats: Zuibroldun doesn't have enough skillpoints (0/1)."
         );
+        state.message = "";
     });
 
     it("Restricted name error", () => {
@@ -53,6 +58,7 @@ describe("Command level stats", () => {
         expect(state.message).toEqual(
             "\nLevel Stats: hp cannot be levelled up.\nLevel Stats: skillpoints cannot be levelled up."
         );
+        state.message = "";
     });
 
     it("Should level up stats", () => {

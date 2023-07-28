@@ -10,9 +10,10 @@ describe("Command get state", () => {
     });
 
     it("Should print state", () => {
+        const cache = JSON.stringify(state);
         getState("", [], "");
         expect(state.out).toEqual(
-            "\n----------\n\n" + JSON.stringify(state) + "\n\n----------\n"
+            "\n----------\n\n" + cache + "\n\n----------\n"
         );
     });
 });

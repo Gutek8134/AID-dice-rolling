@@ -1,6 +1,7 @@
 import unequip from "../../../../Input Modifier/Commands/unequip";
 import { Character } from "../../../../Shared Library/Character";
 import { Item } from "../../../../Shared Library/Item";
+import { ElementInArray } from "../../../../Shared Library/Utils";
 import { state } from "../../../proxy_state";
 
 describe("Command unequip", () => {
@@ -34,6 +35,10 @@ describe("Command unequip", () => {
             ),
         };
 
+        expect(
+            ElementInArray("Zuibroldun", Object.keys(state.characters))
+        ).toBeTruthy();
+        expect(state.message).toEqual("");
         expect(unequip("Zuibroldun, artifact", [0, 0], "")).toEqual(
             "\nZuibroldun unequipped Staff of Zalos."
         );

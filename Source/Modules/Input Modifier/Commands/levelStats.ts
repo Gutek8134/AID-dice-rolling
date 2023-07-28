@@ -23,7 +23,8 @@ const levelStats = (
     const match: RegExpMatchArray | null = commandArguments.match(exp);
 
     if (!match || !match.groups) {
-        state.message = "Level Stats: No matching arguments found.";
+        state.message =
+            "Level Stats: Arguments were not given in proper format.";
         return modifiedText;
     }
 

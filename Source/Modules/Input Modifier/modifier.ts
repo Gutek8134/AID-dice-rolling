@@ -22,7 +22,7 @@ import getState from "./Commands/getstate";
 import setState from "./Commands/setstate";
 import alterItem from "./Commands/alteritem";
 
-export const DEBUG: boolean = false;
+export const DEBUG: boolean = true;
 
 export const modifier = (text: string): { text: string; stop?: boolean } => {
     //#region logs
@@ -54,13 +54,15 @@ export const modifier = (text: string): { text: string; stop?: boolean } => {
 
     //#region battle handling
     if (state.inBattle) {
-        const temp = text.match(
+        const battleMatch = text.match(
             /\((?:(?<attackStat>[\w ']+), *)?(?<defendingCharacter>[\w\s']+)(?:, *(?<defenseStat>[\w ']+))?\)/i
         )?.[0];
-        if (temp !== undefined)
+        if (battleMatch !== undefined)
             modifiedText =
-                modifiedText.substring(0, text.indexOf(temp)) +
-                modifiedText.substring(text.indexOf(temp) + temp.length);
+                modifiedText.substring(0, text.indexOf(battleMatch)) +
+                modifiedText.substring(
+                    text.indexOf(battleMatch) + battleMatch.length
+                );
         if (!state.active?.length) {
             const temp = Number(state.currentSide?.substring(4)) + 1;
             state.currentSide = `side${temp >= 3 ? 1 : temp}`;

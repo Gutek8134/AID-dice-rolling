@@ -8,8 +8,7 @@ const getState = (
 ): string => {
     CutCommandFromContext(modifiedText, currIndices);
     if (commandArguments) {
-        state.message =
-            "Get State: getState command doesn't take any arguments.";
+        state.message = "Get State: command doesn't take any arguments.";
         return modifiedText;
     }
 

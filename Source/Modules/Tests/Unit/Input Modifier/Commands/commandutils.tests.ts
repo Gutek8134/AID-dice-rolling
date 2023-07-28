@@ -5,7 +5,8 @@ describe("Command Utilities", () => {
     it("Should cut command from context", () => {
         CutCommandFromContext("aaabbbb", [2, 4]);
         expect(state.ctxt).toEqual("aabbb");
-        CutCommandFromContext("Yolo !test lo", [4, 9]);
+        state.ctxt = "";
+        CutCommandFromContext("Yolo !test lo", [5, 10]);
         expect(state.ctxt).toEqual("Yolo  lo");
     });
 });

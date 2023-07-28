@@ -1,4 +1,4 @@
-import alterItem from "../../../../Input Modifier/Commands/alterItem";
+import alterItem from "../../../../Input Modifier/Commands/alteritem";
 import { Item } from "../../../../Shared Library/Item";
 import { state } from "../../../proxy_state";
 
@@ -35,7 +35,7 @@ describe("Command alter item", () => {
         state.stats = [];
         state.items = { stick: new Item("stick", []) };
         alterItem("stick, slot, int=1", [0, 0], "");
-        expect(state.message).toEqual("Add Item: Stat int does not exist.");
+        expect(state.message).toEqual("Alter Item: Stat int does not exist.");
     });
 
     it("Restricted name error", () => {
@@ -43,7 +43,7 @@ describe("Command alter item", () => {
         state.items = { stick: new Item("stick", []) };
         alterItem("stick, slot, hp=2, skillpoints=1", [], "");
         expect(state.message).toEqual(
-            "\nAdd Item: hp cannot be altered.\nAdd Item: skillpoints cannot be altered."
+            "\nAlter Item: hp cannot be altered.\nAlter Item: skillpoints cannot be altered."
         );
     });
 

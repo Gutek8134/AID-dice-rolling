@@ -5,8 +5,7 @@ const showInventory = (
     modifiedText: string
 ): string => {
     if (commandArguments !== "") {
-        state.message =
-            "Show Inventory: showInventory doesn't take any arguments";
+        state.message = "Show Inventory: Command doesn't take any arguments.";
         return modifiedText;
     }
     //console.log(state.inventory);

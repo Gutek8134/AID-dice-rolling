@@ -8,7 +8,7 @@ describe("Command gain item", () => {
         expect(gainItem("", [0, 0], "Test message")).toEqual("Test message");
         expect(state.message).toEqual("Gain Item: No arguments found.");
 
-        expect(gainItem("yololo", [0, 0], "Test message")).toEqual(
+        expect(gainItem("----;", [0, 0], "Test message")).toEqual(
             "Test message"
         );
         expect(state.message).toEqual(
@@ -19,7 +19,7 @@ describe("Command gain item", () => {
     it("Nonexistent item error", () => {
         state.items = { "Staff of Zalos": new Item("Staff of Zalos", []) };
 
-        let commandArguments = "Staff of Zalos";
+        let commandArguments = "Staff Zalos";
         let input = `Test !gainItem(${commandArguments}) message`;
         expect(gainItem(commandArguments, [0, 0], input)).toEqual(input);
         expect(state.message).toEqual(
@@ -62,7 +62,7 @@ describe("Command gain item", () => {
         expect(gainItem(commandArguments, [0, 0], input)).toEqual(
             "\nCharacter Zuibroldun equipped Staff of Zalos."
         );
-        expect(state.characters.Zuibroldun.items["Staff of Zalos"]).toEqual(
+        expect(state.characters.Zuibroldun.items["artifact"]).toEqual(
             state.items["Staff of Zalos"]
         );
     });

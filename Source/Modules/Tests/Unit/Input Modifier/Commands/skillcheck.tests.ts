@@ -59,7 +59,7 @@ describe("Command skillcheck", () => {
         state.characters.Zuibroldun.stats["explosion"].level += 5;
 
         expect(skillcheck("explosion, Zuibroldun, 5:10", [0, 0], "")).toEqual(
-            "Skillcheck performed: Zuibroldun with explosion: 1 rolled 1. 6 + 1 = 7. Difficulty: 5, 10 Outcome: nothing happens."
+            "Skillcheck performed: Zuibroldun with explosion: 6 rolled 1. 6 + 1 = 7. Difficulty: 5, 10 Outcome: nothing happens."
         );
         expect(state.ctxt).toEqual("Outcome: nothing happens.");
         state.characters.Zuibroldun.experience = 0;
@@ -68,7 +68,7 @@ describe("Command skillcheck", () => {
         expect(
             skillcheck("explosion, Zuibroldun, 5:10:15", [0, 0], "")
         ).toEqual(
-            "Skillcheck performed: Zuibroldun with explosion: 1 rolled 1. 11 + 1 = 12. Difficulty: 5, 10, 15 Outcome: success."
+            "Skillcheck performed: Zuibroldun with explosion: 11 rolled 1. 11 + 1 = 12. Difficulty: 5, 10, 15 Outcome: success."
         );
         expect(state.ctxt).toEqual("Outcome: success.");
         state.characters.Zuibroldun.experience = 0;
@@ -77,7 +77,7 @@ describe("Command skillcheck", () => {
         expect(
             skillcheck("explosion, Zuibroldun, 5:10:15:20", [0, 0], "")
         ).toEqual(
-            "Skillcheck performed: Zuibroldun with explosion: 1 rolled 1. 16 + 1 = 17. Difficulty: 5, 10, 15, 20 Outcome: success."
+            "Skillcheck performed: Zuibroldun with explosion: 16 rolled 1. 16 + 1 = 17. Difficulty: 5, 10, 15, 20 Outcome: success."
         );
         expect(state.ctxt).toEqual("Outcome: success.");
         state.characters.Zuibroldun.experience = 0;
@@ -90,15 +90,15 @@ describe("Command skillcheck", () => {
                 ""
             )
         ).toEqual(
-            "Skillcheck performed: Zuibroldun with explosion: 1 rolled 1. 21 + 1 = 22. Difficulty: 5, 10, 15, 20, 25 Outcome: d"
+            "Skillcheck performed: Zuibroldun with explosion: 21 rolled 1. 21 + 1 = 22. Difficulty: 5, 10, 15, 20, 25 Outcome: d"
         );
         expect(state.ctxt).toEqual("Outcome: d");
     });
 
     it("Should add xp", () => {
+        SetLevellingToOblivion(true);
         state.stats = ["explosion"];
         state.characters = { Zuibroldun: new Character() };
-        SetLevellingToOblivion(true);
         skillcheck("explosion, Zuibroldun, 5", [0, 0], "");
         expect(
             state.characters.Zuibroldun.stats["explosion"].experience

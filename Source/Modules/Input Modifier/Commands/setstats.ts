@@ -20,7 +20,7 @@ const setStats = (
 
     //Null check
     if (!match || !match.groups) {
-        state.message = "Set Stats: No matching arguments found.";
+        state.message = "Set Stats: Arguments were not given in proper format.";
         return modifiedText;
     }
 

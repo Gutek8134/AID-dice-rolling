@@ -39,7 +39,7 @@ describe("Stat creation", () => {
     });
 
     it("Should create common stat", () => {
-        SetLevellingToOblivion(true);
+        SetLevellingToOblivion(false);
         state.startingLevel = 1;
         state.stats = [];
 

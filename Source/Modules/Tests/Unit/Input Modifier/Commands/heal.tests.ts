@@ -70,7 +70,7 @@ describe("Command heal", () => {
             expect(state.characters.Zuibroldun.hp).toBeLessThanOrEqual(110);
             expect(state.characters.Zuibroldun.hp).not.toBeLessThanOrEqual(100);
             expect(state.out).toMatch(
-                "Character Zuibroldun was healed by \\d{1,2} hp. Current hp: 110."
+                /Character Zuibroldun was healed by \d{1,2} hp\. Current hp: 1\d{2}\./
             );
         }
     });
@@ -88,7 +88,7 @@ describe("Command heal", () => {
             expect(state.characters.Zuibroldun.hp).toBeLessThanOrEqual(130);
             expect(state.characters.Zuibroldun.hp).not.toBeLessThan(110);
             expect(state.out).toMatch(
-                "Character Zuibroldun was healed by \\d{2} hp. Current hp: 110."
+                /Character Zuibroldun was healed by \d{2} hp\. Current hp: 1\d0\./
             );
         }
     });

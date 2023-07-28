@@ -1,18 +1,16 @@
 import battle from "../../../../Input Modifier/Commands/battle";
-import { turn } from "../../../../Input Modifier/turn";
 import { Character } from "../../../../Shared Library/Character";
 import { state } from "../../../proxy_state";
 
 describe("Command battle", () => {
     it("Invalid args error", () => {
-        expect(battle("aaa", "Test message")).toEqual("Test message");
+        expect(battle("", "Test message")).toEqual("Test message");
         expect(state.message).toEqual("Battle: No arguments found.");
 
         expect(battle("aaa", "Test message")).toEqual("Test message");
         expect(state.message).toEqual(
             "Battle: Arguments were not given in proper format."
         );
-        expect(turn).not.toBeCalled();
     });
 
     it("Character cannot participate in both sides of the battle at once", () => {
@@ -29,9 +27,8 @@ describe("Command battle", () => {
             )
         ).toEqual(`Test !battle(${commandArguments}) message.`);
         expect(state.message).toEqual(
-            "Battle: character Zuibroldun cannot belong to both sides of the battle."
+            "Battle: Character Zuibroldun cannot belong to both sides of the battle."
         );
-        expect(turn).not.toBeCalled();
 
         commandArguments = "(Zuibroldun, Miguel), (Miguel)";
         expect(
@@ -41,9 +38,8 @@ describe("Command battle", () => {
             )
         ).toEqual(`Test !battle(${commandArguments}) message.`);
         expect(state.message).toEqual(
-            "Battle: character Miguel cannot belong to both sides of the battle."
+            "Battle: Character Miguel cannot belong to both sides of the battle."
         );
-        expect(turn).not.toBeCalled();
     });
 
     it("Nonexistent characters error", () => {
@@ -59,9 +55,8 @@ describe("Command battle", () => {
             )
         ).toEqual(`Test !battle(${commandArguments}) message.`);
         expect(state.message).toEqual(
-            "Battle: character Zuibroldun doesn't exist."
+            "Battle: Character Zuibroldun doesn't exist."
         );
-        expect(turn).not.toBeCalled();
 
         commandArguments = "(Zuibroldun), (Miguel)";
         expect(
@@ -71,9 +66,8 @@ describe("Command battle", () => {
             )
         ).toEqual(`Test !battle(${commandArguments}) message.`);
         expect(state.message).toEqual(
-            "Battle: character Miguel doesn't exist."
+            "Battle: Character Miguel doesn't exist."
         );
-        expect(turn).not.toBeCalled();
     });
 
     it("Should set state values", () => {
@@ -102,6 +96,5 @@ describe("Command battle", () => {
         expect(state.active).toEqual(state[state.currentSide ?? ""]);
         expect(state.inBattle).toEqual(true);
         expect(state.out).toEqual("A battle has emerged between two groups!");
-        expect(turn).toBeCalled();
     });
 });

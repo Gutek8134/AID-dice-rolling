@@ -1,4 +1,8 @@
-import { BestStat, IncrementExp } from "../../../Input Modifier/characterutils";
+import {
+    BestStat,
+    GetStatWithMods,
+    IncrementExp,
+} from "../../../Input Modifier/characterutils";
 import { SetLevellingToOblivion } from "../../../Input Modifier/constants";
 import { Character } from "../../../Shared Library/Character";
 import { Item } from "../../../Shared Library/Item";
@@ -51,25 +55,22 @@ describe("Character Utilities", () => {
                 ["dexterity", 1],
             ]),
         };
-
-        expect(
-            BestStat(
-                new Character(
-                    [
-                        ["dexterity", 2],
-                        ["strength", 2],
-                        ["explosion", 3],
-                    ],
-                    ["Staff of Zalos", "stick"]
-                )
-            )
-        ).toEqual("strength");
+        const character = new Character(
+            [
+                ["dexterity", 2],
+                ["strength", 2],
+                ["explosion", 3],
+            ],
+            ["Staff of Zalos", "stick"]
+        );
+        expect(GetStatWithMods(character, "strength")).toEqual(4);
+        expect(BestStat(character)).toEqual("strength");
     });
 
     it("Increment XP", () => {
-        state.characters.Zuibroldun = new Character([["explosion", 1]]);
-
         SetLevellingToOblivion(true);
+
+        state.characters.Zuibroldun = new Character([["explosion", 1]]);
 
         expect(IncrementExp("Zuibroldun", "explosion")).toEqual("");
         expect(state.characters.Zuibroldun.stats["explosion"].level).toEqual(1);

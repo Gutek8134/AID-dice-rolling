@@ -27,7 +27,9 @@ describe("Command set stats", () => {
 
         setStats("Zuibroldun, explosion=15, fireproof =2", [0, 0], "");
 
-        expect(state.characters.Zuibroldun.stats["explosion"]).toEqual(15);
-        expect(state.characters.Zuibroldun.stats["fireproof"]).toEqual(2);
+        expect(state.characters.Zuibroldun.stats["explosion"].level).toEqual(
+            15
+        );
+        expect(state.characters.Zuibroldun.stats["fireproof"].level).toEqual(2);
     });
 });

@@ -308,7 +308,7 @@ const EndTurn = (): void => {
 
 const ExitBattle = (): void => {
     state.inBattle = false;
-    delete state.attackingCharacter, state.activeCharacterName;
+    delete state.activeCharacter, state.activeCharacterName;
     delete state.side1, state.side2;
     delete state.currentSide;
 };

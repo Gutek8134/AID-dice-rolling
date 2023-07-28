@@ -40,7 +40,7 @@ describe("Command add item", () => {
 
     it("Restricted name error", () => {
         state.stats = [];
-        state.items = { stick: new Item("stick", []) };
+        state.items = {};
         addItem("stick, slot, hp=2, skillpoints=1", [], "");
         expect(state.message).toEqual(
             "\nAdd Item: hp cannot be altered.\nAdd Item: skillpoints cannot be altered."
@@ -110,9 +110,8 @@ describe("Command add item", () => {
                 "aaa !addItem(Staff of Zalos, artifact, wizardry = 3, strength = -1) bbb"
             )
         ).toEqual(
-            `Item Staff of Zalos created with attributes ${ItemToString(
-                testItem
-            )}.`
+            `Item Staff of Zalos created with attributes:
+${ItemToString(testItem)}.`
         );
 
         expect(state.items).toContainEqual(testItem);
@@ -137,10 +136,9 @@ describe("Command add item", () => {
                 "aaa !addItem(Staff of Zalos, artifact, wizardry = 3, strength = -1, inventory) bbb"
             )
         ).toEqual(
-            `Item Staff of Zalos created with attributes ${ItemToString(
-                testItem
-            )}.
-            Item Staff of Zalos was put into inventory.`
+            `Item Staff of Zalos created with attributes:
+${ItemToString(testItem)}.
+Item Staff of Zalos was put into inventory.`
         );
 
         expect(state.items).toContainEqual(testItem);
@@ -166,10 +164,9 @@ describe("Command add item", () => {
                 "aaa !addItem(Staff of Zalos, artifact, wizardry = 3, strength = -1, equip, Zuibroldun Jodem) bbb"
             )
         ).toEqual(
-            `Item Staff of Zalos created with attributes ${ItemToString(
-                testItem
-            )}.
-            Character Zuibroldun Jodem equipped Staff of Zalos.`
+            `Item Staff of Zalos created with attributes:
+${ItemToString(testItem)}.
+Character Zuibroldun Jodem equipped Staff of Zalos.`
         );
 
         expect(state.items).toContainEqual(testItem);

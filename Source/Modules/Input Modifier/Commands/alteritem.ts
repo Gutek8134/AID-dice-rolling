@@ -5,6 +5,7 @@ import {
 } from "../../Shared Library/Utils";
 import { state } from "../../Tests/proxy_state";
 import { restrictedStatNames } from "../constants";
+import { DEBUG } from "../modifier";
 import { CutCommandFromContext } from "./commandutils";
 
 const alterItem = (
@@ -27,7 +28,11 @@ const alterItem = (
     }
 
     if (ElementInArray(match.groups.name, Object.keys(state.items))) {
-        state.message = "Alter Item: Item doesn't exist.";
+        state.message = `Alter Item: Item ${match.groups.name} doesn't exist.`;
+        if (DEBUG) {
+            state.message += "\n";
+            for (const key in state.items) state.message += ", " + key;
+        }
         return modifiedText;
     }
 

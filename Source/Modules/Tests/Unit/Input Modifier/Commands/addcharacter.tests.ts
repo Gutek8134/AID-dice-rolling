@@ -29,7 +29,7 @@ describe("Command add character", () => {
         expect(state.out).toEqual(
             `\nCharacter Zuibroldun Jodem has been created with stats\n${CharacterToString(
                 state.characters["Zuibroldun Jodem"]
-            )}`
+            )}.`
         );
 
         const expected: { [key: string]: any } = {
@@ -66,7 +66,7 @@ describe("Command add character", () => {
         expect(state.out).toEqual(
             `\nCharacter Zuibroldun Jodem has been created with stats\n${CharacterToString(
                 state.characters["Zuibroldun Jodem"]
-            )}`
+            )}.`
         );
 
         const expected: { [key: string]: any } = {
@@ -115,7 +115,7 @@ describe("Command add character", () => {
         expect(state.out).toEqual(
             `\nCharacter Zuibroldun Jodem has been created with stats\n${CharacterToString(
                 state.characters["Zuibroldun Jodem"]
-            )}`
+            )}.`
         );
 
         const expected: { [key: string]: any } = {

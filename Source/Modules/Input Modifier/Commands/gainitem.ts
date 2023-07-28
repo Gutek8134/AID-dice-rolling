@@ -46,11 +46,7 @@ const gainItem = (
 
     state.inventory.push(itemName);
     if (characterName !== undefined) {
-        modifiedText = _equip(
-            characterName,
-            state.items[itemName],
-            modifiedText
-        );
+        modifiedText = _equip(characterName, state.items[itemName], "");
     } else modifiedText = `Item ${itemName} was put into inventory.`;
 
     return modifiedText;

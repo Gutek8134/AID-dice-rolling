@@ -18,8 +18,7 @@ describe("Command add npc", () => {
     it("Should create default NPC", () => {
         state.stats = [];
         state.characters = {};
-        const commandArguments =
-            "Zuibroldun Jodem, dexterity=1, strength = 2, nano machines  =3";
+        const commandArguments = "Zuibroldun Jodem";
         const input: string = `Test !addnpc(${commandArguments}) message`;
 
         expect(addNPC(commandArguments, [0, 0], input)).toEqual(input);
@@ -27,7 +26,7 @@ describe("Command add npc", () => {
         expect(state.out).toEqual(
             `\nNon-Playable Character Zuibroldun Jodem has been created with stats\n${CharacterToString(
                 state.characters["Zuibroldun Jodem"]
-            )}`
+            )}.`
         );
 
         const expected: { [key: string]: any } = {
@@ -64,7 +63,7 @@ describe("Command add npc", () => {
         expect(state.out).toEqual(
             `\nNon-Playable Character Zuibroldun Jodem has been created with stats\n${CharacterToString(
                 state.characters["Zuibroldun Jodem"]
-            )}`
+            )}.`
         );
 
         const expected: { [key: string]: any } = {

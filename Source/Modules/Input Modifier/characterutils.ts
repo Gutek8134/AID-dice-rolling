@@ -7,10 +7,13 @@ import { Stat } from "../Shared Library/Stat";
 
 export const BestStat = (character: Character): string => {
     let bestStat: string = "",
-        bestStatValue: number = -1;
+        bestStatValue: number = -Infinity;
 
     for (const stat of Object.keys(character.stats)) {
-        if (GetStatWithMods(character, stat) > bestStatValue) bestStat = stat;
+        if (GetStatWithMods(character, stat) > bestStatValue) {
+            bestStat = stat;
+            bestStatValue = GetStatWithMods(character, stat);
+        }
     }
 
     return bestStat || state.stats[0];

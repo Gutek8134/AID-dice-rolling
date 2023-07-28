@@ -45,7 +45,7 @@ export class Character {
             //Sanitized beforehand
             for (const [name, value] of initialStats) {
                 //Hp and level need to be double checked to not make a stat of them
-                if (name in ["hp", "level"]) {
+                if (name in restrictedStatNames) {
                     this[name] = value;
                     continue;
                 } else if (name in restrictedStatNames) continue;
@@ -60,14 +60,8 @@ export class Character {
         if (initialItemNames[0] !== "" && initialItemNames.length > 0) {
             for (const name of initialItemNames) {
                 // console.log("item:", el);
-                const item: Item = state.items[name.substring(1)];
-                if (!item) {
-                    state.message += `\nCharacter Creation Internal Error: Item ${name} was not found.
-                    Please submit a bug report including the original command and output from !getState.
-                    Skipping to the next item.`;
-                    continue;
-                }
-                this.items[item.slot] = item;
+                const item: Item = state.items[name];
+                this.items[item.name] = item;
             }
         }
 

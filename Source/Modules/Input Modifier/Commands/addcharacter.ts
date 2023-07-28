@@ -28,12 +28,14 @@ const addCharacter = (
 
     //Converts values to format [[stat, val], [stat2, val], ... [statN, val]]
     let values: [string, number][] = match.groups.startingStats
-        .substring(2)
-        .split(", ")
-        .map((el) => {
-            const temp: string[] = el.trim().split("=");
-            return [temp[0].trim(), Number(temp[1].trim())];
-        });
+        ? match.groups.startingStats
+              .substring(2)
+              .split(", ")
+              .map((el) => {
+                  const temp: string[] = el.trim().split("=");
+                  return [temp[0].trim(), Number(temp[1].trim())];
+              })
+        : [];
 
     //Creates the character with stats. If none were given, every created stat is at state.startingLevel
     state.characters[characterName] = new Character(

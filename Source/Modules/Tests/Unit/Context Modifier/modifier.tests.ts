@@ -11,7 +11,7 @@ describe("Context Modifier", () => {
 
     it("Should cut info", () => {
         const inputText = `Zuibroldun arrived at the scene.
-        Zuibroldun tries to solve the mystery. Skillcheck performed: Zuibroldun with int 5 rolled 11. 15 + 11 = 26. Difficulty 25. Outcome: success.`;
+Zuibroldun tries to solve the mystery. Skillcheck performed: Zuibroldun with int 5 rolled 11. 15 + 11 = 26. Difficulty 25. Outcome: success.`;
         state.in = `Zuibroldun tries to solve the mystery. Skillcheck performed: Zuibroldun with int 5 rolled 11. 15 + 11 = 26. Difficulty 25. Outcome: success.`;
         state.ctxt = "Zuibroldun tries to solve the mystery. Outcome: success.";
         expect(modifier(inputText).text).toEqual(

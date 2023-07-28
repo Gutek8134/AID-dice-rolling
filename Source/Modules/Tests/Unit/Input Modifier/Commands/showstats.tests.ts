@@ -14,7 +14,7 @@ describe("Command show stats", () => {
     it("Nonexistent character error", () => {
         showStats("Zuibroldun", [], "");
         expect(state.message).toEqual(
-            "Level Stats: Character Zuibroldun doesn't exist."
+            "Show Stats: Character Zuibroldun doesn't exist."
         );
     });
 
@@ -30,7 +30,7 @@ describe("Command show stats", () => {
 
         expect(state.out).toEqual(
             `\nZuibroldun's current stats are:
-            ${CharacterToString(state.characters.Zuibroldun)}.`
+${CharacterToString(state.characters.Zuibroldun)}.`
         );
     });
 });
