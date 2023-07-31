@@ -112,7 +112,7 @@ describe("Command add npc", () => {
         expect(state.out).toEqual(
             `\nNon-Playable Character Zuibroldun Jodem has been created with stats\n${CharacterToString(
                 state.characters["Zuibroldun Jodem"]
-            )}`
+            )}.`
         );
 
         const expected: { [key: string]: any } = {

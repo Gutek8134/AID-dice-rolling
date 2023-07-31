@@ -162,6 +162,9 @@ nano machines: 3`
             Zuibroldun: new Character([], ["Staff of Żulos"]),
         };
 
+        expect(Object.values(state.characters.Zuibroldun.items)).toContain(
+            state.items["Staff of Żulos"]
+        );
         let modifiedText = "";
         expect(
             _equip("Zuibroldun", state.items["Staff of Zalos"], modifiedText)

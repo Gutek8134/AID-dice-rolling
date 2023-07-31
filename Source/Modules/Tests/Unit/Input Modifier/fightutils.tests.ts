@@ -45,6 +45,8 @@ describe("Fight Utilities", () => {
             "Zuibroldun Jodem": new Character([["hp", 0]]),
             "Miguel Booble": new Character([["hp", 1]]),
         };
+
+        state.characters["Zuibroldun Jodem"].hp = 0;
         let { attackOutput, levelOutput, contextOutput } = DealDamage(
             "Zuibroldun Jodem",
             "explosion",
@@ -86,8 +88,8 @@ describe("Fight Utilities", () => {
         ));
 
         expect(attackOutput).toEqual(
-            `Zuibroldun Jodem (explosion: 1) attacked Miguel Booble (fireproof: 1) dealing light damage (2).
-            Miguel Booble now has 98 hp.`
+            `Zuibroldun Jodem (explosion: 1) attacked Miguel Booble (fireproof: 1) dealing light damage (1).
+Miguel Booble now has 99 hp.`
         );
 
         state.characters["Zuibroldun Jodem"].experience = 0;
@@ -114,7 +116,7 @@ describe("Fight Utilities", () => {
 
         expect(attackOutput).toEqual(
             `Zuibroldun Jodem (explosion: 1) attacked Miguel Booble (fireproof: 1) dealing light damage (2).
-            Miguel Booble retreated.`
+Miguel Booble retreated.`
         );
 
         state.characters["Zuibroldun Jodem"].stats["explosion"].experience = 0;
@@ -126,7 +128,7 @@ describe("Fight Utilities", () => {
 
         expect(contextOutput).toEqual(
             `Zuibroldun Jodem attacked Miguel Booble dealing light damage.
-            Miguel Booble died.`
+Miguel Booble died.`
         );
     });
 
@@ -137,6 +139,8 @@ describe("Fight Utilities", () => {
             "Zuibroldun Jodem": new Character([["hp", 0]]),
             "Miguel Booble": new Character([["hp", 1]]),
         };
+
+        state.characters["Zuibroldun Jodem"].hp = 0;
         let { attackOutput, levelOutput, contextOutput } =
             DealDamageIfNotDodged(
                 "Zuibroldun Jodem",

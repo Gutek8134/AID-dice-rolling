@@ -3,6 +3,7 @@ import { ElementInArray, diceRoll } from "../../Shared Library/Utils";
 import { state } from "../../Tests/proxy_state";
 import { GetStatWithMods, IncrementExp } from "../characterutils";
 import { shouldPunish } from "../constants";
+import { DEBUG } from "../modifier";
 import { CutCommandFromContext } from "./commandutils";
 
 const skillcheck = (
@@ -20,7 +21,7 @@ const skillcheck = (
 
     //Checks for thresholds type
     const thresholdCheck: RegExp =
-        /(?<thresholdsC>\d+ *= *.+(?: *: *\d+ *= *.+)+)|(?<thresholds4>\d+ *: *\d+ *: *\d+ *: *\d+)|(?<thresholds3>\d+ *: *\d+ *: *\d+)|(?<thresholds2>\d+ *: *\d+)|(?<thresholds1>\d+)/i;
+        /^\s*(?:(?<thresholdsC>\d+ *= *.+(?: *: *\d+ *= *.+)+)|(?<thresholds4>\d+ *: *\d+ *: *\d+ *: *\d+)|(?<thresholds3>\d+ *: *\d+ *: *\d+)|(?<thresholds2>\d+ *: *\d+)|(?<thresholds1>\d+))\s*$/i;
 
     const match: RegExpMatchArray | null = commandArguments.match(exp);
     //console.log(match);
@@ -41,7 +42,7 @@ const skillcheck = (
 
     //Testing if stat exists, throwing error otherwise
     if (!ElementInArray(statName, state.stats)) {
-        state.message = "Skillcheck: Specified stat does not exist.";
+        state.message = `Skillcheck: Stat ${statName} does not exist.`;
         return modifiedText;
     }
 
@@ -72,7 +73,7 @@ const skillcheck = (
     const thresholds = commandArguments.match(thresholdCheck);
     if (!thresholds || !thresholds.groups) {
         state.message = "Skillcheck: Thresholds are not in proper format.";
-        return modifiedText;
+        return DEBUG ? "Threshold fail" : modifiedText;
     }
     //console.log(thresholds);
 
@@ -254,7 +255,7 @@ const CustomDifficulties = (
     thresholdsAsStringNumberArr.forEach((element) => {
         temp += element[0] + ", ";
     });
-    return temp.substring(0, temp.length - 1);
+    return temp.substring(0, temp.length - 2);
 };
 
 export default skillcheck;

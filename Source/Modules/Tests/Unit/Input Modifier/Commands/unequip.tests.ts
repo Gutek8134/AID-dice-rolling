@@ -38,10 +38,9 @@ describe("Command unequip", () => {
         expect(
             ElementInArray("Zuibroldun", Object.keys(state.characters))
         ).toBeTruthy();
+        const cache = unequip("Zuibroldun, artifact", [0, 0], "");
         expect(state.message).toEqual("");
-        expect(unequip("Zuibroldun, artifact", [0, 0], "")).toEqual(
-            "\nZuibroldun unequipped Staff of Zalos."
-        );
+        expect(cache).toEqual("\nZuibroldun unequipped Staff of Zalos.");
         expect(state.characters.Zuibroldun.items["artifact"]).toBeUndefined();
 
         state.characters.Zuibroldun.items["artifact"] =

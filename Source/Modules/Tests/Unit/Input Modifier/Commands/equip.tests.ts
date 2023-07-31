@@ -4,6 +4,7 @@ import { Item } from "../../../../Shared Library/Item";
 import { state } from "../../../proxy_state";
 
 describe("Command equip", () => {
+    afterEach(() => console.log(state.message));
     it("Invalid args error", () => {
         expect(equip("", [0, 0], "Test message")).toEqual("Test message");
         expect(state.message).toEqual("Equip Item: No arguments found.");

@@ -24,7 +24,7 @@ const heal = (
     const characterName: string = match.groups.character;
     //Checks if character exists
     if (!ElementInArray(characterName, Object.keys(state.characters))) {
-        state.message = "Character Miguel Bootle does not exist.";
+        state.message = `Heal: Character ${characterName} does not exist.`;
         return modifiedText;
     }
 

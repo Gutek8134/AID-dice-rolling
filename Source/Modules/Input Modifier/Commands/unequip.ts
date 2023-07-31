@@ -1,6 +1,7 @@
 import { Character } from "../../Shared Library/Character";
 import { ElementInArray } from "../../Shared Library/Utils";
 import { state } from "../../Tests/proxy_state";
+import { DEBUG } from "../modifier";
 import { CutCommandFromContext } from "./commandutils";
 
 const unequip = (
@@ -26,6 +27,10 @@ const unequip = (
     //Checks if character exists
     if (!ElementInArray(characterName, Object.keys(state.characters))) {
         state.message = `Unequip: Character ${characterName} doesn't exist.`;
+        if (DEBUG) {
+            state.message += "\n";
+            for (const key in state.characters) state.message += ", " + key;
+        }
         return modifiedText;
     }
 

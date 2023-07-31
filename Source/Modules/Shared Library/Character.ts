@@ -40,7 +40,7 @@ export class Character {
         this.level = 1;
 
         //Null check, just to be sure
-        if (initialStats !== undefined) {
+        if (initialStats !== undefined && initialStats.length > 0) {
             //el in format ["attribute/stat", value], because I didn't like converting array to object
             //Sanitized beforehand
             for (const [name, value] of initialStats) {
@@ -57,9 +57,14 @@ export class Character {
         this.items = {};
 
         // console.log("Items:", items);
-        if (initialItemNames[0] !== "" && initialItemNames.length > 0) {
-            for (const name of initialItemNames) {
+        if (
+            initialItemNames &&
+            initialItemNames[0] !== "" &&
+            initialItemNames.length > 0
+        ) {
+            for (let name of initialItemNames) {
                 // console.log("item:", el);
+                if (name[0] === "$") name = name.substring(1);
                 const item: Item = state.items[name];
                 this.items[item.name] = item;
             }

@@ -39,8 +39,10 @@ const addCharacter = (
 
     //Creates the character with stats. If none were given, every created stat is at state.startingLevel
     state.characters[characterName] = new Character(
-        values || [],
-        match.groups.startingItems.split(",").map((el) => el.trim()) || []
+        values,
+        match.groups.startingItems
+            .split(",")
+            .map((el) => el.trim().substring(1))
     );
 
     state.out = `\nCharacter ${characterName} has been created with stats\n${state.characters[characterName]}.`;

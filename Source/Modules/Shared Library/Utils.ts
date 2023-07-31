@@ -96,12 +96,12 @@ export const CharacterToString = (character: Character): string => {
 isNPC: ${character.isNpc},\n`
         : `hp: ${character.hp},
 level: ${character.level},
-skillpoints:${character.skillpoints},
-experience: ${character.experience}
+skillpoints: ${character.skillpoints},
+experience: ${character.experience},
 to level up: ${character.expToNextLvl}(need ${
               character.expToNextLvl - character.experience
           } more),
-isNpc: ${character.isNpc},\n`;
+isNPC: ${character.isNpc},\n`;
 
     for (const key in character.stats) {
         const value: Stat = character.stats[key];
@@ -133,9 +133,9 @@ export const ItemToString = (item: Item): string => {
 
     let temp = `${item.name}:\nslot: ${item.slot}\n`;
     for (const key of Object.keys(item.modifiers))
-        temp += `${key}: ${item.modifiers[key]},\n`;
+        temp += `${key}: ${item.modifiers[key]}\n`;
 
-    return temp.substring(0, temp.length - 2);
+    return temp.substring(0, temp.length - 1);
 };
 
 //Returns whether character exists and has more than 0 HP

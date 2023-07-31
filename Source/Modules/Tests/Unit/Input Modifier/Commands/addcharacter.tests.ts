@@ -20,8 +20,7 @@ describe("Command add character", () => {
     it("Should create default character", () => {
         state.stats = [];
         state.characters = {};
-        const commandArguments =
-            "Zuibroldun Jodem, dexterity=1, strength = 2, nano machines  =3";
+        const commandArguments = "Zuibroldun Jodem";
         const input: string = `Test !addcharacter(${commandArguments}) message`;
 
         expect(addCharacter(commandArguments, [0, 0], input)).toEqual(input);

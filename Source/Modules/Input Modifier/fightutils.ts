@@ -15,7 +15,7 @@ export const CustomDamageOutput = (
     let i = 0;
     let out = "no damage";
 
-    while (damage >= values[i][0] && values[i]) {
+    while (values[i] && damage >= values[i][0]) {
         out = values[i++][1];
     }
 

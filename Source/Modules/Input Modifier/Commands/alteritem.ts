@@ -27,7 +27,7 @@ const alterItem = (
         return modifiedText;
     }
 
-    if (ElementInArray(match.groups.name, Object.keys(state.items))) {
+    if (!ElementInArray(match.groups.name, Object.keys(state.items))) {
         state.message = `Alter Item: Item ${match.groups.name} doesn't exist.`;
         if (DEBUG) {
             state.message += "\n";
@@ -49,6 +49,10 @@ const alterItem = (
 
     //Stats must exist prior
     for (const modifier of initValues) {
+        if (ElementInArray(modifier[0], restrictedStatNames)) {
+            state.message += `\nAlter Item: ${modifier[0]} cannot be altered.`;
+            continue;
+        }
         if (!isInStats(modifier[0])) {
             state.message = `Alter Item: Stat ${modifier[0]} does not exist.`;
             return modifiedText;
@@ -61,15 +65,11 @@ const alterItem = (
 
     item.slot = match.groups.slot.substring(2);
     for (const modifier of initValues) {
-        if (ElementInArray(modifier[0], restrictedStatNames)) {
-            state.message += `\nAlter Item: ${modifier[0]} cannot be altered.`;
-            continue;
-        }
         if (modifier[1] === 0) delete item.modifiers[modifier[0]];
         else item.modifiers[modifier[0]] = modifier[1];
     }
 
-    state.out += `\n${itemName}'s attributes has been altered\nfrom\n${oldAttributes}\nto\n${ItemToString(
+    state.out = `\n${itemName}'s attributes has been altered\nfrom\n${oldAttributes}\nto\n${ItemToString(
         item
     )}.`;
 

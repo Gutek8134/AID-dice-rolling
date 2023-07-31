@@ -35,13 +35,12 @@ const addNPC = (
         : [];
 
     //Creates the character with stats. If none were given, every created stat is at state.startingLevel
-    state.characters[characterName] =
-        !values || !values[0][0]
-            ? new NPC()
-            : new NPC(
-                  values,
-                  match.groups.startingItems.split(",").map((el) => el.trim())
-              );
+    state.characters[characterName] = new NPC(
+        values,
+        match.groups.startingItems
+            .split(",")
+            .map((el) => el.trim().substring(1))
+    );
 
     CutCommandFromContext(modifiedText, currIndices);
     state.out = `\nNon-Playable Character ${characterName} has been created with stats\n${state.characters[characterName]}.`;

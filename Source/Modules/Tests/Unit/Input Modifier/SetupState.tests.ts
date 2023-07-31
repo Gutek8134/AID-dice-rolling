@@ -2,21 +2,25 @@ import SetupState from "../../../Input Modifier/SetupState";
 import { state } from "../../proxy_state";
 
 describe("State setup", () => {
-    const expected: any = {
-        stats: [],
-        dice: 20,
-        startingLevel: 1,
-        startingHP: 100,
-        characters: {},
-        items: {},
-        inventory: [],
-        punishment: 5,
-        skillpointsonLevelUp: 5,
-        inBattle: false,
-    };
-    SetupState();
+    it("", () => {
+        const expected: any = {
+            stats: [],
+            dice: 20,
+            startingLevel: 1,
+            startingHP: 100,
+            characters: {},
+            items: {},
+            inventory: [],
+            punishment: 5,
+            skillpointsOnLevelUp: 5,
+            inBattle: false,
+            ctxt: "",
+            in: "",
+            message: "",
+            out: "",
+        };
+        SetupState();
 
-    for (const key in expected) {
-        expect(state[key]).toEqual(expected[key]);
-    }
+        expect(state).toEqual(expected);
+    });
 });

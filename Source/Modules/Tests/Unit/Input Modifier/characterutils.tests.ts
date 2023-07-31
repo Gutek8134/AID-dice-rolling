@@ -51,7 +51,7 @@ describe("Character Utilities", () => {
             ]),
             stick: new Item("stick", [
                 ["slot", "weapon"],
-                ["strength", 2],
+                ["strength", 3],
                 ["dexterity", 1],
             ]),
         };

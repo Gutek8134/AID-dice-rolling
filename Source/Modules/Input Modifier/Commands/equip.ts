@@ -43,7 +43,7 @@ const equip = (
             return DEBUG ? "error" : modifiedText;
         }
 
-        if (!ElementInArray(itemNames, Object.keys(state.inventory))) {
+        if (!ElementInArray(name, Object.keys(state.inventory))) {
             state.message = `Equip Item: You don't have item ${name} in your inventory.`;
             return DEBUG ? "error" : modifiedText;
         }
