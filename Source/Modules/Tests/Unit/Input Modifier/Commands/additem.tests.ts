@@ -14,6 +14,7 @@ describe("Command add item", () => {
         expect(state.message).toEqual(
             "Add Item: Arguments were not given in proper format."
         );
+        state.message = "";
     });
 
     it("Stat doesn't exist error", () => {
@@ -22,8 +23,9 @@ describe("Command add item", () => {
         state.inventory = [];
         addItem("name, slot, Some Stat=1", [0, 0], "");
         expect(state.message).toEqual(
-            "Add Item: Stat Some Stat does not exist."
+            "\nAdd Item: Stat Some Stat does not exist."
         );
+        state.message = "";
 
         expect(state.items).toEqual({});
         expect(state.inventory).toEqual([]);
@@ -36,6 +38,7 @@ describe("Command add item", () => {
         expect(state.message).toEqual(
             "Add Item: Item stick already exists. Maybe you should use gainItem or equip instead?"
         );
+        state.message = "";
     });
 
     it("Restricted name error", () => {
@@ -43,15 +46,17 @@ describe("Command add item", () => {
         state.items = {};
         addItem("stick, slot, hp=2, skillpoints=1", [], "");
         expect(state.message).toEqual(
-            "\nAdd Item: hp cannot be altered.\nAdd Item: skillpoints cannot be altered."
+            "\nAdd Item: hp cannot be set.\nAdd Item: skillpoints cannot be set."
         );
+        state.message = "";
     });
 
     it("Stat doesn't exist error", () => {
         state.stats = [];
         state.items = {};
         addItem("stick, slot, int=1", [0, 0], "");
-        expect(state.message).toEqual("Add Item: Stat int does not exist.");
+        expect(state.message).toEqual("\nAdd Item: Stat int does not exist.");
+        state.message = "";
     });
 
     it("Equip errors", () => {
@@ -114,8 +119,8 @@ describe("Command add item", () => {
 ${ItemToString(testItem)}.`
         );
 
-        expect(state.items).toContainEqual(testItem);
-        expect(state.inventory).not.toContainEqual(testItem);
+        expect(Object.values(state.items)).toContainEqual(testItem);
+        expect(state.inventory).not.toContainEqual(testItem.name);
     });
 
     it("Should create item and put it to inventory", () => {
@@ -141,8 +146,8 @@ ${ItemToString(testItem)}.
 Item Staff of Zalos was put into inventory.`
         );
 
-        expect(state.items).toContainEqual(testItem);
-        expect(state.inventory).toContainEqual(testItem);
+        expect(Object.values(state.items)).toContainEqual(testItem);
+        expect(state.inventory).toContainEqual(testItem.name);
     });
 
     it("Should create item and equip it", () => {
@@ -169,10 +174,10 @@ ${ItemToString(testItem)}.
 Character Zuibroldun Jodem equipped Staff of Zalos.`
         );
 
-        expect(state.items).toContainEqual(testItem);
+        expect(Object.values(state.items)).toContainEqual(testItem);
         expect(state.inventory).toEqual([]);
         expect(state.characters["Zuibroldun Jodem"].items).toEqual({
-            "Staff of Zalos": testItem,
+            artifact: testItem,
         });
     });
 });

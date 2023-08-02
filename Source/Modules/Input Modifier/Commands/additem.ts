@@ -68,17 +68,20 @@ const addItem = (
             return [temp[0].trim(), Number(temp[1].trim())];
         });
 
+    let error = false;
     for (const modifier of initValues) {
         if (ElementInArray(modifier[0], restrictedStatNames)) {
-            state.message = `Add Item: ${modifier[0]} cannot be set.`;
-            return modifiedText;
+            state.message += `\nAdd Item: ${modifier[0]} cannot be set.`;
+            error = true;
+            continue;
         }
         //Stats must exist prior
         if (!isInStats(modifier[0])) {
-            state.message = `Add Item: Stat ${modifier[0]} does not exist.`;
-            return modifiedText;
+            state.message += `\nAdd Item: Stat ${modifier[0]} does not exist.`;
+            error = true;
         }
     }
+    if (error) return modifiedText;
 
     //Adds slot
     initValues.push(["slot", match.groups.slot]);

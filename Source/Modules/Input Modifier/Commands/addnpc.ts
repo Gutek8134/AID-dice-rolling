@@ -9,7 +9,7 @@ const addNPC = (
 ): string => {
     //Looks for pattern !addCharacter(name) or !addCharacter(name, stat1=value, stat2=value, ..., statN=value)
     const exp: RegExp =
-        /(?<character>[\w\s']+)(?<startingStats>(?:, [\w ']+ *= *(?:\d+|\$[\w ']+))*)(?<startingItems>(?:, *(?:\$[\w '])+)*)/i;
+        /^(?<character>[\w\s']+)(?<startingStats>(?:, *[\w ']+ *= *\d+)*)(?<startingItems>(?:, *(?:\$[\w\s']+)+)*)$/i;
 
     //Matches the RegEx
     const match: RegExpMatchArray | null = commandArguments.match(exp);
@@ -34,12 +34,19 @@ const addNPC = (
               })
         : [];
 
+    console.log(
+        match.groups.startingItems
+            .split(",")
+            .map((el) => el.trim().substring(1))
+            .slice(1)
+    );
     //Creates the character with stats. If none were given, every created stat is at state.startingLevel
     state.characters[characterName] = new NPC(
         values,
         match.groups.startingItems
             .split(",")
             .map((el) => el.trim().substring(1))
+            .slice(1)
     );
 
     CutCommandFromContext(modifiedText, currIndices);

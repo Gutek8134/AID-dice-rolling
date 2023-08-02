@@ -123,11 +123,13 @@ describe("Command add character", () => {
             experience: 0,
             expToNextLvl: experienceCalculation(1),
             skillpoints: 0,
-            items: { "Staff of Zalos": testItem },
+            items: { head: testItem },
             type: "character",
             isNpc: false,
             stats: {},
         };
+
+        console.log(state.characters["Zuibroldun Jodem"]);
 
         for (const key in expected) {
             expect(state.characters["Zuibroldun Jodem"]).toHaveProperty(key);

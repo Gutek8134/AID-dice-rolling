@@ -66,7 +66,7 @@ export class Character {
                 // console.log("item:", el);
                 if (name[0] === "$") name = name.substring(1);
                 const item: Item = state.items[name];
-                this.items[item.name] = item;
+                this.items[item.slot] = item;
             }
         }
 

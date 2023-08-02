@@ -29,7 +29,8 @@ const unequip = (
         state.message = `Unequip: Character ${characterName} doesn't exist.`;
         if (DEBUG) {
             state.message += "\n";
-            for (const key in state.characters) state.message += ", " + key;
+            for (const key of Object.keys(state.characters))
+                state.message += ", " + key;
         }
         return modifiedText;
     }

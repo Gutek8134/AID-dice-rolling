@@ -126,7 +126,7 @@ export const DealDamage = (
             : defendingCharacterName +
               " now has " +
               state.characters[defendingCharacterName].hp +
-              "hp."
+              " hp."
     }`;
 
     let levelOutput: string = IncrementExp(

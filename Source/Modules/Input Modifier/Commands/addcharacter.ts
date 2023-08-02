@@ -11,7 +11,7 @@ const addCharacter = (
     //Looks for pattern !addCharacter(name) or !addCharacter(name, stat1=value, stat2=value, ..., statN=value)
     //or !addCharacter(name, stat1=value, stat2=value, ..., statN=value, $itemName1, itemName2, ...)
     const exp: RegExp =
-        /(?<character>[\w\s']+)(?<startingStats>(?:, [\w ']+ *= *(?:\d+|\$[\w ']+))*)(?<startingItems>(?:, *(?:\$[\w '])+)*)/i;
+        /^(?<character>[\w\s']+)(?<startingStats>(?:, *[\w ']+ *= *\d+)*)(?<startingItems>(?:, *(?:\$[\w\s']+)+)*)$/i;
 
     //Matches the RegEx
     const match: RegExpMatchArray | null = commandArguments.match(exp);
@@ -43,6 +43,7 @@ const addCharacter = (
         match.groups.startingItems
             .split(",")
             .map((el) => el.trim().substring(1))
+            .slice(1)
     );
 
     state.out = `\nCharacter ${characterName} has been created with stats\n${state.characters[characterName]}.`;

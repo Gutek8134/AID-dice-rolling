@@ -35,6 +35,7 @@ describe("Command unequip", () => {
             ),
         };
 
+        console.log(Object.keys(state.characters).join(", "));
         expect(
             ElementInArray("Zuibroldun", Object.keys(state.characters))
         ).toBeTruthy();

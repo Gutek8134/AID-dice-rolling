@@ -121,7 +121,7 @@ describe("Command add npc", () => {
             experience: 0,
             expToNextLvl: experienceCalculation(1),
             skillpoints: 0,
-            items: { "Staff of Zalos": testItem },
+            items: { head: testItem },
             type: "character",
             isNpc: true,
             stats: {},

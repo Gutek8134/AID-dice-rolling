@@ -17,7 +17,7 @@ const sattack = (
         commandArguments === null ||
         commandArguments === ""
     ) {
-        state.message = "Attack: No arguments found.";
+        state.message = "Attack: Arguments were not given in proper format.";
         return modifiedText;
     }
 
@@ -35,11 +35,11 @@ const sattack = (
 
     //Checks if stats exist
     if (!ElementInArray(match.groups.attackStat, state.stats)) {
-        state.message = "Attack: Attacking stat was not created.";
+        state.message = `Attack: Stat ${match.groups.attackStat} was not created.`;
         return modifiedText;
     }
     if (!ElementInArray(match.groups.defenseStat, state.stats)) {
-        state.message = "Attack: Defending stat was not created.";
+        state.message = `Attack: Stat ${match.groups.defenseStat} was not created.`;
         return modifiedText;
     }
 
