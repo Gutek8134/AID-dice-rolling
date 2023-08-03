@@ -17,7 +17,7 @@ const attack = (
         commandArguments === null ||
         commandArguments === ""
     ) {
-        state.message = "Attack: No arguments found.";
+        state.message = "Attack: Arguments were not given in proper format.";
         return modifiedText;
     }
 
@@ -52,7 +52,7 @@ const attack = (
     if (
         !ElementInArray(attackingCharacterName, Object.keys(state.characters))
     ) {
-        state.message = `Attack: Character ${attackingCharacterName} does not exist`;
+        state.message = `Attack: Character ${attackingCharacterName} does not exist.`;
         return modifiedText;
     }
 
@@ -73,21 +73,16 @@ const attack = (
 
     //Gives the player necessary info.
     modifiedText =
-        modifiedText.substring(0, currIndices[0]) +
-        "\n" +
+        textCopy.substring(0, currIndices[0]) +
         attackOutput +
-        " " +
+        (levelOutput ? "\n" : "") +
         levelOutput +
         textCopy.substring(currIndices[1]);
 
     state.ctxt =
-        state.ctxt !== ""
-            ? state.ctxt.substring(0, currIndices[0]) +
-              contextOutput +
-              state.ctxt.substring(currIndices[1])
-            : modifiedText.substring(0, currIndices[0]) +
-              contextOutput +
-              modifiedText.substring(currIndices[1]);
+        textCopy.substring(0, currIndices[0]) +
+        contextOutput +
+        textCopy.substring(currIndices[1]);
 
     return modifiedText;
 };

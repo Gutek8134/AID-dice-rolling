@@ -55,7 +55,7 @@ const IncrementExpOnCharacter = (characterName: string): string => {
         character.expToNextLvl = experienceCalculation(++character.level);
         //In the case of attackingCharacter levelling up, it also gains free skillpoints
         character.skillpoints += state.skillpointsOnLevelUp;
-        return ` ${characterName} has levelled up to level ${character.level} (free skillpoints: ${character.skillpoints})!`;
+        return `\n${characterName} has levelled up to level ${character.level} (free skillpoints: ${character.skillpoints})!`;
     }
     return "";
 };
@@ -77,7 +77,7 @@ const IncrementExpOnStat = (
         stat.experience = 0;
         //level increased and expToNextLevel re-calculated
         stat.expToNextLvl = experienceCalculation(++stat.level);
-        return ` ${characterName}'s ${statName} has levelled up to level ${stat.level}!`;
+        return `\n${characterName}'s ${statName} has levelled up to level ${stat.level}!`;
     }
     return "";
 };

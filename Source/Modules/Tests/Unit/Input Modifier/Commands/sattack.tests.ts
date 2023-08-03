@@ -65,7 +65,7 @@ describe("Command special attack", () => {
 
         expect(
             sattack(
-                "explosion, Zuibroldun Jodem, fireproof, Miguel Bootle",
+                "Zuibroldun Jodem, explosion, Miguel Bootle, fireproof",
                 [0, 0],
                 "Test message",
                 "Test message"
@@ -78,7 +78,7 @@ describe("Command special attack", () => {
 
         expect(
             sattack(
-                "explosion, Zuibroldun, fireproof, Miguel Booble",
+                "Zuibroldun, explosion, Miguel Booble, fireproof",
                 [0, 0],
                 "Test message",
                 "Test message"
@@ -102,7 +102,7 @@ describe("Command special attack", () => {
 
         expect(
             sattack(
-                "explosion, Zuibroldun Jodem, fireproof, Miguel Bootle",
+                "Zuibroldun Jodem, explosion, Miguel Booble, fireproof",
                 [0, 0],
                 "Test message",
                 "Test message"
@@ -117,7 +117,7 @@ describe("Command special attack", () => {
         state.characters["Miguel Booble"].hp = 0;
         expect(
             sattack(
-                "explosion, Zuibroldun, fireproof, Miguel Booble",
+                "Zuibroldun Jodem, explosion, Miguel Booble, fireproof",
                 [0, 0],
                 "Test message",
                 "Test message"
@@ -139,17 +139,17 @@ describe("Command special attack", () => {
         };
 
         const commandArguments =
-            "explosion, Zuibroldun Jodem, fireproof, Miguel Booble";
+            "Zuibroldun Jodem, explosion, Miguel Booble, fireproof";
         const input = `Test !attack(${commandArguments}) message.`;
         expect(
             sattack(
                 commandArguments,
-                [13, 14 + commandArguments.length],
+                [5, 14 + commandArguments.length],
                 input,
                 input
             )
         ).toMatch(
-            /Test message.\nZuibroldun Jodem \(explosion: 1\) attacked Miguel Booble \(fireproof: 1\) dealing \w+ damage \(\d+\).\nMiguel Booble now has \d+ hp./
+            /Test Zuibroldun Jodem \(explosion: 1\) attacked Miguel Booble \(fireproof: 1\) dealing \w+ damage \(\d+\)\.\nMiguel Booble now has \d+ hp\. message\./
         );
 
         expect(state.characters["Miguel Booble"].hp).toBeLessThan(
@@ -157,19 +157,20 @@ describe("Command special attack", () => {
         );
 
         expect(state.ctxt).toMatch(
-            /Test message.\nZuibroldun Jodem attacked Miguel Booble dealing \w+ damage./
+            /Test Zuibroldun Jodem attacked Miguel Booble dealing \w+ damage\. message\./
         );
     });
 
     it("Should increase xp", () => {
         SetDisableDodge(true);
         state.stats = ["fireproof", "explosion"];
+        SetLevellingToOblivion(true);
         state.characters = {
             "Zuibroldun Jodem": new Character(),
             "Miguel Booble": new Character(),
         };
         const commandArguments =
-            "explosion, Zuibroldun Jodem, fireproof, Miguel Booble";
+            "Zuibroldun Jodem, explosion, Miguel Booble, fireproof";
         const input = `Test !attack(${commandArguments}) message.`;
 
         //
@@ -248,13 +249,14 @@ describe("Command special attack", () => {
 
     it("Should increase level", () => {
         SetDisableDodge(true);
+        SetLevellingToOblivion(true);
         state.stats = ["fireproof", "explosion"];
         state.characters = {
             "Zuibroldun Jodem": new Character(),
             "Miguel Booble": new Character(),
         };
         const commandArguments =
-            "explosion, Zuibroldun Jodem, fireproof, Miguel Booble";
+            "Zuibroldun Jodem, explosion, Miguel Booble, fireproof";
         const input = `Test !attack(${commandArguments}) message.`;
 
         //
@@ -266,20 +268,20 @@ describe("Command special attack", () => {
         expect(
             sattack(
                 commandArguments,
-                [13, 14 + commandArguments.length],
+                [5, 14 + commandArguments.length],
                 input,
                 input
             )
         ).toMatch(
-            new RegExp(`Test message.
-Zuibroldun Jodem \\(explosion: 1\\) attacked Miguel Booble \\(fireproof: 1\\) dealing \\w+ damage \\(\\d+\\).
-Miguel Booble now has \\d+ hp.
-Zuibroldun Jodem levelled up to level 2 \\(free skillpoints: ${state.skillpointsOnLevelUp}\\)!`)
+            new RegExp(`Test Zuibroldun Jodem \\(explosion: 1\\) attacked Miguel Booble \\(fireproof: 1\\) dealing \\w+ damage \\(\\d+\\)\\.
+Miguel Booble now has \\d+ hp\\.
+Zuibroldun Jodem has levelled up to level 2 \\(free skillpoints: ${state.skillpointsOnLevelUp}\\)! message\\.`)
         );
 
         expect(state.ctxt).toMatch(
-            new RegExp(`Test message.
-Zuibroldun Jodem attacked Miguel Booble dealing \\w+ damage.`)
+            new RegExp(
+                `Test Zuibroldun Jodem attacked Miguel Booble dealing \\w+ damage. message.`
+            )
         );
 
         expect(state.characters["Zuibroldun Jodem"].experience).toEqual(0);
@@ -294,10 +296,12 @@ Zuibroldun Jodem attacked Miguel Booble dealing \\w+ damage.`)
         state.characters["Zuibroldun Jodem"].level = 1;
         state.characters["Zuibroldun Jodem"].expToNextLvl =
             experienceCalculation(1);
+        state.characters["Zuibroldun Jodem"].skillpoints = 0;
         state.characters["Miguel Booble"].experience = 0;
         state.characters["Miguel Booble"].level = 1;
         state.characters["Miguel Booble"].expToNextLvl =
             experienceCalculation(1);
+        state.characters["Miguel Booble"].skillpoints = 0;
 
         //
         SetLevellingToOblivion(false);
@@ -312,20 +316,22 @@ Zuibroldun Jodem attacked Miguel Booble dealing \\w+ damage.`)
         expect(
             sattack(
                 commandArguments,
-                [13, 14 + commandArguments.length],
+                [5, 14 + commandArguments.length],
                 input,
                 input
             )
         ).toMatch(
-            new RegExp(`Test message.
-Zuibroldun Jodem \\(explosion: 1\\) attacked Miguel Booble \\(fireproof: 1\\) dealing \\w+ damage \\(\\d+\\).
+            new RegExp(`Test Zuibroldun Jodem \\(explosion: 1\\) attacked Miguel Booble \\(fireproof: 1\\) dealing \\w+ damage \\(\\d+\\).
 Miguel Booble now has \\d+ hp.
-Zuibroldun Jodem levelled up to level 2 \\(free skillpoints: ${state.skillpointsOnLevelUp}\\)!
-Miguel Booble levelled up to level 2 \\(free skillpoints: ${state.skillpointsOnLevelUp}\\)!`)
+Zuibroldun Jodem has levelled up to level 2 \\(free skillpoints: ${state.skillpointsOnLevelUp}\\)!
+Miguel Booble has levelled up to level 2 \\(free skillpoints: ${state.skillpointsOnLevelUp}\\)! message.`)
         );
 
-        expect(state.ctxt).toMatch(`Test message.
-        Zuibroldun Jodem attacked Miguel Booble dealing \\w+ damage.`);
+        expect(state.ctxt).toMatch(
+            new RegExp(
+                `Test Zuibroldun Jodem attacked Miguel Booble dealing \\w+ damage. message.`
+            )
+        );
 
         expect(state.characters["Zuibroldun Jodem"].experience).toEqual(0);
         expect(state.characters["Zuibroldun Jodem"].level).toEqual(2);
@@ -342,10 +348,12 @@ Miguel Booble levelled up to level 2 \\(free skillpoints: ${state.skillpointsOnL
         state.characters["Zuibroldun Jodem"].level = 1;
         state.characters["Zuibroldun Jodem"].expToNextLvl =
             experienceCalculation(1);
+        state.characters["Zuibroldun Jodem"].skillpoints = 0;
         state.characters["Miguel Booble"].experience = 0;
         state.characters["Miguel Booble"].level = 1;
         state.characters["Miguel Booble"].expToNextLvl =
             experienceCalculation(1);
+        state.characters["Miguel Booble"].skillpoints = 0;
 
         //
         SetLevellingToOblivion(true);
@@ -364,20 +372,20 @@ Miguel Booble levelled up to level 2 \\(free skillpoints: ${state.skillpointsOnL
         expect(
             sattack(
                 commandArguments,
-                [13, 14 + commandArguments.length],
+                [5, 14 + commandArguments.length],
                 input,
                 input
             )
         ).toMatch(
-            new RegExp(`Test message.
-Zuibroldun Jodem \\(explosion: 1\\) attacked Miguel Booble \\(fireproof: 1\\) dealing \\w+ damage \\(\\d+\\).
+            new RegExp(`Test Zuibroldun Jodem \\(explosion: 1\\) attacked Miguel Booble \\(fireproof: 1\\) dealing \\w+ damage \\(\\d+\\).
 Miguel Booble now has \\d+ hp.
-Zuibroldun Jodem's explosion levelled up to level 2!`)
+Zuibroldun Jodem's explosion has levelled up to level 2! message.`)
         );
 
         expect(state.ctxt).toMatch(
-            new RegExp(`Test message.
-Zuibroldun Jodem attacked Miguel Booble dealing \\w+ damage.`)
+            new RegExp(
+                `Test Zuibroldun Jodem attacked Miguel Booble dealing \\w+ damage. message.`
+            )
         );
 
         expect(
@@ -429,21 +437,21 @@ Zuibroldun Jodem attacked Miguel Booble dealing \\w+ damage.`)
         expect(
             sattack(
                 commandArguments,
-                [13, 14 + commandArguments.length],
+                [5, 14 + commandArguments.length],
                 input,
                 input
             )
         ).toMatch(
-            new RegExp(`Test message.
-Zuibroldun Jodem \\(explosion: 1\\) attacked Miguel Booble \\(fireproof: 1\\) dealing \\w+ damage \\(\\d+\\).
+            new RegExp(`Test Zuibroldun Jodem \\(explosion: 1\\) attacked Miguel Booble \\(fireproof: 1\\) dealing \\w+ damage \\(\\d+\\).
 Miguel Booble now has \\d+ hp.
-Zuibroldun Jodem's explosion levelled up to level 2!
-Miguel Booble's fireproof levelled up to level 2!`)
+Zuibroldun Jodem's explosion has levelled up to level 2!
+Miguel Booble's fireproof has levelled up to level 2! message.`)
         );
 
         expect(state.ctxt).toMatch(
-            new RegExp(`Test message.
-Zuibroldun Jodem attacked Miguel Booble dealing \\w+ damage.`)
+            new RegExp(
+                `Test Zuibroldun Jodem attacked Miguel Booble dealing \\w+ damage. message.`
+            )
         );
 
         expect(
@@ -485,48 +493,47 @@ Zuibroldun Jodem attacked Miguel Booble dealing \\w+ damage.`)
             "Miguel Bootle": new NPC([["hp", 1]]),
         };
 
+        console.log(state.characters["Miguel Booble"]);
+
         const commandArguments =
-            "explosion, Zuibroldun Jodem, fireproof, Miguel Booble";
+            "Zuibroldun Jodem, explosion, Miguel Booble, fireproof";
         const input = `Test !attack(${commandArguments}) message.`;
 
         expect(
             sattack(
                 commandArguments,
-                [13, 14 + commandArguments.length],
+                [5, 14 + commandArguments.length],
                 input,
                 input
             )
         ).toMatch(
-            new RegExp(`Test message.
-Zuibroldun Jodem \\(explosion: 1\\) attacked Miguel Booble \\(fireproof: 1\\) dealing \\w+ damage \\(\\d+\\).
-Miguel Booble has retreated.`)
+            new RegExp(`Test Zuibroldun Jodem \\(explosion: 1\\) attacked Miguel Booble \\(fireproof: 1\\) dealing \\w+ damage \\(\\d+\\).
+Miguel Booble has retreated. message.`)
         );
 
         expect(state.ctxt).toMatch(
-            new RegExp(`Test message.
-Zuibroldun Jodem attacked Miguel Booble dealing \\w+ damage.
-Miguel Booble has retreated.`)
+            new RegExp(`Test Zuibroldun Jodem attacked Miguel Booble dealing \\w+ damage.
+Miguel Booble has retreated. message.`)
         );
 
         expect(state.characters["Miguel Booble"].hp).toEqual(0);
 
+        state.characters["Zuibroldun Jodem"].stats["explosion"].experience = 0;
         expect(
             sattack(
-                "explosion, Zuibroldun Jodem, fireproof, Miguel Bootle",
-                [13, 14 + commandArguments.length],
+                "Zuibroldun Jodem, explosion, Miguel Bootle, fireproof",
+                [5, 14 + commandArguments.length],
                 input,
                 input
             )
         ).toMatch(
-            new RegExp(`Test message.
-Zuibroldun Jodem \\(explosion: 1\\) attacked Miguel Bootle \\(fireproof: 1\\) dealing \\w+ damage \\(\\d+\\).
-Miguel Bootle has died.`)
+            new RegExp(`Test Zuibroldun Jodem \\(explosion: 1\\) attacked Miguel Bootle \\(fireproof: 1\\) dealing \\w+ damage \\(\\d+\\).
+Miguel Bootle has died. message.`)
         );
 
         expect(state.ctxt).toMatch(
-            new RegExp(`Test message.
-Zuibroldun Jodem attacked Miguel Bootle dealing \\w+ damage.
-Miguel Bootle has died.`)
+            new RegExp(`Test Zuibroldun Jodem attacked Miguel Bootle dealing \\w+ damage.
+Miguel Bootle has died. message.`)
         );
 
         expect(state.characters).not.toHaveProperty("Miguel Bootle");
@@ -542,37 +549,40 @@ Miguel Bootle has died.`)
         };
 
         const commandArguments =
-            "explosion, Zuibroldun Jodem, fireproof, Miguel Booble";
+            "Zuibroldun Jodem, explosion, Miguel Booble, fireproof";
         const input = `Test !attack(${commandArguments}) message.`;
         expect(
             sattack(
                 commandArguments,
-                [13, 14 + commandArguments.length],
+                [5, 14 + commandArguments.length],
                 input,
                 input
             )
         ).toMatch(
-            new RegExp(`Test message.
-Zuibroldun Jodem \\(explosion: 1\\) attacked Miguel Booble \\(fireproof: 1\\), but missed.`)
+            new RegExp(
+                `Test Zuibroldun Jodem \\(explosion: 1\\) attacked Miguel Booble \\(fireproof: 100\\), but missed. message.`
+            )
         );
 
         expect(state.characters["Miguel Booble"].hp).toEqual(state.startingHP);
 
         expect(state.ctxt).toMatch(
-            new RegExp(`Test message.
-Zuibroldun Jodem attacked Miguel Booble, but missed.`)
+            new RegExp(
+                `Test Zuibroldun Jodem attacked Miguel Booble, but missed. message.`
+            )
         );
     });
 
     it("Should not increase xp after a successful dodge", () => {
         SetDisableDodge(false);
+        SetLevellingToOblivion(true);
         state.stats = ["fireproof", "explosion"];
         state.characters = {
             "Zuibroldun Jodem": new Character(),
             "Miguel Booble": new Character([["fireproof", 100]]),
         };
         const commandArguments =
-            "explosion, Zuibroldun Jodem, fireproof, Miguel Booble";
+            "Zuibroldun Jodem, explosion, Miguel Booble, fireproof";
         const input = `Test !attack(${commandArguments}) message.`;
 
         //

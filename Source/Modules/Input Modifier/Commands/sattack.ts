@@ -49,6 +49,20 @@ const sattack = (
     const defendingCharacterName: string = match.groups.defendingCharacter;
     const defenseStat: string = match.groups.defenseStat;
 
+    if (
+        !ElementInArray(attackingCharacterName, Object.keys(state.characters))
+    ) {
+        state.message = `Attack: Character ${attackingCharacterName} does not exist.`;
+        return modifiedText;
+    }
+
+    if (
+        !ElementInArray(defendingCharacterName, Object.keys(state.characters))
+    ) {
+        state.message = `Attack: Character ${defendingCharacterName} does not exist.`;
+        return modifiedText;
+    }
+
     const { attackOutput, levelOutput, contextOutput } = DealDamageIfNotDodged(
         attackingCharacterName,
         attackStat,
@@ -59,20 +73,16 @@ const sattack = (
 
     //Gives the player necessary info.
     modifiedText =
-        modifiedText.substring(0, currIndices[0]) +
+        textCopy.substring(0, currIndices[0]) +
         attackOutput +
-        (levelOutput ? " " : "") +
+        (levelOutput ? "\n" : "") +
         levelOutput +
         textCopy.substring(currIndices[1]);
 
     state.ctxt =
-        state.ctxt !== ""
-            ? state.ctxt.substring(0, currIndices[0]) +
-              contextOutput +
-              state.ctxt.substring(currIndices[1])
-            : modifiedText.substring(0, currIndices[0]) +
-              contextOutput +
-              modifiedText.substring(currIndices[1]);
+        textCopy.substring(0, currIndices[0]) +
+        contextOutput +
+        textCopy.substring(currIndices[1]);
 
     return modifiedText;
 };

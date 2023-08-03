@@ -96,11 +96,6 @@ export const DealDamage = (
     //Damaging
     state.characters[defendingCharacterName].hp -= damageInflicted;
 
-    if (state.characters[defendingCharacterName].hp <= 0)
-        if (!defendingCharacter.isNpc)
-            state.characters[defendingCharacterName].hp = 0;
-        else delete state.characters[defendingCharacterName];
-
     //Gives the player necessary info.
     const attackOutput = `${attackingCharacterName} (${attackStatName}: ${attackingCharacterStatLevelWithMods}${
         attackModifier === 0
@@ -121,8 +116,8 @@ export const DealDamage = (
         state.characters[defendingCharacterName].hp <= 0
             ? defendingCharacterName +
               (state.characters[defendingCharacterName].isNpc
-                  ? " died."
-                  : " retreated.")
+                  ? " has died."
+                  : " has retreated.")
             : defendingCharacterName +
               " now has " +
               state.characters[defendingCharacterName].hp +
@@ -132,7 +127,7 @@ export const DealDamage = (
     let levelOutput: string = IncrementExp(
         attackingCharacterName,
         attackStatName
-    );
+    ).substring(1);
 
     if (defendingCharacterLevels) {
         levelOutput += IncrementExp(defendingCharacterName, defenseStatName);
@@ -144,9 +139,18 @@ export const DealDamage = (
         damageOutputs
     )}.${
         state.characters[defendingCharacterName].hp <= 0
-            ? "\n" + defendingCharacterName + " died."
+            ? "\n" +
+              defendingCharacterName +
+              " has " +
+              (state.characters[defendingCharacterName].isNpc
+                  ? "died."
+                  : "retreated.")
             : ""
     }`;
+    if (state.characters[defendingCharacterName].hp <= 0)
+        if (!defendingCharacter.isNpc)
+            state.characters[defendingCharacterName].hp = 0;
+        else delete state.characters[defendingCharacterName];
 
     return { attackOutput, levelOutput, contextOutput };
 };
@@ -214,13 +218,13 @@ export const DealDamageIfNotDodged = (
             defendingCharacterStatLevelWithMods
         )
     ) {
-        const attackOutput: string = `${attackingCharacterName} (${attackingCharacterStatLevelWithMods}${
+        const attackOutput: string = `${attackingCharacterName} (${attackStatName}: ${attackingCharacterStatLevelWithMods}${
             attackModifier === 0
                 ? ""
                 : " (base: " +
                   (attackingCharacterStatLevelWithMods - attackModifier) +
                   ")"
-        }) attacked ${defendingCharacterName} (${defendingCharacterStatLevelWithMods}${
+        }) attacked ${defendingCharacterName} (${defenseStatName}: ${defendingCharacterStatLevelWithMods}${
             defenseModifier === 0
                 ? ""
                 : " (base: " +

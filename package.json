@@ -14,7 +14,7 @@
         "webpack-cli": "^5.1.4"
     },
     "scripts": {
-        "test": "jest",
+        "test": "jest -i",
         "build": "tsc -p tsconfig.build.json"
     }
 }
