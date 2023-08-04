@@ -22,7 +22,7 @@ import getState from "./Commands/getstate";
 import setState from "./Commands/setstate";
 import alterItem from "./Commands/alteritem";
 
-export const DEBUG: boolean = true;
+export const DEBUG: boolean = false;
 
 export const modifier = (text: string): { text: string; stop?: boolean } => {
     //#region logs

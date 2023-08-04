@@ -1,7 +1,6 @@
 import unequip from "../../../../Input Modifier/Commands/unequip";
 import { Character } from "../../../../Shared Library/Character";
 import { Item } from "../../../../Shared Library/Item";
-import { ElementInArray } from "../../../../Shared Library/Utils";
 import { state } from "../../../proxy_state";
 
 describe("Command unequip", () => {
@@ -19,6 +18,7 @@ describe("Command unequip", () => {
         expect(state.message).toEqual(
             "Unequip: Character Zuibroldun doesn't exist."
         );
+        state.message = "";
     });
 
     it("Should unequip items", () => {
@@ -35,10 +35,6 @@ describe("Command unequip", () => {
             ),
         };
 
-        console.log(Object.keys(state.characters).join(", "));
-        expect(
-            ElementInArray("Zuibroldun", Object.keys(state.characters))
-        ).toBeTruthy();
         const cache = unequip("Zuibroldun, artifact", [0, 0], "");
         expect(state.message).toEqual("");
         expect(cache).toEqual("\nZuibroldun unequipped Staff of Zalos.");

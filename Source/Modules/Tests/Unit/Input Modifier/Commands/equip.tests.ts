@@ -4,7 +4,10 @@ import { Item } from "../../../../Shared Library/Item";
 import { state } from "../../../proxy_state";
 
 describe("Command equip", () => {
-    afterEach(() => console.log(state.message));
+    afterEach(() => {
+        console.log(state.message);
+        state.message = "";
+    });
     it("Invalid args error", () => {
         expect(equip("", [0, 0], "Test message")).toEqual("Test message");
         expect(state.message).toEqual("Equip Item: No arguments found.");
@@ -30,7 +33,7 @@ describe("Command equip", () => {
 
     it("Nonexistent item error", () => {
         state.characters = { Zuibroldun: new Character() };
-        state.items = {};
+        state.items = { "Staff of Zalos": new Item("Staff of Zalos", []) };
         state.inventory = ["Staff of Zalos"];
 
         let commandArguments = "Zuibroldun, Staff of Zalos, Staff Zalos";
@@ -71,7 +74,8 @@ describe("Command equip", () => {
 
         let commandArguments = "Zuibroldun, Staff of Zalos";
         let input = `Test !equip(${commandArguments}) message`;
-        expect(equip(commandArguments, [0, 0], input)).toEqual(`
+        equip(commandArguments, [0, 0], input);
+        expect(state.out).toEqual(`
 Character Zuibroldun equipped Staff of Zalos.
 Item successfully equipped.`);
 
@@ -80,7 +84,8 @@ Item successfully equipped.`);
 
         commandArguments = "Zuibroldun, Staff of Zalos, stick";
         input = `Test !equip(${commandArguments}) message`;
-        expect(equip(commandArguments, [0, 0], input)).toEqual(`
+        equip(commandArguments, [0, 0], input);
+        expect(state.out).toEqual(`
 Character Zuibroldun equipped Staff of Zalos.
 Character Zuibroldun equipped stick.
 Items successfully equipped.`);
@@ -96,7 +101,8 @@ Items successfully equipped.`);
 
         let commandArguments = "Zuibroldun, Staff of Zalos, stick";
         let input = `Test !equip(${commandArguments}) message`;
-        expect(equip(commandArguments, [0, 0], input)).toEqual(`
+        equip(commandArguments, [0, 0], input);
+        expect(state.out).toEqual(`
 Character Zuibroldun equipped Staff of Zalos.
 Character Zuibroldun unequipped Staff of Zalos.
 Character Zuibroldun equipped stick.
@@ -107,7 +113,8 @@ Items successfully equipped.`);
 
         commandArguments = "Zuibroldun, Staff of Zalos";
         input = `Test !equip(${commandArguments}) message`;
-        expect(equip(commandArguments, [0, 0], input)).toEqual(`
+        equip(commandArguments, [0, 0], input);
+        expect(state.out).toEqual(`
 Character Zuibroldun unequipped stick.
 Character Zuibroldun equipped Staff of Zalos.
 Item successfully equipped.`);

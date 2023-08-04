@@ -159,7 +159,7 @@ describe("Character creation", () => {
             experience: 0,
             expToNextLvl: experienceCalculation(1),
             skillpoints: 0,
-            items: { "Staff of Zalos": testItem },
+            items: { head: testItem },
             type: "character",
             isNpc: false,
             stats: {

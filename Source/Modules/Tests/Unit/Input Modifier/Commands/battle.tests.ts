@@ -55,8 +55,12 @@ describe("Command battle", () => {
             )
         ).toEqual(`Test !battle(${commandArguments}) message.`);
         expect(state.message).toEqual(
-            "Battle: Character Zuibroldun doesn't exist."
+            "Battle: Character Miguel doesn't exist."
         );
+
+        state.characters = {
+            Miguel: new Character(),
+        };
 
         commandArguments = "(Zuibroldun), (Miguel)";
         expect(
@@ -66,11 +70,12 @@ describe("Command battle", () => {
             )
         ).toEqual(`Test !battle(${commandArguments}) message.`);
         expect(state.message).toEqual(
-            "Battle: Character Miguel doesn't exist."
+            "Battle: Character Zuibroldun doesn't exist."
         );
     });
 
     it("Should set state values", () => {
+        state.stats = ["a", "b", "c"];
         state.characters = {
             Zuibroldun: new Character(),
             Miguel: new Character(),

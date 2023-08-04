@@ -3,7 +3,6 @@ import { Character } from "./Character";
 import { Item } from "./Item";
 import { levellingToOblivion } from "../Input Modifier/constants";
 import { Stat } from "./Stat";
-import { DEBUG } from "../Input Modifier/modifier";
 
 //!Function for calculating damage. Adjust it to your heart's content.
 //!Just make sure it won't divide by 0 (finally putting all the hours spent on learning math in high school to good use).
@@ -31,7 +30,7 @@ export const damage = (attackStat: number, defenseStat: number): number => {
 };
 
 export let dodge = (attackStat: number, dodgeStat: number): boolean => {
-    if (DEBUG && disableDodge) return false;
+    if (disableDodge) return false;
     let dodged =
         /*You can edit from here*/
         attackStat + diceRoll(5) < dodgeStat + diceRoll(5);
@@ -78,7 +77,7 @@ export const _equip = (
     //If character has an already equipped item, it is put back into inventory
     if (character.items[item.slot]) {
         modifiedText += `\nCharacter ${characterName} unequipped ${
-            character.items[item.slot]
+            character.items[item.slot].name
         }.`;
         state.inventory.push(character.items[item.slot].name);
     }
@@ -105,7 +104,13 @@ isNPC: ${character.isNpc},\n`;
 
     for (const key in character.stats) {
         const value: Stat = character.stats[key];
-        if (levellingToOblivion && value.expToNextLvl && value.experience) {
+        console.log(value.expToNextLvl, value.experience);
+
+        if (
+            levellingToOblivion &&
+            value.expToNextLvl !== undefined &&
+            value.experience !== undefined
+        ) {
             temp += `${key}: level=${value.level}, exp=${
                 value.experience
             }, to lvl up=${value.expToNextLvl}(need ${
@@ -155,19 +160,17 @@ let overrideRollOutcome = false;
 let overrideValue: number;
 
 export const SetDisableDodge = (newValue: boolean) => {
-    if (DEBUG) disableDodge = newValue;
+    disableDodge = newValue;
 };
 
 export const SetFixedRollOutcome = (
     shouldOverride: boolean,
     newValue?: number
 ) => {
-    if (DEBUG) {
-        if (shouldOverride && newValue) {
-            overrideRollOutcome = true;
-            overrideValue = newValue;
-        } else if (!shouldOverride) {
-            overrideRollOutcome = false;
-        }
+    if (shouldOverride && newValue) {
+        overrideRollOutcome = true;
+        overrideValue = newValue;
+    } else if (!shouldOverride) {
+        overrideRollOutcome = false;
     }
 };

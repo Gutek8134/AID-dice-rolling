@@ -37,7 +37,7 @@ describe("Command skillcheck", () => {
         state.characters = { Zuibroldun: new Character() };
 
         expect(
-            skillcheck("explosion, Zuibroldun, :5", [0, 0], "Test message")
+            skillcheck("explosion, Zuibroldun, :w", [0, 0], "Test message")
         ).toEqual("Test message");
         expect(state.message).toEqual(
             "Skillcheck: Thresholds are not in proper format."
@@ -92,7 +92,7 @@ describe("Command skillcheck", () => {
         ).toEqual(
             "Skillcheck performed: Zuibroldun with explosion: 21 rolled 1. 21 + 1 = 22. Difficulty: 5, 10, 15, 20, 25 Outcome: d"
         );
-        expect(state.ctxt).toEqual("Outcome: d");
+        expect(state.ctxt).toEqual("d");
     });
 
     it("Should add xp", () => {

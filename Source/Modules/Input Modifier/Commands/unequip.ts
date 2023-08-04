@@ -27,17 +27,12 @@ const unequip = (
     //Checks if character exists
     if (!ElementInArray(characterName, Object.keys(state.characters))) {
         state.message = `Unequip: Character ${characterName} doesn't exist.`;
-        if (DEBUG) {
-            state.message += "\n";
-            for (const key of Object.keys(state.characters))
-                state.message += ", " + key;
-        }
-        return modifiedText;
+        return DEBUG ? "error" : modifiedText;
     }
 
     const character: Character = state.characters[characterName];
 
-    if (match.groups.slots === "all") {
+    if (match.groups.slots.substring(1).trim() === "all") {
         for (const slot of Object.keys(character.items)) {
             if (character.items[slot]) {
                 state.inventory.push(character.items[slot].name);

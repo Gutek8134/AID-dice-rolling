@@ -43,16 +43,17 @@ const equip = (
             return DEBUG ? "error" : modifiedText;
         }
 
-        if (!ElementInArray(name, Object.keys(state.inventory))) {
+        if (!ElementInArray(name, state.inventory)) {
             state.message = `Equip Item: You don't have item ${name} in your inventory.`;
             return DEBUG ? "error" : modifiedText;
         }
     }
 
+    state.out = "";
     for (const name of itemNames)
-        modifiedText = _equip(characterName, state.items[name], modifiedText);
+        state.out += _equip(characterName, state.items[name], "");
 
-    modifiedText += `\nItem${
+    state.out += `\nItem${
         itemNames.length > 1 ? "s" : ""
     } successfully equipped.`;
     return modifiedText;

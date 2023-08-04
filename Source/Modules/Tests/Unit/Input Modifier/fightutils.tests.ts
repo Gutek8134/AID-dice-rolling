@@ -39,6 +39,7 @@ describe("Fight Utilities", () => {
     });
 
     it("Deal Damage", () => {
+        SetLevellingToOblivion(true);
         state.stats = ["fireproof", "explosion"];
 
         state.characters = {
@@ -115,20 +116,20 @@ Miguel Booble now has 99 hp.`
         ));
 
         expect(attackOutput).toEqual(
-            `Zuibroldun Jodem (explosion: 1) attacked Miguel Booble (fireproof: 1) dealing light damage (2).
-Miguel Booble retreated.`
+            `Zuibroldun Jodem (explosion: 1) attacked Miguel Booble (fireproof: 1) dealing light damage (1).
+Miguel Booble has retreated.`
         );
 
         state.characters["Zuibroldun Jodem"].stats["explosion"].experience = 0;
         state.characters["Miguel Booble"].stats["fireproof"].experience = 0;
         expect(levelOutput).toEqual(
-            IncrementExp("Zuibroldun Jodem", "") +
-                IncrementExp("Miguel Booble", "")
+            IncrementExp("Zuibroldun Jodem", "explosion") +
+                IncrementExp("Miguel Booble", "fireproof")
         );
 
         expect(contextOutput).toEqual(
             `Zuibroldun Jodem attacked Miguel Booble dealing light damage.
-Miguel Booble died.`
+Miguel Booble has retreated.`
         );
     });
 
@@ -167,6 +168,7 @@ Miguel Booble died.`
             "Debug: Character Miguel Booble cannot be attacked, because they are dead."
         );
 
+        state.characters["Miguel Booble"].hp = 1;
         state.characters["Miguel Booble"].stats.fireproof.level = 100;
 
         ({ attackOutput, levelOutput, contextOutput } = DealDamageIfNotDodged(
@@ -178,7 +180,7 @@ Miguel Booble died.`
         ));
 
         expect(attackOutput).toEqual(
-            "Zuibroldun Jodem (explosion: 1) attacked Miguel Booble (fireproof: 1), but missed."
+            "Zuibroldun Jodem (explosion: 1) attacked Miguel Booble (fireproof: 100), but missed."
         );
         expect(contextOutput).toEqual(
             "Zuibroldun Jodem attacked Miguel Booble, but missed."

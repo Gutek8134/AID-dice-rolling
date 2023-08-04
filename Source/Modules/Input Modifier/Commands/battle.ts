@@ -31,7 +31,6 @@ const battle = (commandArguments: string, modifiedText: string): string => {
                 .trim()
                 .split(",")
                 .map((el) => el.trim())
-                .filter((el) => state.characters[el]?.hp > 0)
         )
     );
 
@@ -41,7 +40,6 @@ const battle = (commandArguments: string, modifiedText: string): string => {
                 .trim()
                 .split(",")
                 .map((el) => el.trim())
-                .filter((el) => state.characters[el]?.hp > 0)
         )
     );
 
@@ -52,6 +50,10 @@ const battle = (commandArguments: string, modifiedText: string): string => {
 
     for (const characterName of side1CharactersNames) {
         if (ElementInArray(characterName, Object.keys(state.characters))) {
+            if (state.characters[characterName].hp <= 0) {
+                state.message = `Battle: Character ${characterName} is dead and cannot participate in battle.`;
+                return modifiedText;
+            }
             if (ElementInArray(characterName, side2CharactersNames)) {
                 state.message = `Battle: Character ${characterName} cannot belong to both sides of the battle.`;
                 return modifiedText;
@@ -65,6 +67,9 @@ const battle = (commandArguments: string, modifiedText: string): string => {
     for (const characterName of side2CharactersNames) {
         if (!ElementInArray(characterName, Object.keys(state.characters))) {
             state.message = `Battle: Character ${characterName} doesn't exist.`;
+            return modifiedText;
+        } else if (state.characters[characterName].hp <= 0) {
+            state.message = `Battle: Character ${characterName} is dead and cannot participate in battle.`;
             return modifiedText;
         }
     }

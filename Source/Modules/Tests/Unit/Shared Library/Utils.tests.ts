@@ -47,7 +47,10 @@ level: 1,
 skillpoints: 0,
 experience: 0,
 to level up: ${experienceCalculation(1)}(need ${experienceCalculation(1)} more),
-isNPC: false`
+isNPC: false,
+
+Items:
+none`
         );
         SetLevellingToOblivion(true);
         state.stats = [];
@@ -56,7 +59,10 @@ isNPC: false`
         character = new Character();
         expect(CharacterToString(character)).toEqual(
             `hp: 100,
-            isNPC: false`
+isNPC: false,
+
+Items:
+none`
         );
     });
 
@@ -77,7 +83,10 @@ experience: 0,
 to level up: ${experienceCalculation(1)}(need ${experienceCalculation(1)} more),
 isNPC: false,
 dexterity: 5,
-strength: 2`
+strength: 2,
+
+Items:
+none`
         );
 
         SetLevellingToOblivion(true);
@@ -96,7 +105,10 @@ dexterity: level=5, exp=0, to lvl up=${experienceCalculation(
             )}(need ${experienceCalculation(5)} more),
 strength: level=2, exp=0, to lvl up=${experienceCalculation(
                 2
-            )}(need ${experienceCalculation(2)} more),`
+            )}(need ${experienceCalculation(2)} more),
+
+Items:
+none`
         );
     });
 
@@ -120,6 +132,7 @@ skillpoints: 0,
 experience: 0,
 to level up: ${experienceCalculation(1)}(need ${experienceCalculation(1)} more),
 isNPC: false,
+
 Items:
 Staff of Zalos:
 slot: head
@@ -131,10 +144,11 @@ nano machines: 3`
         state.stats = [];
         state.startingHP = 100;
         state.startingLevel = 1;
-        character = new Character([], []);
+        character = new Character([], ["Staff of Zalos"]);
         expect(CharacterToString(character)).toEqual(
             `hp: 100,
 isNPC: false,
+
 Items:
 Staff of Zalos:
 slot: head

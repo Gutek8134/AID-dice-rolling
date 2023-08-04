@@ -79,7 +79,7 @@ describe("Character Utilities", () => {
         ).toEqual(1);
 
         expect(IncrementExp("Zuibroldun", "explosion")).toEqual(
-            " Zuibroldun's explosion has levelled up to level 2!"
+            "\nZuibroldun's explosion has levelled up to level 2!"
         );
         expect(state.characters.Zuibroldun.stats["explosion"].level).toEqual(2);
         expect(
@@ -93,7 +93,7 @@ describe("Character Utilities", () => {
         expect(state.characters.Zuibroldun.experience).toEqual(1);
 
         expect(IncrementExp("Zuibroldun", "explosion")).toEqual(
-            " Zuibroldun has levelled up to level 2 (free skillpoints: 5)!"
+            "\nZuibroldun has levelled up to level 2 (free skillpoints: 5)!"
         );
         expect(state.characters.Zuibroldun.level).toEqual(2);
         expect(state.characters.Zuibroldun.experience).toEqual(0);

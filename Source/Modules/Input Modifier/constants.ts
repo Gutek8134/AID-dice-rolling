@@ -1,9 +1,6 @@
 //You can edit this list to edit what will be displayed when dealing x damage.
 //Format is [minimum damage, "displayed message"].
 //Note that it is used in sentence like
-
-import { DEBUG } from "./modifier";
-
 //Miguel attacked Zuibroldun Jodem dealing {value from here} (x).
 export let damageOutputs: [number, string][] = [
     [1, "light damage"],
@@ -51,26 +48,26 @@ export let defendingCharacterLevels: boolean = false;
 
 //Debug purposes only
 export const SetDamageOutputs = (inValue: [number, string][]) => {
-    if (DEBUG) damageOutputs = inValue;
+    damageOutputs = inValue;
 };
 export const SetEquipmentParts = (inValue: string[]) => {
-    if (DEBUG) equipmentParts = inValue;
+    equipmentParts = inValue;
 };
 export const SetIgnoredValues = (inValue: string[]) => {
-    if (DEBUG) restrictedStatNames = inValue;
+    restrictedStatNames = inValue;
 };
 export const SetIgnoreZeroDiv = (inValue: boolean) => {
-    if (DEBUG) ignoreZeroDiv = inValue;
+    ignoreZeroDiv = inValue;
 };
 export const SetShouldPunish = (inValue: boolean) => {
-    if (DEBUG) shouldPunish = inValue;
+    shouldPunish = inValue;
 };
 export const SetDefaultDodge = (inValue: boolean) => {
-    if (DEBUG) defaultDodge = inValue;
+    defaultDodge = inValue;
 };
 export const SetLevellingToOblivion = (inValue: boolean) => {
-    if (DEBUG) levellingToOblivion = inValue;
+    levellingToOblivion = inValue;
 };
 export const SetDefendingCharacterLevels = (inValue: boolean) => {
-    if (DEBUG) defendingCharacterLevels = inValue;
+    defendingCharacterLevels = inValue;
 };
