@@ -1,6 +1,5 @@
 import { ElementInArray, diceRoll } from "../../Shared Library/Utils";
 import { state } from "../../Tests/proxy_state";
-import { turn } from "../turn";
 
 const battle = (commandArguments: string, modifiedText: string): string => {
     //Error checking
@@ -81,7 +80,6 @@ const battle = (commandArguments: string, modifiedText: string): string => {
     state.active = [...state[state.currentSide]];
     state.inBattle = true;
     state.out = "A battle has emerged between two groups!";
-    turn(modifiedText);
 
     return modifiedText;
 };

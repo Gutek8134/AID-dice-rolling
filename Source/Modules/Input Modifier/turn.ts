@@ -5,6 +5,7 @@ import {
     damage,
     diceRoll,
     dodge,
+    isInStats,
 } from "../Shared Library/Utils";
 import { Character } from "../Shared Library/Character";
 import {
@@ -21,7 +22,7 @@ import { DEBUG } from "./modifier";
  * Does not modify text
  */
 export const turn = (textCopy: string): void => {
-    if (DEBUG) console.log("Active: ", state.active);
+    // if (DEBUG) console.log("Active: ", state.active);
 
     if (!state.activeCharacter) {
         if (!state.active?.length) {
@@ -38,12 +39,12 @@ export const turn = (textCopy: string): void => {
     //Attacking character set and is not an NPC
     if (!state.activeCharacter.isNpc) {
         if (!state.activeCharacterName) {
-            state.message = "Turn: active character name not found.";
+            state.message = "Battle turn: active character name not found.";
             return;
         }
 
         const expression: RegExp =
-            /(?:(?<escape>retreat|escape|exit)|(?:\((?<attackStat>[\w ']+), *)?(?<defendingCharacter>[\w\s']+)(?:, *(?<defenseStat>[\w ']+))?\))/i;
+            /(?<escape>retreat|escape|exit)|(?:\((?<attackStat>[\w ']+), *)?(?<defendingCharacter>[\w\s']+)(?:, *(?<defenseStat>[\w ']+))?\)/i;
 
         const match: RegExpMatchArray | null = textCopy.match(expression);
 
@@ -59,6 +60,31 @@ export const turn = (textCopy: string): void => {
             state.out += "\nParty retreated from the fight.";
             ExitBattle();
             return;
+        }
+
+        //Shifts values if necessary
+        if (isInStats(match.groups.defendingCharacter)) {
+            if (
+                ElementInArray(
+                    match.groups.attackStat,
+                    Object.keys(state.characters)
+                ) &&
+                !match.groups.defenseStat
+            ) {
+                match.groups.defenseStat = match.groups.defendingCharacter;
+                match.groups.defendingCharacter = match.groups.attackStat;
+                match.groups.attackStat = "";
+            } else if (
+                ElementInArray(
+                    match.groups.defenseStat,
+                    Object.keys(state.characters)
+                ) &&
+                !match.groups.attackStat
+            ) {
+                match.groups.attackStat = match.groups.defendingCharacter;
+                match.groups.defendingCharacter = match.groups.defenseStat;
+                match.groups.defenseStat = "";
+            }
         }
 
         const attackingCharacterName: string = state.activeCharacterName;
@@ -186,13 +212,13 @@ const takeTurn = (
                 defendingCharacterStatLevelWithMods
             )
         ) {
-            state.out += `\n${attackingCharacterName}(${attackStat}: ${attackingCharacterStatLevelWithMods}${
+            state.out += `\n${attackingCharacterName} (${attackStat}: ${attackingCharacterStatLevelWithMods}${
                 attackModifier === 0
                     ? ""
                     : " (base: " +
                       (attackingCharacterStatLevelWithMods - attackModifier) +
                       ")"
-            }) attacked ${defendingCharacterName}(${defenseStat}: ${defendingCharacterStatLevelWithMods}${
+            }) attacked ${defendingCharacterName} (${defenseStat}: ${defendingCharacterStatLevelWithMods}${
                 defenseModifier === 0
                     ? ""
                     : " (base: " +
@@ -235,12 +261,12 @@ const takeTurn = (
         state.characters[defendingCharacterName].hp <= 0
             ? defendingCharacterName +
               (state.characters[defendingCharacterName].isNpc
-                  ? " died."
-                  : " retreated.")
+                  ? " has died."
+                  : " has retreated.")
             : defendingCharacterName +
               " now has " +
               state.characters[defendingCharacterName].hp +
-              "hp."
+              " hp."
     }`;
 
     //Always grants 1 Exp to attacking character, for defending it's up to user
@@ -265,14 +291,12 @@ const takeTurn = (
         state.message =
             "HP of all party members dropped to 0. Party retreated.";
         state.out += "\nThe adventurers retreated, overwhelmed by the enemy.";
-        state.inBattle = false;
-        delete state.activeCharacter;
+        ExitBattle();
         return;
     } else if (!state.side2?.length) {
-        state.message = "You have won the battle!";
         state.out += "\nThe adventurers have won the battle.";
-        state.inBattle = false;
-        delete state.activeCharacter;
+        ExitBattle();
+        state.message = "You have won the battle!";
         return;
     }
 
@@ -297,7 +321,7 @@ const EndTurn = (): void => {
     const activeCharacterName = state.active?.[nextActiveCharacterIndex];
 
     if (!activeCharacterName) {
-        state.message = "Battle turn: active character is undefined.";
+        state.message = "Battle turn: ERROR active character is undefined.";
         return;
     }
 
@@ -308,7 +332,8 @@ const EndTurn = (): void => {
 
 const ExitBattle = (): void => {
     state.inBattle = false;
-    delete state.activeCharacter, state.activeCharacterName;
+    delete state.activeCharacter, state.activeCharacterName, state.active;
     delete state.side1, state.side2;
     delete state.currentSide;
+    state.message = "";
 };

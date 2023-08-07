@@ -104,7 +104,6 @@ isNPC: ${character.isNpc},\n`;
 
     for (const key in character.stats) {
         const value: Stat = character.stats[key];
-        console.log(value.expToNextLvl, value.experience);
 
         if (
             levellingToOblivion &&
