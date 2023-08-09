@@ -1,5 +1,5 @@
 import { Character } from "../../Shared Library/Character";
-import { state } from "../../Tests/proxy_state";
+import { state } from "../../proxy_state";
 import { CutCommandFromContext } from "./commandutils";
 
 const addCharacter = (

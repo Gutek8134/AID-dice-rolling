@@ -1,4 +1,4 @@
-import { state } from "../Tests/proxy_state";
+import { state } from "../proxy_state";
 import { BestStat, GetStatWithMods, IncrementExp } from "./characterutils";
 import {
     ElementInArray,
@@ -15,7 +15,7 @@ import {
     defaultDodge,
 } from "./constants";
 import { CustomDamageOutput } from "./fightutils";
-import { DEBUG } from "./modifier";
+// import { DEBUG } from "./modifier";
 
 /**
  * Executes next battle turn until player can take action.

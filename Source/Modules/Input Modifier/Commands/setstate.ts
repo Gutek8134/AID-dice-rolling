@@ -1,4 +1,4 @@
-import { state } from "../../Tests/proxy_state";
+import { state } from "../../proxy_state";
 import { CutCommandFromContext } from "./commandutils";
 
 const setState = (

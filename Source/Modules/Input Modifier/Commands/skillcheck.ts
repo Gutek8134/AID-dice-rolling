@@ -1,6 +1,6 @@
 import { Character } from "../../Shared Library/Character";
 import { ElementInArray, diceRoll } from "../../Shared Library/Utils";
-import { state } from "../../Tests/proxy_state";
+import { state } from "../../proxy_state";
 import { GetStatWithMods, IncrementExp } from "../characterutils";
 import { shouldPunish } from "../constants";
 import { DEBUG } from "../modifier";

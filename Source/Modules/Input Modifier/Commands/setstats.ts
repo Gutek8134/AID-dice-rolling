@@ -1,7 +1,7 @@
 import { Character } from "../../Shared Library/Character";
 import { Stat } from "../../Shared Library/Stat";
 import { CharacterToString, ElementInArray } from "../../Shared Library/Utils";
-import { state } from "../../Tests/proxy_state";
+import { state } from "../../proxy_state";
 import { restrictedStatNames } from "../constants";
 import { CutCommandFromContext } from "./commandutils";
 

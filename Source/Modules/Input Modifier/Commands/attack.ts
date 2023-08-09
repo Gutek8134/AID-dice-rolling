@@ -1,5 +1,5 @@
 import { ElementInArray } from "../../Shared Library/Utils";
-import { state } from "../../Tests/proxy_state";
+import { state } from "../../proxy_state";
 import { DealDamage } from "../fightutils";
 import { CutCommandFromContext } from "./commandutils";
 

@@ -1,6 +1,6 @@
 import { Character } from "../../Shared Library/Character";
 import { ElementInArray } from "../../Shared Library/Utils";
-import { state } from "../../Tests/proxy_state";
+import { state } from "../../proxy_state";
 import { DEBUG } from "../modifier";
 import { CutCommandFromContext } from "./commandutils";
 

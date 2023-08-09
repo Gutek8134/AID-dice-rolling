@@ -1,5 +1,6 @@
 import { ElementInArray, diceRoll } from "../../Shared Library/Utils";
-import { state } from "../../Tests/proxy_state";
+import { state } from "../../proxy_state";
+import { turn } from "../turn";
 
 const battle = (commandArguments: string, modifiedText: string): string => {
     //Error checking
@@ -81,6 +82,11 @@ const battle = (commandArguments: string, modifiedText: string): string => {
     state.inBattle = true;
     state.out = "A battle has emerged between two groups!";
 
+    const nextActiveCharacterIndex = diceRoll(state.active.length) - 1;
+    state.activeCharacterName = state.active[nextActiveCharacterIndex];
+    state.activeCharacter = state.characters[state.activeCharacterName];
+
+    if (state.activeCharacter.isNpc) turn("");
     return modifiedText;
 };
 

@@ -1,5 +1,5 @@
 import { restrictedStatNames } from "../Input Modifier/constants";
-import { state } from "../Tests/proxy_state";
+import { state } from "../proxy_state";
 import { Item } from "./Item";
 import { Stat } from "./Stat";
 import {

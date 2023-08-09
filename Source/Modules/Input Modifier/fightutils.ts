@@ -1,6 +1,6 @@
 import { Character } from "../Shared Library/Character";
 import { damage, dodge } from "../Shared Library/Utils";
-import { state } from "../Tests/proxy_state";
+import { state } from "../proxy_state";
 import { GetStatWithMods, IncrementExp } from "./characterutils";
 import {
     damageOutputs,

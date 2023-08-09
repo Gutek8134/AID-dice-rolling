@@ -1,5 +1,6 @@
 {
     "compilerOptions": {
+        "module": "CommonJS",
         "allowUnreachableCode": false,
         "exactOptionalPropertyTypes": true,
         "noFallthroughCasesInSwitch": true,
@@ -8,6 +9,9 @@
         "noUnusedLocals": true,
         "noUnusedParameters": true,
         "resolveJsonModule": true,
-        "strict": true
-    }
+        "strict": true,
+        "outDir": "../build",
+        "target": "ES6"
+    },
+    "exclude": ["./Tests"]
 }

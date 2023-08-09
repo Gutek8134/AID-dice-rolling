@@ -1,4 +1,4 @@
-import { state } from "../../Tests/proxy_state";
+import { state } from "../../proxy_state";
 
 export const CutCommandFromContext = (
     modifiedText: string,

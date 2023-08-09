@@ -1,5 +1,5 @@
-import { Item } from "../Shared Library/Item";
-import { Character } from "../Shared Library/Character";
+import { Item } from "./Shared Library/Item";
+import { Character } from "./Shared Library/Character";
 
 export const state: {
     //Options

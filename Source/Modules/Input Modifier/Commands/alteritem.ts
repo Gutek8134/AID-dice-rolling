@@ -3,7 +3,7 @@ import {
     ItemToString,
     isInStats,
 } from "../../Shared Library/Utils";
-import { state } from "../../Tests/proxy_state";
+import { state } from "../../proxy_state";
 import { restrictedStatNames } from "../constants";
 import { DEBUG } from "../modifier";
 import { CutCommandFromContext } from "./commandutils";

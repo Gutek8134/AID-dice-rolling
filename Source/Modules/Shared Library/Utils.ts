@@ -1,4 +1,4 @@
-import { state } from "../Tests/proxy_state";
+import { state } from "../proxy_state";
 import { Character } from "./Character";
 import { Item } from "./Item";
 import { levellingToOblivion } from "../Input Modifier/constants";
