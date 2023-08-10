@@ -16,6 +16,6 @@
     },
     "scripts": {
         "test": "jest -i",
-        "build": "npx tsc --p ./Source/Modules"
+        "build": "npx tsc --p ./Source/Modules; cd ./Source; python 'combine files.py';"
     }
 }

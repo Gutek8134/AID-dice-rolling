@@ -10,7 +10,7 @@
         "noUnusedParameters": true,
         "resolveJsonModule": true,
         "strict": true,
-        "outDir": "../build",
+        "outDir": "../build-intermediate",
         "target": "ES6"
     },
     "exclude": ["./Tests"]
