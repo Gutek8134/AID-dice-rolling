@@ -81,13 +81,19 @@ Can be also turned off in the code.
 
 Syntax: `!addItem(name, slot, stat = value, stat2=value, stat3 = value, ..., statN=value[, target, character])`
 
-Creates an item with given bonuses.
+Creates an item with given modifiers.
 
 Target (optional) - can be either `inventory` or `equip`. When unspecified item will be simply created, `inventory` will put it into party's inventory, and `equip` will instantly equip it on specified character.
 
 Character (must be given when target is set to `equip`) - specifies which character will equip the item.
 
 If a character has something in the slot, the item will be unequipped to inventory.
+
+## !alterItem
+
+Syntax: `!alterItem(name, slot, stat = value, stat2=value, stat3 = value, ..., statN=value)`
+
+Alters slot and modifiers of previously created item.
 
 ## !gainItem
 
@@ -242,5 +248,5 @@ You can vote on what do you want me to do next [here](https://forms.gle/SqfzW5hZ
 1. Create a scenario.
 2. Get into Scripts menu. (You need to use browser for this.)
 3. Copy files contents to corresponding fragments: sharedLibrary.js to Shared Library, inputModifier.js to Input Modifier and so on.
-4. Adjust the in-script settings. They are: damage function, damageOutputs, ignoreZeroDiv, shouldPunish, levellingToOblivion, defendingCharacterLevels in Input Modifier and experienceCalculation function in Shared Library.
+4. Adjust the in-script settings. They are: damageOutputs, ignoreZeroDiv, shouldPunish, levellingToOblivion, defendingCharacterLevels in Input Modifier and damage, dodge, and experienceCalculation functions in Shared Library.
 5. Play the created scenario. You should now be able to use the commands.

@@ -23,7 +23,7 @@
     "stat": Stat object
     "hp", "level", "experience", "expToNextLvl", "skillpoints": Numbers (integers)
     "items": {
-        "name": Item object
+        "item slot": Item object
         ...
     }
     "type": "character"
