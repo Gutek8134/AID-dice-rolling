@@ -8,7 +8,9 @@ import {
     _equip,
     experienceCalculation,
 } from "../../../Shared Library/Utils";
-import { state } from "../../proxy_state";
+import { state } from "../../../proxy_state";
+
+//TODO: update for effects: CToS, EToS
 
 describe("Utilities", () => {
     it("Element In Array", () => {

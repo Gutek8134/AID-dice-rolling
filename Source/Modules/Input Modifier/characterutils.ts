@@ -21,6 +21,14 @@ export const BestStat = (character: Character): string => {
 
 export const GetStatWithMods = (character: Character, stat: string): number => {
     if (!character || !stat || character.stats[stat] === undefined) return 0;
+    if (!character.effects) character.effects = [];
+
+    let effectModifiersSum: number = 0;
+
+    for (const effect of character.effects) {
+        if (effect.modifiers[stat])
+            effectModifiersSum += effect.modifiers[stat];
+    }
 
     let itemModifiersSum: number = 0;
 
@@ -29,7 +37,7 @@ export const GetStatWithMods = (character: Character, stat: string): number => {
         if (item.modifiers[stat]) itemModifiersSum += item.modifiers[stat];
     }
 
-    return character.stats[stat].level + itemModifiersSum;
+    return character.stats[stat].level + itemModifiersSum + effectModifiersSum;
 };
 
 export const IncrementExp = (

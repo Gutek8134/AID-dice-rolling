@@ -1,5 +1,6 @@
 import { Item } from "./Shared Library/Item";
 import { Character } from "./Shared Library/Character";
+import { Effect } from "./Shared Library/Effect";
 
 export const state: {
     //Options
@@ -14,6 +15,7 @@ export const state: {
     inventory: string[];
     items: { [key: string]: Item };
     characters: { [key: string]: Character };
+    effects: { [key: string]: Effect };
 
     //Used in modifiers other than Input
     in: string;
@@ -41,6 +43,7 @@ export const state: {
     punishment: 5,
     skillpointsOnLevelUp: 5,
     items: {},
+    effects: {},
     inventory: [],
     in: "",
     ctxt: "",

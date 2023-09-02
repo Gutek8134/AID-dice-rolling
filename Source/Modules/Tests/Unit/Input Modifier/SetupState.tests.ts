@@ -1,5 +1,5 @@
 import SetupState from "../../../Input Modifier/SetupState";
-import { state } from "../../proxy_state";
+import { state } from "../../../proxy_state";
 
 describe("State setup", () => {
     it("", () => {
@@ -11,6 +11,7 @@ describe("State setup", () => {
             characters: {},
             items: {},
             inventory: [],
+            effects: {},
             punishment: 5,
             skillpointsOnLevelUp: 5,
             inBattle: false,

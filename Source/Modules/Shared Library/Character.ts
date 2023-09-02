@@ -1,5 +1,6 @@
 import { restrictedStatNames } from "../Input Modifier/constants";
 import { state } from "../proxy_state";
+import { Effect } from "./Effect";
 import { Item } from "./Item";
 import { Stat } from "./Stat";
 import {
@@ -20,12 +21,15 @@ export class Character {
     type: "character" | "item" | "stat";
     isNpc: boolean;
     stats: { [key: string]: Stat } = {};
+    // Marked as possibly undefined for backwards compatibility
+    effects?: Effect[] = [];
     [key: string]:
         | number
         | boolean
         | "character"
         | "item"
         | "stat"
+        | Effect[]
         | (() => string)
         | { [key: string]: Item }
         | { [key: string]: Stat };

@@ -15,6 +15,7 @@ const alterItem = (
 ): string => {
     CutCommandFromContext(modifiedText, currIndices);
 
+    //TODO: effects
     //Looks for pattern name, slot, stat=value
     const exp: RegExp =
         /(?<name>[\w ']+)(?<slot>, [\w\s]+)?(?<modifiers>(?:, [\w ']+ *= *-?\d+)+)/i;

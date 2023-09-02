@@ -5,7 +5,7 @@ import {
 import { turn } from "../../../Input Modifier/turn";
 import { Character, NPC } from "../../../Shared Library/Character";
 import { SetFixedRollOutcome } from "../../../Shared Library/Utils";
-import { state } from "../../proxy_state";
+import { state } from "../../../proxy_state";
 
 describe("Turn taking", () => {
     beforeAll(() => {

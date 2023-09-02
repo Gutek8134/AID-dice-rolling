@@ -1,7 +1,17 @@
 {
-    "extends": "../../tsconfig.json",
     "compilerOptions": {
-        "types": ["node", "jest"],
-        "outDir": "./dist"
+        "module": "CommonJS",
+        "allowUnreachableCode": false,
+        "exactOptionalPropertyTypes": true,
+        "noFallthroughCasesInSwitch": true,
+        "noImplicitOverride": true,
+        "noImplicitReturns": true,
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+        "resolveJsonModule": true,
+        "strict": true,
+        "outDir": "./dist",
+        "target": "ES6",
+        "types": ["node", "jest"]
     }
 }

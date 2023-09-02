@@ -6,7 +6,9 @@ import {
 import { SetLevellingToOblivion } from "../../../Input Modifier/constants";
 import { Character } from "../../../Shared Library/Character";
 import { Item } from "../../../Shared Library/Item";
-import { state } from "../../proxy_state";
+import { state } from "../../../proxy_state";
+
+//TODO: GSWM - update for effects
 
 describe("Character Utilities", () => {
     it("Best stat", () => {

@@ -24,6 +24,7 @@ const addItem = (
         state.message = "Add Item: No arguments found.";
         return modifiedText;
     }
+    //TODO: start effects
     //Looks for pattern name, slot, stat=value, target place (none by default) and character
     const exp: RegExp =
         /(?<name>[\w ']+), (?<slot>[\w\s]+)(?<modifiers>(?:, [\w ']+ *= *-?\d+)+)(?:, *(?<target>inventory|equip)(?:, *(?<character>[\w\s']+))?)?/i;

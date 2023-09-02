@@ -3,6 +3,7 @@ import { Character } from "./Character";
 import { Item } from "./Item";
 import { levellingToOblivion } from "../Input Modifier/constants";
 import { Stat } from "./Stat";
+import { Effect } from "./Effect";
 
 //!Function for calculating damage. Adjust it to your heart's content.
 //!Just make sure it won't divide by 0 (finally putting all the hours spent on learning math in high school to good use).
@@ -127,6 +128,16 @@ isNPC: ${character.isNpc},\n`;
             temp += `\n${ItemToString(item)},\n`;
         }
     else temp += "\nnone  ";
+
+    if (!character.effects) character.effects = [];
+
+    temp += "\nApplied effects:";
+    if (character.effects.length > 0)
+        for (const el of character.effects) {
+            temp += `\n${EffectToString(el)},\n`;
+        }
+    else temp += "\nnone  ";
+
     return temp.substring(0, temp.length - 2) == ""
         ? "none"
         : temp.substring(0, temp.length - 2);
@@ -140,6 +151,20 @@ export const ItemToString = (item: Item): string => {
         temp += `${key}: ${item.modifiers[key]}\n`;
 
     return temp.substring(0, temp.length - 1);
+};
+
+export const EffectToString = (effect: Effect): string => {
+    if (!effect) return "none";
+    let temp = `${effect.name}:
+duration: ${effect.durationLeft} (base ${effect.baseDuration}),
+unique per entity: ${effect.applyUnique},
+applied when: ${effect.appliedOn},
+applied to: ${effect.appliedTo}`;
+
+    for (const key of Object.keys(effect.modifiers))
+        temp += `${key}: ${effect.modifiers[key]}\n`;
+
+    return temp;
 };
 
 //Returns whether character exists and has more than 0 HP
