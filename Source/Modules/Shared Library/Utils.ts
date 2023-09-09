@@ -159,7 +159,8 @@ export const EffectToString = (effect: Effect): string => {
 duration: ${effect.durationLeft} (base ${effect.baseDuration}),
 unique per entity: ${effect.applyUnique},
 applied when: ${effect.appliedOn},
-applied to: ${effect.appliedTo}`;
+applied to: ${effect.appliedTo}
+`;
 
     for (const key of Object.keys(effect.modifiers))
         temp += `${key}: ${effect.modifiers[key]}\n`;

@@ -44,7 +44,10 @@ const createEffect = (
     let error = false;
     const existingModifiers: string[] = [];
     for (const modifier of initModifiers) {
-        if (ElementInArray(modifier[0], restrictedStatNames)) {
+        if (
+            ElementInArray(modifier[0], restrictedStatNames) &&
+            modifier[0] !== "hp"
+        ) {
             state.message += `\nCreate Effect: ${modifier[0]} cannot be set.`;
             error = true;
             continue;
@@ -63,7 +66,7 @@ const createEffect = (
     if (error) return modifiedText;
 
     let appliedOn: "attack" | "defense" | "battle start" | "not applied";
-    switch (match.groups.appliedOn) {
+    switch (match.groups.appliedOn.toLowerCase()) {
         case "a":
         case "attack":
             appliedOn = "attack";
@@ -82,7 +85,7 @@ const createEffect = (
     }
 
     let appliedTo: "self" | "enemy";
-    switch (match.groups.appliedTo) {
+    switch (match.groups.appliedTo.toLowerCase()) {
         default:
         case "self":
             appliedTo = "self";
@@ -92,13 +95,33 @@ const createEffect = (
             break;
     }
 
+    let impact: "on end" | "continuous" | "every turn";
+    switch (match.groups.impact.toLowerCase()) {
+        default:
+        case "c":
+        case "continuous":
+            impact = "continuous";
+            break;
+
+        case "e":
+        case "on end":
+            impact = "on end";
+            break;
+
+        case "t":
+        case "every turn":
+            impact = "every turn";
+            break;
+    }
+
     const effect: Effect = new Effect(
         match.groups.name.trim(),
         initModifiers,
         Number(match.groups.duration.trim()),
         match.groups.unique.length > 0,
         appliedOn,
-        appliedTo
+        appliedTo,
+        impact
     );
 
     modifiedText = `\nEffect ${

@@ -18,6 +18,7 @@ export class Effect {
     applyUnique: boolean;
     appliedOn: "attack" | "defense" | "battle start" | "not applied";
     appliedTo: "self" | "enemy";
+    impact: "on end" | "continuous" | "every turn";
 
     constructor(
         inName: string,
@@ -25,7 +26,8 @@ export class Effect {
         inDuration: number,
         inApplyUnique: boolean = true,
         inAppliedOn: "attack" | "defense" | "battle start" | "not applied",
-        inAppliedTo: "self" | "enemy"
+        inAppliedTo: "self" | "enemy",
+        inImpact: "on end" | "continuous" | "every turn"
     ) {
         this.name = inName;
         this.modifiers = Object.fromEntries(inModifiers);
@@ -33,6 +35,7 @@ export class Effect {
         this.applyUnique = inApplyUnique;
         this.appliedOn = inAppliedOn;
         this.appliedTo = inAppliedTo;
+        this.impact = inImpact;
     }
 }
 
@@ -62,4 +65,22 @@ export const InstanceEffect = (
     if (overriddenDuration !== undefined && overriddenDuration > 0)
         effectCopy.durationLeft = overriddenDuration;
     character.effects.push(effectCopy);
+};
+
+export const RemoveEffect = (
+    characterName: string,
+    effectName: string
+): void => {
+    const character: Character = state.characters[characterName];
+    if (!character.effects) {
+        character.effects = [];
+        return;
+    }
+
+    const effect: Effect | undefined = character.effects.find(
+        (_effect) => _effect.name === effectName
+    );
+    if (effect === undefined) return;
+
+    character.effects.splice(character.effects.indexOf(effect), 1);
 };
