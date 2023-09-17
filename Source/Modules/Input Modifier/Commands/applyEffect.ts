@@ -39,13 +39,13 @@ const applyEffect = (
 
     const effect: Effect = state.effects[effectName];
     const character: Character = state.characters[characterName];
-    if (!character.effects) character.effects = [];
+    if (!character.activeEffects) character.activeEffects = [];
 
     if (effect.applyUnique)
         if (
             ElementInArray(
                 effect.name,
-                character.effects.map((effect) => effect.name)
+                character.activeEffects.map((effect) => effect.name)
             )
         ) {
             state.message += `Apply Effect: Effect ${effect.name} was not applied to ${characterName}. Reason: unique effect already applied.`;

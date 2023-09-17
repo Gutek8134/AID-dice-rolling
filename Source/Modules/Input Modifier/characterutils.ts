@@ -21,12 +21,12 @@ export const BestStat = (character: Character): string => {
 
 export const GetStatWithMods = (character: Character, stat: string): number => {
     if (!character || !stat || character.stats[stat] === undefined) return 0;
-    if (!character.effects) character.effects = [];
+    if (!character.activeEffects) character.activeEffects = [];
 
     let effectModifiersSum: number = 0;
 
-    for (const effect of character.effects) {
-        if (effect.modifiers[stat])
+    for (const effect of character.activeEffects) {
+        if (effect.modifiers[stat] && effect.impact === "continuous")
             effectModifiersSum += effect.modifiers[stat];
     }
 

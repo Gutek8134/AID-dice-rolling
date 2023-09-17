@@ -1,4 +1,5 @@
 import { Character } from "../Shared Library/Character";
+import { Effect, InstanceEffect } from "../Shared Library/Effect";
 import { damage, dodge } from "../Shared Library/Utils";
 import { state } from "../proxy_state";
 import { GetStatWithMods, IncrementExp } from "./characterutils";
@@ -21,6 +22,75 @@ export const CustomDamageOutput = (
 
     return out;
 };
+
+export const ApplyEffectsOnAttack = (
+    attackingCharacterName: string,
+    defendingCharacterName: string
+): string => {
+    //Grabs the info
+    let attackingCharacter: Character =
+        state.characters[attackingCharacterName];
+    let defendingCharacter: Character =
+        state.characters[defendingCharacterName];
+
+    //If you didn't create the characters earlier, they get all stats at starting level from state
+    if (attackingCharacter === undefined) {
+        state.characters[attackingCharacterName] = new Character();
+        attackingCharacter = state.characters[attackingCharacterName];
+    }
+    if (defendingCharacter === undefined) {
+        state.characters[defendingCharacterName] = new Character();
+        defendingCharacter = state.characters[defendingCharacterName];
+    }
+
+    let effectsToApplyOnAttacker: Effect[] = [];
+    let effectsToApplyOnDefender: Effect[] = [];
+
+    for (const item of Object.values(attackingCharacter.items)) {
+        for (const effectName of item.effects) {
+            const effect: Effect = state.effects[effectName];
+            if (!effect) continue;
+            if (effect.appliedOn === "attack") {
+                if (effect.appliedTo === "self")
+                    effectsToApplyOnAttacker.push(effect);
+                else if (effect.appliedTo === "enemy")
+                    effectsToApplyOnDefender.push(effect);
+            }
+        }
+    }
+
+    for (const item of Object.values(defendingCharacter.items)) {
+        for (const effectName of item.effects) {
+            const effect = state.effects[effectName];
+            if (!effect) continue;
+            if (effect.appliedOn === "defense") {
+                if (effect.appliedTo === "self")
+                    effectsToApplyOnDefender.push(effect);
+                else if (effect.appliedTo === "enemy")
+                    effectsToApplyOnAttacker.push(effect);
+            }
+        }
+    }
+
+    if (!attackingCharacter.activeEffects)
+        attackingCharacter.activeEffects = [];
+    if (!defendingCharacter.activeEffects)
+        defendingCharacter.activeEffects = [];
+
+    let output: string = "";
+
+    for (const effect of effectsToApplyOnAttacker) {
+        output += InstanceEffect(attackingCharacterName, effect);
+    }
+
+    if (defendingCharacter.hp >= 0 || !defendingCharacter.isNpc)
+        for (const effect of effectsToApplyOnDefender) {
+            output += InstanceEffect(defendingCharacterName, effect);
+        }
+
+    return output;
+};
+
 /**
  * state.ctxt is NOT modified by this function
  *
@@ -96,6 +166,10 @@ export const DealDamage = (
     //Damaging
     state.characters[defendingCharacterName].hp -= damageInflicted;
 
+    const effectsText: string = ApplyEffectsOnAttack(
+        attackingCharacterName,
+        defendingCharacterName
+    );
     //Gives the player necessary info.
     const attackOutput = `${attackingCharacterName} (${attackStatName}: ${attackingCharacterStatLevelWithMods}${
         attackModifier === 0
@@ -122,7 +196,7 @@ export const DealDamage = (
               " now has " +
               state.characters[defendingCharacterName].hp +
               " hp."
-    }`;
+    }${effectsText}`;
 
     let levelOutput: string = IncrementExp(
         attackingCharacterName,
@@ -146,7 +220,7 @@ export const DealDamage = (
                   ? "died."
                   : "retreated.")
             : ""
-    }`;
+    }${effectsText}`;
     if (state.characters[defendingCharacterName].hp <= 0)
         if (!defendingCharacter.isNpc)
             state.characters[defendingCharacterName].hp = 0;

@@ -39,10 +39,10 @@ const removeEffect = (
     }
 
     const character: Character = state.characters[characterName];
-    if (!character.effects) character.effects = [];
+    if (!character.activeEffects) character.activeEffects = [];
 
     if (effectName === "all") {
-        character.effects = [];
+        character.activeEffects = [];
         state.out = `All effects have been removed from ${characterName}.
 Current ${characterName} state:
 ${CharacterToString(character)}`;
@@ -52,7 +52,7 @@ ${CharacterToString(character)}`;
     if (
         !ElementInArray(
             effectName,
-            character.effects.map((effect) => effect.name)
+            character.activeEffects.map((effect) => effect.name)
         )
     ) {
         state.message += `Remove Effect: Character ${characterName} is not under influence of effect ${effectName}.`;

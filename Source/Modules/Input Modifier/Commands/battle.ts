@@ -1,3 +1,5 @@
+import { Character } from "../../Shared Library/Character";
+import { Effect, InstanceEffect } from "../../Shared Library/Effect";
 import { ElementInArray, diceRoll } from "../../Shared Library/Utils";
 import { state } from "../../proxy_state";
 import { turn } from "../turn";
@@ -74,13 +76,54 @@ const battle = (commandArguments: string, modifiedText: string): string => {
         }
     }
 
+    state.out = "";
+
+    //On battle start effects are instanced (applied) to self or random enemy
+    for (const characterName of side1CharactersNames) {
+        const character: Character = state.characters[characterName];
+        for (const item of Object.values(character.items)) {
+            for (const effectName of item.effects) {
+                const effect: Effect = state.effects[effectName];
+                if (effect.appliedOn === "battle start")
+                    if (effect.appliedTo === "self")
+                        state.out += InstanceEffect(characterName, effect);
+                    else if (effect.appliedTo === "enemy")
+                        state.out += InstanceEffect(
+                            side2CharactersNames[
+                                diceRoll(side2CharactersNames.length) - 1
+                            ],
+                            effect
+                        );
+            }
+        }
+    }
+
+    for (const characterName of side2CharactersNames) {
+        const character: Character = state.characters[characterName];
+        for (const item of Object.values(character.items)) {
+            for (const effectName of item.effects) {
+                const effect: Effect = state.effects[effectName];
+                if (effect.appliedOn === "battle start")
+                    if (effect.appliedTo === "self")
+                        state.out += InstanceEffect(characterName, effect);
+                    else if (effect.appliedTo === "enemy")
+                        state.out += InstanceEffect(
+                            side1CharactersNames[
+                                diceRoll(side1CharactersNames.length) - 1
+                            ],
+                            effect
+                        );
+            }
+        }
+    }
+    state.out += "A battle has emerged between two groups!";
+
     //Setting up values for automatic turns
     state.side1 = side1CharactersNames;
     state.side2 = side2CharactersNames;
     state.currentSide = `side${diceRoll(2)}`;
     state.active = [...state[state.currentSide]];
     state.inBattle = true;
-    state.out = "A battle has emerged between two groups!";
 
     const nextActiveCharacterIndex = diceRoll(state.active.length) - 1;
     state.activeCharacterName = state.active[nextActiveCharacterIndex];

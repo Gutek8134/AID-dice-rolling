@@ -46,25 +46,26 @@ export const InstanceEffect = (
     characterName: string,
     effect: Effect,
     overriddenDuration?: number
-): void => {
+): string => {
     const character: Character = state.characters[characterName];
-    if (!character.effects) character.effects = [];
+    if (!character.activeEffects) character.activeEffects = [];
 
     if (effect.applyUnique)
         if (
             ElementInArray(
                 effect.name,
-                character.effects.map((effect) => effect.name)
+                character.activeEffects.map((effect) => effect.name)
             )
         ) {
-            state.message += `Effect ${effect.name} was not applied to ${characterName}. Reason: unique effect already applied.`;
-            return;
+            state.message += `Effect ${effect.name} was not applied to ${characterName}, because it is already applied.`;
+            return "";
         }
 
     const effectCopy = { ...effect };
     if (overriddenDuration !== undefined && overriddenDuration > 0)
         effectCopy.durationLeft = overriddenDuration;
-    character.effects.push(effectCopy);
+    character.activeEffects.push(effectCopy);
+    return `\n${characterName} now is under influence of ${effect.name}.`;
 };
 
 export const RemoveEffect = (
@@ -72,15 +73,15 @@ export const RemoveEffect = (
     effectName: string
 ): void => {
     const character: Character = state.characters[characterName];
-    if (!character.effects) {
-        character.effects = [];
+    if (!character.activeEffects) {
+        character.activeEffects = [];
         return;
     }
 
-    const effect: Effect | undefined = character.effects.find(
+    const effect: Effect | undefined = character.activeEffects.find(
         (_effect) => _effect.name === effectName
     );
     if (effect === undefined) return;
 
-    character.effects.splice(character.effects.indexOf(effect), 1);
+    character.activeEffects.splice(character.activeEffects.indexOf(effect), 1);
 };

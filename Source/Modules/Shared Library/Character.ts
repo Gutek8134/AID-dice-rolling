@@ -22,7 +22,7 @@ export class Character {
     isNpc: boolean;
     stats: { [key: string]: Stat } = {};
     // Marked as possibly undefined for backwards compatibility
-    effects?: Effect[] = [];
+    activeEffects?: Effect[] = [];
     [key: string]:
         | number
         | boolean

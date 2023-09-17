@@ -243,7 +243,9 @@ You can vote on what do you want me to do next [here](https://forms.gle/SqfzW5hZ
 
 # Installation
 
-[Video tutorial](https://youtu.be/rwzCD6qZLi4)
+[Video tutorial for Legacy](https://youtu.be/rwzCD6qZLi4)
+
+[Video tutorial for Phoenix](https://youtu.be/_nfOIWf7qC8)
 
 1. Create a scenario.
 2. Get into Scripts menu. (You need to use browser for this.)

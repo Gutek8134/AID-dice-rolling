@@ -129,11 +129,11 @@ isNPC: ${character.isNpc},\n`;
         }
     else temp += "\nnone  ";
 
-    if (!character.effects) character.effects = [];
+    if (!character.activeEffects) character.activeEffects = [];
 
     temp += "\nApplied effects:";
-    if (character.effects.length > 0)
-        for (const el of character.effects) {
+    if (character.activeEffects.length > 0)
+        for (const el of character.activeEffects) {
             temp += `\n${EffectToString(el)},\n`;
         }
     else temp += "\nnone  ";
