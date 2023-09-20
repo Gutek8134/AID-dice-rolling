@@ -1,7 +1,7 @@
 import { state } from "../proxy_state";
 import SetupState from "./SetupState";
 import { turn } from "./turn";
-import { defaultDodge } from "./constants";
+import { defaultDodge, levellingToOblivion } from "./constants";
 import skillcheck from "./Commands/skillcheck";
 import battle from "./Commands/battle";
 import attack from "./Commands/attack";
@@ -21,6 +21,9 @@ import levelStats from "./Commands/levelStats";
 import getState from "./Commands/getState";
 import setState from "./Commands/setState";
 import alterItem from "./Commands/alterItem";
+import { experienceCalculation } from "../Shared Library/Utils";
+import { RemoveEffect } from "../Shared Library/Effect";
+import { Character } from "../Shared Library/Character";
 
 export const DEBUG: boolean = false;
 
@@ -75,6 +78,41 @@ export const modifier = (text: string): { text: string; stop?: boolean } => {
     }
     //#endregion battle handling
 
+    for (const characterName of Object.keys(state.characters)) {
+        const character: Character = state.characters[characterName];
+        if (!character.activeEffects) character.activeEffects = [];
+        for (const effect of character.activeEffects) {
+            if (--effect.durationLeft === 0) {
+                if (effect.impact === "on end") {
+                    for (const modifier in effect.modifiers) {
+                        if (modifier === "hp" || modifier === "experience") {
+                            character[modifier] -= effect.modifiers[modifier];
+                        } else {
+                            character.stats[modifier].level -=
+                                effect.modifiers[modifier];
+
+                            if (levellingToOblivion) {
+                                character.stats[modifier].expToNextLvl =
+                                    experienceCalculation(
+                                        character.stats[modifier].level
+                                    );
+
+                                while (
+                                    character.stats[modifier].expToNextLvl ??
+                                    Infinity <= character.stats[modifier].level
+                                )
+                                    character.stats[modifier].expToNextLvl =
+                                        experienceCalculation(
+                                            ++character.stats[modifier].level
+                                        );
+                            }
+                        }
+                    }
+                }
+                modifiedText += RemoveEffect(characterName, effect.name);
+            }
+        }
+    }
     //#region globalCommand
     //Checks for pattern !command(args)
     const globalExp = /!(?<command>[^\s()]+)\((?<arguments>.*)\)/i;

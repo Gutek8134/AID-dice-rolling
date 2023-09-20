@@ -71,17 +71,18 @@ export const InstanceEffect = (
 export const RemoveEffect = (
     characterName: string,
     effectName: string
-): void => {
+): string => {
     const character: Character = state.characters[characterName];
     if (!character.activeEffects) {
         character.activeEffects = [];
-        return;
+        return "";
     }
 
     const effect: Effect | undefined = character.activeEffects.find(
         (_effect) => _effect.name === effectName
     );
-    if (effect === undefined) return;
+    if (effect === undefined) return "";
 
     character.activeEffects.splice(character.activeEffects.indexOf(effect), 1);
+    return `\n${characterName} no longer is under influence of ${effect.name}.`;
 };

@@ -5,6 +5,7 @@ import {
     damage,
     diceRoll,
     dodge,
+    experienceCalculation,
     isInStats,
 } from "../Shared Library/Utils";
 import { Character } from "../Shared Library/Character";
@@ -13,8 +14,10 @@ import {
     damageOutputs,
     defendingCharacterLevels,
     defaultDodge,
+    levellingToOblivion,
 } from "./constants";
-import { CustomDamageOutput } from "./fightutils";
+import { ApplyEffectsOnAttack, CustomDamageOutput } from "./fightutils";
+import { RemoveEffect } from "../Shared Library/Effect";
 // import { DEBUG } from "./modifier";
 
 /**
@@ -241,6 +244,10 @@ const takeTurn = (
     //Damaging
     state.characters[defendingCharacterName].hp -= damageInflicted;
 
+    const effectsText: string = ApplyEffectsOnAttack(
+        attackingCharacterName,
+        defendingCharacterName
+    );
     //Gives the player necessary info.
     state.out += `\n${attackingCharacterName} (${attackStat}: ${attackingCharacterStatLevelWithMods}${
         attackModifier === 0
@@ -267,13 +274,51 @@ const takeTurn = (
               " now has " +
               state.characters[defendingCharacterName].hp +
               " hp."
-    }`;
+    }${effectsText}`;
 
     //Always grants 1 Exp to attacking character, for defending it's up to user
     state.out += IncrementExp(attackingCharacterName, attackStat);
 
     if (defendingCharacterLevels) {
         state.out += IncrementExp(defendingCharacterName, defenseStat);
+    }
+    if (!attackingCharacter.activeEffects)
+        attackingCharacter.activeEffects = [];
+
+    for (const effect of attackingCharacter.activeEffects) {
+        if (--effect.durationLeft === 0) {
+            if (effect.impact === "on end") {
+                for (const modifier in effect.modifiers) {
+                    if (modifier === "hp" || modifier === "experience") {
+                        attackingCharacter[modifier] -=
+                            effect.modifiers[modifier];
+                    } else {
+                        attackingCharacter.stats[modifier].level -=
+                            effect.modifiers[modifier];
+
+                        if (levellingToOblivion) {
+                            attackingCharacter.stats[modifier].expToNextLvl =
+                                experienceCalculation(
+                                    attackingCharacter.stats[modifier].level
+                                );
+
+                            while (
+                                attackingCharacter.stats[modifier]
+                                    .expToNextLvl ??
+                                Infinity <=
+                                    attackingCharacter.stats[modifier].level
+                            )
+                                attackingCharacter.stats[
+                                    modifier
+                                ].expToNextLvl = experienceCalculation(
+                                    ++attackingCharacter.stats[modifier].level
+                                );
+                        }
+                    }
+                }
+            }
+            state.out += RemoveEffect(attackingCharacterName, effect.name);
+        }
     }
 
     //If character's hp falls below 0, they are removed from the battle
