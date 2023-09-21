@@ -24,10 +24,10 @@ const addItem = (
         state.message = "Add Item: No arguments found.";
         return modifiedText;
     }
-    //TODO: start effects
+
     //Looks for pattern name, slot, stat=value, target place (none by default) and character
     const exp: RegExp =
-        /(?<name>[\w ']+), (?<slot>[\w\s]+)(?<modifiers>(?:, [\w ']+ *= *-?\d+)+)(?:, *(?<target>inventory|equip)(?:, *(?<character>[\w\s']+))?)?/i;
+        /(?<name>[\w ']+), (?<slot>[\w\s]+)(?<modifiers>(?:, [\w ']+ *= *-?\d+)+)(?<effectNames>(?:, [\w ']+)*)(?:, *(?<target>inventory|equip)(?:, *(?<character>[\w\s']+))?)?/i;
     const match: RegExpMatchArray | null = commandArguments.match(exp);
 
     //Error checking
@@ -69,6 +69,12 @@ const addItem = (
             return [temp[0].trim(), Number(temp[1].trim())];
         });
 
+    const effectNames = match.groups.effectNames
+        .substring(2)
+        .split(", ")
+        .map<[string, string]>((el) => ["effect", el.trim()]);
+
+    //Sanitizing
     let error = false;
     for (const modifier of initValues) {
         if (ElementInArray(modifier[0], restrictedStatNames)) {
@@ -82,7 +88,16 @@ const addItem = (
             error = true;
         }
     }
+
+    for (const [_, name] of effectNames) {
+        if (!ElementInArray(name, Object.keys(state.effects))) {
+            state.message += `\nAdd Item: Effect ${name} doesn't exist.`;
+            error = true;
+        }
+    }
     if (error) return modifiedText;
+
+    initValues.push(...effectNames);
 
     //Adds slot
     initValues.push(["slot", match.groups.slot]);

@@ -1,11 +1,11 @@
-import addCharacter from "../../../../Input Modifier/Commands/addcharacter";
+import addCharacter from "../../../../Input Modifier/Commands/addCharacter";
 import { Item } from "../../../../Shared Library/Item";
 import { Stat } from "../../../../Shared Library/Stat";
 import {
     CharacterToString,
     experienceCalculation,
 } from "../../../../Shared Library/Utils";
-import { state } from "../../../proxy_state";
+import { state } from "../../../../proxy_state";
 
 describe("Command add character", () => {
     it("Invalid args error", () => {

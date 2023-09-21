@@ -15,10 +15,9 @@ const alterItem = (
 ): string => {
     CutCommandFromContext(modifiedText, currIndices);
 
-    //TODO: effects
     //Looks for pattern name, slot, stat=value
     const exp: RegExp =
-        /(?<name>[\w ']+)(?<slot>, [\w\s]+)?(?<modifiers>(?:, [\w ']+ *= *-?\d+)+)/i;
+        /(?<name>[\w ']+)(?<slot>, [\w\s]+)?(?<modifiers>(?:, [\w ']+ *= *-?\d+)+)(?<effectNames>(?:, [\w ']+)*)/i;
     const match: RegExpMatchArray | null = commandArguments.match(exp);
 
     //Error checking
@@ -48,19 +47,33 @@ const alterItem = (
             return [temp[0].trim(), Number(temp[1].trim())];
         });
 
+    const effectNames = match.groups.effectNames
+        .substring(2)
+        .split(", ")
+        .map<string>((el) => el.trim());
+
     //Stats must exist prior
+    let error: boolean = false;
     for (const modifier of initValues) {
         if (ElementInArray(modifier[0], restrictedStatNames)) {
             state.message += `\nAlter Item: ${modifier[0]} cannot be altered.`;
+            error = true;
             continue;
         }
         if (!isInStats(modifier[0])) {
             state.message = `Alter Item: Stat ${modifier[0]} does not exist.`;
-            return modifiedText;
+            error = true;
         }
     }
 
-    //Passes to constructor and adds received item to the state
+    for (const name of effectNames) {
+        if (!ElementInArray(name, Object.keys(state.effects))) {
+            state.message += `\nAlter Item: Effect ${name} doesn't exist.`;
+            error = true;
+        }
+    }
+    if (error) return modifiedText;
+
     const item = state.items[itemName];
     const oldAttributes = ItemToString(item);
 
@@ -68,6 +81,10 @@ const alterItem = (
     for (const modifier of initValues) {
         if (modifier[1] === 0) delete item.modifiers[modifier[0]];
         else item.modifiers[modifier[0]] = modifier[1];
+    }
+
+    if (effectNames.length > 0) {
+        item.effects = effectNames;
     }
 
     state.out = `\n${itemName}'s attributes has been altered\nfrom\n${oldAttributes}\nto\n${ItemToString(

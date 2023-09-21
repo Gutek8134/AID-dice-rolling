@@ -1,7 +1,8 @@
 import { state } from "../proxy_state";
 import { Character } from "./Character";
-import { ElementInArray } from "./Utils";
+import { ElementInArray, experienceCalculation } from "./Utils";
 import { GetStatWithMods } from "../Input Modifier/characterutils";
+import { levellingToOblivion } from "../Input Modifier/constants";
 
 /**
  * Data Class
@@ -85,4 +86,31 @@ export const RemoveEffect = (
 
     character.activeEffects.splice(character.activeEffects.indexOf(effect), 1);
     return `\n${characterName} no longer is under influence of ${effect.name}.`;
+};
+
+export const RunEffect = (characterName: string, effect: Effect) => {
+    const character = state.characters[characterName];
+    for (const modifier in effect.modifiers) {
+        if (modifier === "hp" || modifier === "experience") {
+            character[modifier] -= effect.modifiers[modifier];
+        } else {
+            character.stats[modifier].level -= effect.modifiers[modifier];
+
+            if (levellingToOblivion) {
+                character.stats[modifier].expToNextLvl = experienceCalculation(
+                    character.stats[modifier].level
+                );
+
+                while (
+                    character.stats[modifier].expToNextLvl ??
+                    Infinity <= character.stats[modifier].level
+                )
+                    character.stats[modifier].expToNextLvl =
+                        experienceCalculation(
+                            ++character.stats[modifier].level
+                        );
+            }
+        }
+        state.message += `\n${characterName} lost ${effect.modifiers[modifier]} ${modifier}. Duration left: ${effect.durationLeft}.`;
+    }
 };

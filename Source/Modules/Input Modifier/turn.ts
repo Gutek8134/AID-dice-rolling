@@ -5,7 +5,6 @@ import {
     damage,
     diceRoll,
     dodge,
-    experienceCalculation,
     isInStats,
 } from "../Shared Library/Utils";
 import { Character } from "../Shared Library/Character";
@@ -14,10 +13,9 @@ import {
     damageOutputs,
     defendingCharacterLevels,
     defaultDodge,
-    levellingToOblivion,
 } from "./constants";
 import { ApplyEffectsOnAttack, CustomDamageOutput } from "./fightutils";
-import { RemoveEffect } from "../Shared Library/Effect";
+import { RemoveEffect, RunEffect } from "../Shared Library/Effect";
 // import { DEBUG } from "./modifier";
 
 /**
@@ -286,36 +284,12 @@ const takeTurn = (
         attackingCharacter.activeEffects = [];
 
     for (const effect of attackingCharacter.activeEffects) {
+        if (effect.impact === "every turn") {
+            RunEffect(attackingCharacterName, effect);
+        }
         if (--effect.durationLeft === 0) {
             if (effect.impact === "on end") {
-                for (const modifier in effect.modifiers) {
-                    if (modifier === "hp" || modifier === "experience") {
-                        attackingCharacter[modifier] -=
-                            effect.modifiers[modifier];
-                    } else {
-                        attackingCharacter.stats[modifier].level -=
-                            effect.modifiers[modifier];
-
-                        if (levellingToOblivion) {
-                            attackingCharacter.stats[modifier].expToNextLvl =
-                                experienceCalculation(
-                                    attackingCharacter.stats[modifier].level
-                                );
-
-                            while (
-                                attackingCharacter.stats[modifier]
-                                    .expToNextLvl ??
-                                Infinity <=
-                                    attackingCharacter.stats[modifier].level
-                            )
-                                attackingCharacter.stats[
-                                    modifier
-                                ].expToNextLvl = experienceCalculation(
-                                    ++attackingCharacter.stats[modifier].level
-                                );
-                        }
-                    }
-                }
+                RunEffect(attackingCharacterName, effect);
             }
             state.out += RemoveEffect(attackingCharacterName, effect.name);
         }

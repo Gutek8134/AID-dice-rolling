@@ -1,8 +1,8 @@
-import addItem from "../../../../Input Modifier/Commands/additem";
+import addItem from "../../../../Input Modifier/Commands/addItem";
 import { Character } from "../../../../Shared Library/Character";
 import { Item } from "../../../../Shared Library/Item";
 import { ItemToString } from "../../../../Shared Library/Utils";
-import { state } from "../../../proxy_state";
+import { state } from "../../../../proxy_state";
 
 describe("Command add item", () => {
     it("Invalid args error", () => {
