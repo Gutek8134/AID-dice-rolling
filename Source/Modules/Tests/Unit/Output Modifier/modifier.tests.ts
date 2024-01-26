@@ -1,5 +1,5 @@
 import { modifier } from "../../../Output Modifier/modifier";
-import { state } from "../../proxy_state";
+import { state } from "../../../proxy_state";
 import { RandomString } from "../../testutils";
 
 describe("Output Modifier", () => {

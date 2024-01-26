@@ -4,6 +4,7 @@ import {
 } from "../../../Input Modifier/constants";
 import { turn } from "../../../Input Modifier/turn";
 import { Character, NPC } from "../../../Shared Library/Character";
+import { Effect, InstanceEffect } from "../../../Shared Library/Effect";
 import { SetFixedRollOutcome } from "../../../Shared Library/Utils";
 import { state } from "../../../proxy_state";
 
@@ -16,6 +17,7 @@ describe("Turn taking", () => {
 
     beforeEach(() => {
         state.inBattle = true;
+        state.message = "";
         state.out = "";
         state.stats = [
             "explosion",
@@ -111,5 +113,75 @@ Zuibroldun (strength: 15) attacked Zalos (dexterity: 1) dealing medium damage (1
 Zalos now has 9985 hp.
 Miguel (dexterity: 2) attacked Zalos (faith: 15) dealing no damage (0).
 Zalos now has 9985 hp.`);
+    });
+
+    it("Should decrease effect time left", () => {
+        InstanceEffect(
+            "Zuibroldun",
+            new Effect(
+                "heroism",
+                [["courage", 10]],
+                3,
+                "battle start",
+                "self",
+                "continuous",
+                false
+            ),
+            2
+        );
+
+        InstanceEffect(
+            "Zuibroldun",
+            new Effect(
+                "deadge",
+                [
+                    ["hp", -30],
+                    ["strength", 5],
+                ],
+                5,
+                "attack",
+                "enemy",
+                "on end",
+                true
+            ),
+            1
+        );
+
+        InstanceEffect(
+            "Miguel",
+            new Effect(
+                "poison",
+                [["hp", -5]],
+                5,
+                "attack",
+                "enemy",
+                "every turn",
+                false
+            ),
+            1
+        );
+
+        turn("(Zalos)");
+
+        expect(state.out).toEqual(`
+Zuibroldun (explosion: 17) attacked Zalos (faith: 15) dealing light damage (3).
+Zalos now has 9997 hp.
+Zuibroldun is no longer under influence of deadge.
+Miguel (dexterity: 2) attacked Zalos (faith: 15) dealing no damage (0).
+Zalos now has 9997 hp.
+Miguel is no longer under influence of poison.`);
+
+        expect(state.message).toEqual(`
+Zuibroldun lost 30 hp, currently has 70.
+Zuibroldun gained 5 strength, currently has 20.
+Duration left of effect deadge on Zuibroldun: 0.
+Miguel lost 5 hp, currently has 95.
+Duration left of effect poison on Miguel: 1.
+Current turn: Zalos`);
+        expect(
+            state.characters.Zuibroldun.activeEffects?.[0].durationLeft
+        ).toEqual(1);
+        expect(state.characters.Zuibroldun.activeEffects?.length).toEqual(1);
+        expect(state.characters.Miguel.activeEffects).toEqual([]);
     });
 });

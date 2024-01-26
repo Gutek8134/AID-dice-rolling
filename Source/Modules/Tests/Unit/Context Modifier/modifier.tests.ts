@@ -1,5 +1,5 @@
 import { modifier } from "../../../Context Modifier/modifier";
-import { state } from "../../proxy_state";
+import { state } from "../../../proxy_state";
 
 describe("Context Modifier", () => {
     it("Should return normally", () => {

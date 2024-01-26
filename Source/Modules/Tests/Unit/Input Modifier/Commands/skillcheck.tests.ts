@@ -2,7 +2,7 @@ import skillcheck from "../../../../Input Modifier/Commands/skillcheck";
 import { SetLevellingToOblivion } from "../../../../Input Modifier/constants";
 import { Character } from "../../../../Shared Library/Character";
 import { SetFixedRollOutcome } from "../../../../Shared Library/Utils";
-import { state } from "../../../proxy_state";
+import { state } from "../../../../proxy_state";
 
 describe("Command skillcheck", () => {
     it("Invalid args error", () => {

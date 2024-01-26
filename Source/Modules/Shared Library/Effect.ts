@@ -20,15 +20,17 @@ export class Effect {
     appliedOn: "attack" | "defense" | "battle start" | "not applied";
     appliedTo: "self" | "enemy";
     impact: "on end" | "continuous" | "every turn";
+    readonly type: "effect";
+    [key: string]: string | number | boolean | { [key: string]: number };
 
     constructor(
         inName: string,
         inModifiers: [string, number][],
         inDuration: number,
-        inApplyUnique: boolean = true,
         inAppliedOn: "attack" | "defense" | "battle start" | "not applied",
         inAppliedTo: "self" | "enemy",
-        inImpact: "on end" | "continuous" | "every turn"
+        inImpact: "on end" | "continuous" | "every turn",
+        inApplyUnique: boolean = true
     ) {
         this.name = inName;
         this.modifiers = Object.fromEntries(inModifiers);
@@ -37,6 +39,7 @@ export class Effect {
         this.appliedOn = inAppliedOn;
         this.appliedTo = inAppliedTo;
         this.impact = inImpact;
+        this.type = "effect";
     }
 }
 
@@ -65,8 +68,9 @@ export const InstanceEffect = (
     const effectCopy = { ...effect };
     if (overriddenDuration !== undefined && overriddenDuration > 0)
         effectCopy.durationLeft = overriddenDuration;
+    else effectCopy.durationLeft = effectCopy.baseDuration;
     character.activeEffects.push(effectCopy);
-    return `\n${characterName} now is under influence of ${effect.name}.`;
+    return `\n${characterName} is now under influence of ${effect.name}.`;
 };
 
 export const RemoveEffect = (
@@ -85,16 +89,16 @@ export const RemoveEffect = (
     if (effect === undefined) return "";
 
     character.activeEffects.splice(character.activeEffects.indexOf(effect), 1);
-    return `\n${characterName} no longer is under influence of ${effect.name}.`;
+    return `\n${characterName} is no longer under influence of ${effect.name}.`;
 };
 
 export const RunEffect = (characterName: string, effect: Effect) => {
     const character = state.characters[characterName];
     for (const modifier in effect.modifiers) {
         if (modifier === "hp" || modifier === "experience") {
-            character[modifier] -= effect.modifiers[modifier];
+            character[modifier] += effect.modifiers[modifier];
         } else {
-            character.stats[modifier].level -= effect.modifiers[modifier];
+            character.stats[modifier].level += effect.modifiers[modifier];
 
             if (levellingToOblivion) {
                 character.stats[modifier].expToNextLvl = experienceCalculation(
@@ -111,6 +115,13 @@ export const RunEffect = (characterName: string, effect: Effect) => {
                         );
             }
         }
-        state.message += `\n${characterName} lost ${effect.modifiers[modifier]} ${modifier}. Duration left: ${effect.durationLeft}.`;
+        state.message += `\n${characterName} ${
+            effect.modifiers[modifier] < 0 ? "lost" : "gained"
+        } ${Math.abs(effect.modifiers[modifier])} ${modifier}, currently has ${
+            modifier === "hp" || modifier === "experience"
+                ? character[modifier]
+                : character.stats[modifier].level
+        }.`;
     }
+    state.message += `\nDuration left of effect ${effect.name} on ${characterName}: ${effect.durationLeft}.`;
 };

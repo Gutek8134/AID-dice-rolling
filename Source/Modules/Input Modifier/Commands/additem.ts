@@ -27,7 +27,7 @@ const addItem = (
 
     //Looks for pattern name, slot, stat=value, target place (none by default) and character
     const exp: RegExp =
-        /(?<name>[\w ']+), (?<slot>[\w\s]+)(?<modifiers>(?:, [\w ']+ *= *-?\d+)+)(?<effectNames>(?:, [\w ']+)*)(?:, *(?<target>inventory|equip)(?:, *(?<character>[\w\s']+))?)?/i;
+        /(?<name>[\w ']+), (?<slot>[\w\s]+)(?<modifiers>(?:, [\w ']+ *= *-?\d+)+)(?<effectNames>(?:, (?!equip|inventory|[^\w '])[\w ']*)*)?(?:, *(?<target>inventory|equip)(?:, *(?<character>[\w\s']+))?)?/i;
     const match: RegExpMatchArray | null = commandArguments.match(exp);
 
     //Error checking
@@ -70,9 +70,11 @@ const addItem = (
         });
 
     const effectNames = match.groups.effectNames
-        .substring(2)
-        .split(", ")
-        .map<[string, string]>((el) => ["effect", el.trim()]);
+        ? match.groups.effectNames
+              .substring(2)
+              .split(", ")
+              .map<[string, string]>((el) => ["effect", el.trim()])
+        : [];
 
     //Sanitizing
     let error = false;
@@ -91,7 +93,7 @@ const addItem = (
 
     for (const [_, name] of effectNames) {
         if (!ElementInArray(name, Object.keys(state.effects))) {
-            state.message += `\nAdd Item: Effect ${name} doesn't exist.`;
+            state.message += `\nAdd Item: Effect ${name} does not exist.`;
             error = true;
         }
     }

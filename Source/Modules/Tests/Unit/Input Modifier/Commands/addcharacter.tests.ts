@@ -129,7 +129,7 @@ describe("Command add character", () => {
             stats: {},
         };
 
-        console.log(state.characters["Zuibroldun Jodem"]);
+        // console.log(state.characters["Zuibroldun Jodem"]);
 
         for (const key in expected) {
             expect(state.characters["Zuibroldun Jodem"]).toHaveProperty(key);

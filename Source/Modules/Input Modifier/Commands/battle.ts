@@ -76,7 +76,7 @@ const battle = (commandArguments: string, modifiedText: string): string => {
         }
     }
 
-    state.out = "";
+    state.out = "A battle has emerged between two groups!";
 
     //On battle start effects are instanced (applied) to self or random enemy
     for (const characterName of side1CharactersNames) {
@@ -116,7 +116,6 @@ const battle = (commandArguments: string, modifiedText: string): string => {
             }
         }
     }
-    state.out += "A battle has emerged between two groups!";
 
     //Setting up values for automatic turns
     state.side1 = side1CharactersNames;

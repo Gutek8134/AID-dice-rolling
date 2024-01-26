@@ -1,10 +1,13 @@
 import addItem from "../../../../Input Modifier/Commands/addItem";
 import { Character } from "../../../../Shared Library/Character";
+import { Effect } from "../../../../Shared Library/Effect";
 import { Item } from "../../../../Shared Library/Item";
 import { ItemToString } from "../../../../Shared Library/Utils";
 import { state } from "../../../../proxy_state";
 
 describe("Command add item", () => {
+    beforeEach(() => (state.message = ""));
+
     it("Invalid args error", () => {
         expect(addItem("", [0, 0], "Test message")).toEqual("Test message");
         expect(state.message).toEqual("Add Item: No arguments found.");
@@ -59,6 +62,17 @@ describe("Command add item", () => {
         state.message = "";
     });
 
+    it("Effect doesn't exist error", () => {
+        state.stats = ["int"];
+        state.effects = {};
+        state.items = {};
+        addItem("stick, slot, int=1, random effect name", [0, 0], "");
+        expect(state.message).toEqual(
+            "\nAdd Item: Effect random effect name does not exist."
+        );
+        state.message = "";
+    });
+
     it("Equip errors", () => {
         state.items = {};
         state.stats = ["wizardry", "strength"];
@@ -100,19 +114,30 @@ describe("Command add item", () => {
     it("Should only create item", () => {
         state.items = {};
         state.stats = ["wizardry", "strength"];
+        state.effects = {
+            bleeding: new Effect(
+                "bleeding",
+                [],
+                0,
+                "not applied",
+                "enemy",
+                "every turn"
+            ),
+        };
         state.inventory = [];
 
         const testItem = new Item("Staff of Zalos", [
             ["slot", "artifact"],
             ["wizardry", 3],
             ["strength", -1],
+            ["effect", "bleeding"],
         ]);
 
         expect(
             addItem(
-                "Staff of Zalos, artifact, wizardry = 3, strength = -1",
+                "Staff of Zalos, artifact, wizardry = 3, strength = -1, bleeding",
                 [0, 0],
-                "aaa !addItem(Staff of Zalos, artifact, wizardry = 3, strength = -1) bbb"
+                "aaa !addItem(Staff of Zalos, artifact, wizardry = 3, strength = -1, bleeding) bbb"
             )
         ).toEqual(
             `Item Staff of Zalos created with attributes:

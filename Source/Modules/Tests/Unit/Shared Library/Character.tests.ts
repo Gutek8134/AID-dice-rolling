@@ -4,8 +4,6 @@ import { Stat } from "../../../Shared Library/Stat";
 import { experienceCalculation } from "../../../Shared Library/Utils";
 import { state } from "../../../proxy_state";
 
-//TODO: update for effects - structural change
-
 describe("Character creation", () => {
     it("Should create default character", () => {
         state.stats = [];
@@ -17,6 +15,7 @@ describe("Character creation", () => {
             expToNextLvl: experienceCalculation(1),
             skillpoints: 0,
             items: {},
+            activeEffects: [],
             type: "character",
             isNpc: false,
             stats: {},
@@ -36,6 +35,7 @@ describe("Character creation", () => {
             expToNextLvl: experienceCalculation(1),
             skillpoints: 0,
             items: {},
+            activeEffects: [],
             type: "character",
             isNpc: false,
             stats: {
@@ -63,6 +63,7 @@ describe("Character creation", () => {
             expToNextLvl: experienceCalculation(1),
             skillpoints: 0,
             items: {},
+            activeEffects: [],
             type: "character",
             isNpc: false,
             stats: {
@@ -89,6 +90,7 @@ describe("Character creation", () => {
             expToNextLvl: experienceCalculation(1),
             skillpoints: 0,
             items: {},
+            activeEffects: [],
             type: "character",
             isNpc: false,
             stats: {
@@ -121,6 +123,7 @@ describe("Character creation", () => {
             expToNextLvl: experienceCalculation(1),
             skillpoints: 0,
             items: {},
+            activeEffects: [],
             type: "character",
             isNpc: false,
             stats: {

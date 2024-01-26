@@ -1,11 +1,11 @@
 import equip from "../../../../Input Modifier/Commands/equip";
 import { Character } from "../../../../Shared Library/Character";
 import { Item } from "../../../../Shared Library/Item";
-import { state } from "../../../proxy_state";
+import { state } from "../../../../proxy_state";
 
 describe("Command equip", () => {
     afterEach(() => {
-        console.log(state.message);
+        // console.log(state.message);
         state.message = "";
     });
     it("Invalid args error", () => {

@@ -1,5 +1,5 @@
-import showInventory from "../../../../Input Modifier/Commands/showinventory";
-import { state } from "../../../proxy_state";
+import showInventory from "../../../../Input Modifier/Commands/showInventory";
+import { state } from "../../../../proxy_state";
 
 describe("Command show inventory", () => {
     it("Invalid args error", () => {

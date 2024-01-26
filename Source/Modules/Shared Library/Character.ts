@@ -78,6 +78,8 @@ export class Character {
             }
         }
 
+        this.activeEffects = [];
+
         //No overrides for these starting values
         this.experience = 0;
         this.expToNextLvl = experienceCalculation(this.level);

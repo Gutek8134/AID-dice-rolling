@@ -1,6 +1,9 @@
 import battle from "../../../../Input Modifier/Commands/battle";
 import { Character } from "../../../../Shared Library/Character";
-import { state } from "../../../proxy_state";
+import { Effect } from "../../../../Shared Library/Effect";
+import { Item } from "../../../../Shared Library/Item";
+import { SetFixedRollOutcome } from "../../../../Shared Library/Utils";
+import { state } from "../../../../proxy_state";
 
 describe("Command battle", () => {
     it("Invalid args error", () => {
@@ -101,5 +104,62 @@ describe("Command battle", () => {
         expect(state.active).toEqual(state[state.currentSide ?? ""]);
         expect(state.inBattle).toEqual(true);
         expect(state.out).toEqual("A battle has emerged between two groups!");
+        delete state.currentSide, state.active, state.side1, state.side2;
+        state.inBattle = false;
+    });
+
+    it("Should apply effects on battle start", () => {
+        SetFixedRollOutcome(true, 1);
+        state.stats = ["strength", "b", "c"];
+        state.characters = {
+            Zuibroldun: new Character(),
+            Miguel: new Character(),
+            John: new Character(),
+            Hed: new Character(),
+        };
+        state.effects = {
+            rage: new Effect(
+                "rage",
+                [["strength", 2]],
+                3,
+                "battle start",
+                "self",
+                "continuous"
+            ),
+            "quick attack": new Effect(
+                "quick attack",
+                [["hp", -5]],
+                1,
+                "battle start",
+                "enemy",
+                "on end",
+                true
+            ),
+        };
+        state.items = {
+            helmet: new Item("helmet", [
+                ["slot", "head"],
+                ["effect", "rage"],
+            ]),
+            dagger: new Item("dagger", [
+                ["slot", "weapon"],
+                ["effect", "quick attack"],
+            ]),
+        };
+        state.characters.Zuibroldun.items["head"] = state.items.helmet;
+        state.characters.Miguel.items["weapon"] = state.items.dagger;
+
+        let commandArguments = "(Miguel, John), (Zuibroldun, Hed)";
+        expect(
+            battle(
+                commandArguments,
+                `Test !battle(${commandArguments}) message.`
+            )
+        ).toEqual(`Test !battle(${commandArguments}) message.`);
+        expect(state.out).toEqual(`A battle has emerged between two groups!
+Zuibroldun is now under influence of quick attack.
+Zuibroldun is now under influence of rage.`);
+
+        SetFixedRollOutcome(false);
     });
 });

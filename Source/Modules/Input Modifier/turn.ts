@@ -346,7 +346,10 @@ const EndTurn = (): void => {
 
     state.activeCharacterName = activeCharacterName;
     state.activeCharacter = state.characters[state.activeCharacterName];
-    state.message = `Current turn: ${state.activeCharacterName}`;
+    if (state.message && typeof state.message == "string") {
+        state.message = state.message.replace(/\nCurrent turn: \w+/, "");
+        state.message += `\nCurrent turn: ${state.activeCharacterName}`;
+    } else state.message = `Current turn: ${state.activeCharacterName}`;
 };
 
 const ExitBattle = (): void => {

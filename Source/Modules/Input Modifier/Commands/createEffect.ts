@@ -15,9 +15,9 @@ const createEffect = (
 ): string => {
     CutCommandFromContext(modifiedText, currIndices);
 
-    //Looks for pattern name, stat=value, duration, unique?,
+    //Looks for pattern name, stat=value, duration, unique?, appliedOn?, appliedTo?, impact?
     const exp: RegExp =
-        /^(?<name>[\w ']+)(?<modifiers>(?:, [\w ']+ *= *-?\d+)+), (?<duration>\d+)(?:, (?<unique>unique|u))?(?:, (?<appliedOn>a|attack|d|defense|b|battle start))?(?:, (?<appliedTo>self|enemy))?(?:, (?<impact>on end|e|every turn|t|continuous|c))?$/i;
+        /^(?<name>[\w ']+), (?<duration>\d+)(?<modifiers>(?:, [\w ']+ *= *-?\d+)+)(?:, (?<unique>unique|u))?(?:, (?<appliedOn>a|attack|d|defense|b|battle start|n|not applied))?(?:, (?<appliedTo>self|enemy))?(?:, (?<impact>on end|e|every turn|t|continuous|c))?$/i;
     const match: RegExpMatchArray | null = commandArguments.match(exp);
 
     //Error checking
@@ -53,7 +53,7 @@ const createEffect = (
             continue;
         }
         //Stats must exist prior
-        if (!isInStats(modifier[0])) {
+        if (!isInStats(modifier[0]) && modifier[0] !== "hp") {
             state.message += `\nCreate Effect: Stat ${modifier[0]} does not exist.`;
             error = true;
         }
@@ -118,11 +118,13 @@ const createEffect = (
         match.groups.name.trim(),
         initModifiers,
         Number(match.groups.duration.trim()),
-        match.groups.unique.length > 0,
         appliedOn,
         appliedTo,
-        impact
+        impact,
+        match.groups.unique !== undefined
     );
+
+    state.effects[effect.name] = effect;
 
     modifiedText = `\nEffect ${
         effect.name

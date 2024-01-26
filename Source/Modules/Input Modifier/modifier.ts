@@ -102,6 +102,7 @@ export const modifier = (text: string): { text: string; stop?: boolean } => {
 
         //Creates indices, because d flag is not allowed
         const currIndices = [temp, temp + globalMatch[0].length];
+        globalMatch.groups.arguments = globalMatch.groups.arguments.trim();
 
         //Matches the command and forwards arguments to them
         switch (globalMatch.groups.command.toLowerCase()) {

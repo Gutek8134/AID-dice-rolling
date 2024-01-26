@@ -13,7 +13,7 @@ const applyEffect = (
 
     //Looks for pattern name, character, override duration?
     const exp: RegExp =
-        /(?<effectName>[\w ']+), (?<characterName>[\w ']+)(?:, (?<overriddenDuration>\d+))/i;
+        /^(?<effectName>[\w ']+), (?<characterName>[\w ']+)(?:, (?<overriddenDuration>\d+))?$/i;
     const match: RegExpMatchArray | null = commandArguments.match(exp);
 
     //Error checking
@@ -48,7 +48,7 @@ const applyEffect = (
                 character.activeEffects.map((effect) => effect.name)
             )
         ) {
-            state.message += `Apply Effect: Effect ${effect.name} was not applied to ${characterName}. Reason: unique effect already applied.`;
+            state.message = `Apply Effect: Effect ${effect.name} was not applied to ${characterName}. Reason: unique effect already applied.`;
             return modifiedText;
         }
 

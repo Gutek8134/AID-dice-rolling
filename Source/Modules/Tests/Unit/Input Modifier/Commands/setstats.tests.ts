@@ -1,6 +1,6 @@
-import setStats from "../../../../Input Modifier/Commands/setstats";
+import setStats from "../../../../Input Modifier/Commands/setStats";
 import { Character } from "../../../../Shared Library/Character";
-import { state } from "../../../proxy_state";
+import { state } from "../../../../proxy_state";
 
 describe("Command set stats", () => {
     it("Invalid args error", () => {

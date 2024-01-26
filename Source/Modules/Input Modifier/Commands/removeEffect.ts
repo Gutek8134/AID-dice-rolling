@@ -11,8 +11,8 @@ const removeEffect = (
 ): string => {
     CutCommandFromContext(modifiedText, currIndices);
 
-    //Looks for pattern name, character, override duration?
-    const exp: RegExp = /(?<effectName>[\w ']+), (?<characterName>[\w ']+)/i;
+    //Looks for pattern name|all, character
+    const exp: RegExp = /^(?<effectName>[\w ']+), (?<characterName>[\w ']+)$/i;
     const match: RegExpMatchArray | null = commandArguments.match(exp);
 
     //Error checking

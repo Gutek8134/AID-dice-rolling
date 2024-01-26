@@ -1,6 +1,6 @@
 import { modifier } from "../../../Input Modifier/modifier";
 import { Character } from "../../../Shared Library/Character";
-import { state } from "../../proxy_state";
+import { state } from "../../../proxy_state";
 
 describe("Input Modifier", () => {
     it("In Battle", () => {

@@ -15,118 +15,146 @@ const alterEffect = (
 ): string => {
     CutCommandFromContext(modifiedText, currIndices);
 
-    //Looks for pattern name, stat=value, duration, unique?,
+    //Looks for pattern name, stat=value, duration, unique?, appliedOn?, appliedTo?, impact?W
     const exp: RegExp =
-        /^(?<name>[\w ']+)(?<modifiers>(?:, [\w ']+ *= *-?\d+)+), (?<duration>\d+)(?:, (?<unique>unique))?(?:, (?<appliedOn>a|attack|d|defense|b|battle start))?(?:, (?<appliedTo>self|enemy))?(?:, (?<impact>on end|e|continuous|c|every turn|t))?$/i;
+        /^(?<name>[\w ']+), (?<duration>\d+)(?<modifiers>(?:, [\w ']+ *= *-?\d+)+)(?:, (?<unique>unique|u))?(?:, (?<appliedOn>a|attack|d|defense|b|battle start|n|not applied))?(?:, (?<appliedTo>self|enemy))?(?:, (?<impact>on end|e|every turn|t|continuous|c))?$/i;
     const match: RegExpMatchArray | null = commandArguments.match(exp);
 
     //Error checking
     if (!match || !match.groups) {
         state.message =
-            "Create Effect: Arguments were not given in proper format.";
+            "Alter Effect: Arguments were not given in proper format.";
         return modifiedText;
     }
 
     if (!state.effects) state.effects = {};
     if (!ElementInArray(match.groups.name, Object.keys(state.effects))) {
-        state.message = `Create Effect: Effect ${match.groups.name} doesn't exist.`;
+        state.message = `Alter Effect: Effect ${match.groups.name} doesn't exist.`;
         return modifiedText;
     }
 
-    const initModifiers: Array<[string, number]> = match.groups.modifiers
-        .substring(2)
-        .split(", ")
-        .map((el) => {
-            const temp: string[] = el.trim().split("=");
-            return [temp[0].trim(), Number(temp[1].trim())];
-        });
+    const effect: Effect = state.effects[match.groups.name];
+    const oldAttributes = EffectToString(effect);
 
-    let error = false;
-    const existingModifiers: string[] = [];
-    for (const modifier of initModifiers) {
-        if (
-            ElementInArray(modifier[0], restrictedStatNames) &&
-            modifier[0] !== "hp"
-        ) {
-            state.message += `\nCreate Effect: ${modifier[0]} cannot be set.`;
-            error = true;
-            continue;
+    let modifiers: Array<[string, number]> = [];
+
+    if (match.groups.modifiers) {
+        modifiers = match.groups.modifiers
+            .substring(2)
+            .split(", ")
+            .map((el) => {
+                const temp: string[] = el.trim().split("=");
+                return [temp[0].trim(), Number(temp[1].trim())];
+            });
+
+        let error = false;
+        const existingModifiers: string[] = [];
+        for (const modifier of modifiers) {
+            if (
+                ElementInArray(modifier[0], restrictedStatNames) &&
+                modifier[0] !== "hp"
+            ) {
+                state.message += `\nAlter Effect: ${modifier[0]} cannot be set.`;
+                error = true;
+                continue;
+            }
+            //Stats must exist prior
+            if (!isInStats(modifier[0]) && modifier[0] !== "hp") {
+                state.message += `\nAlter Effect: Stat ${modifier[0]} does not exist.`;
+                error = true;
+            }
+
+            if (ElementInArray(modifier[0], existingModifiers)) {
+                state.message += `\nAlter Effect: Stat ${modifier[0]} appears more than once.`;
+                error = true;
+            } else existingModifiers.push(modifier[0]);
         }
-        //Stats must exist prior
-        if (!isInStats(modifier[0])) {
-            state.message += `\nCreate Effect: Stat ${modifier[0]} does not exist.`;
-            error = true;
+        if (error) return modifiedText;
+
+        let overriddenModifiers: { [key: string]: number } = {};
+        for (const [stat, value] of modifiers) {
+            overriddenModifiers[stat] = value;
         }
 
-        if (ElementInArray(modifier[0], existingModifiers)) {
-            state.message += `\nCreate Effect: Stat ${modifier[0]} appears more than once.`;
-            error = true;
-        } else existingModifiers.push(modifier[0]);
-    }
-    if (error) return modifiedText;
-
-    let appliedOn: "attack" | "defense" | "battle start" | "not applied";
-    switch (match.groups.appliedOn.toLowerCase()) {
-        case "a":
-        case "attack":
-            appliedOn = "attack";
-            break;
-        case "b":
-        case "battle start":
-            appliedOn = "battle start";
-            break;
-        case "d":
-        case "defense":
-            appliedOn = "defense";
-            break;
-        default:
-            appliedOn = "not applied";
-            break;
+        effect.modifiers = overriddenModifiers;
     }
 
-    let appliedTo: "self" | "enemy";
-    switch (match.groups.appliedTo.toLowerCase()) {
-        default:
-        case "self":
-            appliedTo = "self";
-            break;
-        case "enemy":
-            appliedTo = "enemy";
-            break;
-    }
+    if (match.groups.duration)
+        effect.durationLeft = effect.baseDuration = Number(
+            match.groups.duration
+        );
 
-    let impact: "on end" | "continuous" | "every turn";
-    switch (match.groups.impact.toLowerCase()) {
-        default:
-        case "c":
-        case "continuous":
-            impact = "continuous";
-            break;
+    if (match.groups.unique)
+        switch (match.groups.unique) {
+            case "u":
+            case "unique":
+                effect.applyUnique = true;
+                break;
+            case "i":
+            case "not unique":
+                effect.applyUnique = false;
+                break;
+        }
 
-        case "e":
-        case "on end":
-            impact = "on end";
-            break;
+    if (match.groups.appliedOn)
+        switch (match.groups.appliedOn.toLowerCase()) {
+            case "a":
+            case "attack":
+                effect.appliedOn = "attack";
+                break;
 
-        case "t":
-        case "every turn":
-            impact = "every turn";
-            break;
-    }
+            case "b":
+            case "battle start":
+                effect.appliedOn = "battle start";
+                break;
 
-    const effect: Effect = new Effect(
-        match.groups.name.trim(),
-        initModifiers,
-        Number(match.groups.duration.trim()),
-        match.groups.unique.length > 0,
-        appliedOn,
-        appliedTo,
-        impact
-    );
+            case "d":
+            case "defense":
+                effect.appliedOn = "defense";
+                break;
 
-    modifiedText = `\nEffect ${
-        effect.name
-    } created with attributes:\n${EffectToString(effect)}.`;
+            case "n":
+            case "not applied":
+            default:
+                effect.appliedOn = "not applied";
+                break;
+        }
+
+    if (match.groups.appliedTo)
+        switch (match.groups.appliedTo.toLowerCase()) {
+            default:
+            case "self":
+                effect.appliedTo = "self";
+                break;
+            case "enemy":
+                effect.appliedTo = "enemy";
+                break;
+        }
+
+    if (match.groups.impact)
+        switch (match.groups.impact.toLowerCase()) {
+            default:
+            case "c":
+            case "continuous":
+                effect.impact = "continuous";
+                break;
+
+            case "e":
+            case "on end":
+                effect.impact = "on end";
+                break;
+
+            case "t":
+            case "every turn":
+                effect.impact = "every turn";
+                break;
+        }
+
+    modifiedText = `\n${
+        match.groups.name
+    }'s attributes has been altered\nfrom\n${oldAttributes}\nto\n${EffectToString(
+        effect
+    )}.`;
     return modifiedText;
 };
 

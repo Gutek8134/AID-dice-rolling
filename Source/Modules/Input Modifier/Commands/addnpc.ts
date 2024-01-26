@@ -34,12 +34,12 @@ const addNPC = (
               })
         : [];
 
-    console.log(
-        match.groups.startingItems
-            .split(",")
-            .map((el) => el.trim().substring(1))
-            .slice(1)
-    );
+    // console.log(
+    //     match.groups.startingItems
+    //         .split(",")
+    //         .map((el) => el.trim().substring(1))
+    //         .slice(1)
+    // );
     //Creates the character with stats. If none were given, every created stat is at state.startingLevel
     state.characters[characterName] = new NPC(
         values,

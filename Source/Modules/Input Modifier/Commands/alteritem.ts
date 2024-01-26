@@ -28,7 +28,7 @@ const alterItem = (
     }
 
     if (!ElementInArray(match.groups.name, Object.keys(state.items))) {
-        state.message = `Alter Item: Item ${match.groups.name} doesn't exist.`;
+        state.message = `Alter Item: Item ${match.groups.name} does not exist.`;
         if (DEBUG) {
             state.message += "\n";
             for (const key in state.items) state.message += ", " + key;
@@ -48,9 +48,11 @@ const alterItem = (
         });
 
     const effectNames = match.groups.effectNames
-        .substring(2)
-        .split(", ")
-        .map<string>((el) => el.trim());
+        ? match.groups.effectNames
+              .substring(2)
+              .split(", ")
+              .map<string>((el) => el.trim())
+        : [];
 
     //Stats must exist prior
     let error: boolean = false;
@@ -68,7 +70,7 @@ const alterItem = (
 
     for (const name of effectNames) {
         if (!ElementInArray(name, Object.keys(state.effects))) {
-            state.message += `\nAlter Item: Effect ${name} doesn't exist.`;
+            state.message += `\nAlter Item: Effect ${name} does not exist.`;
             error = true;
         }
     }

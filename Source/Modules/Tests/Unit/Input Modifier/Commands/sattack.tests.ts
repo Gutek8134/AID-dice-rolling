@@ -8,7 +8,7 @@ import {
     SetDisableDodge,
     experienceCalculation,
 } from "../../../../Shared Library/Utils";
-import { state } from "../../../proxy_state";
+import { state } from "../../../../proxy_state";
 
 describe("Command special attack", () => {
     it("Invalid args error", () => {
@@ -493,7 +493,7 @@ Miguel Booble's fireproof has levelled up to level 2! message.`)
             "Miguel Bootle": new NPC([["hp", 1]]),
         };
 
-        console.log(state.characters["Miguel Booble"]);
+        // console.log(state.characters["Miguel Booble"]);
 
         const commandArguments =
             "Zuibroldun Jodem, explosion, Miguel Booble, fireproof";
