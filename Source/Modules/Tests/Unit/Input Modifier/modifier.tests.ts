@@ -20,4 +20,14 @@ describe("Input Modifier", () => {
 
         expect(cache).toEqual(state.in);
     });
+
+    it("Run Command", () => {
+        expect(
+            modifier(
+                " !addcharacter(Zuibroldun Jodem, dexterity=3, nano machines = 5)"
+            ).text
+        ).toEqual(
+            " !addcharacter(Zuibroldun Jodem, dexterity=3, nano machines = 5)"
+        );
+    });
 });

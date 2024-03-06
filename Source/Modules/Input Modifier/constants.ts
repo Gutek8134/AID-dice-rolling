@@ -10,15 +10,6 @@ export let damageOutputs: [number, string][] = [
     [100, "a killing blow"],
 ];
 
-//Contains every type of equipment you can wear and have
-export let equipmentParts: string[] = [
-    "helmet",
-    "armor",
-    "leggins",
-    "weapon",
-    "artifact",
-];
-
 export let restrictedStatNames: string[] = [
     "hp",
     "level",
@@ -49,9 +40,6 @@ export let defendingCharacterLevels: boolean = false;
 //Debug purposes only
 export const SetDamageOutputs = (inValue: [number, string][]) => {
     damageOutputs = inValue;
-};
-export const SetEquipmentParts = (inValue: string[]) => {
-    equipmentParts = inValue;
 };
 export const SetIgnoredValues = (inValue: string[]) => {
     restrictedStatNames = inValue;

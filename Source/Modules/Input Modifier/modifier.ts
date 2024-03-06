@@ -29,7 +29,7 @@ import applyEffect from "./Commands/applyEffect";
 import removeEffect from "./Commands/removeEffect";
 
 export const DEBUG: boolean = false;
-export const InfoOutput: "out" | "message" = "message";
+export const InfoOutput: "out" | "message" = "out";
 
 const CommandsAccessibleInBattle: string[] = [
     "heal",
@@ -56,7 +56,7 @@ const RunCommand = (
     globalMatch: RegExpMatchArray,
     currIndices: number[]
 ): string => {
-    let modifiedText = "";
+    let modifiedText = textCopy;
     if (globalMatch.groups) {
         if (
             state.inBattle &&
@@ -300,7 +300,8 @@ export const modifier = (text: string): { text: string; stop?: boolean } => {
     SetupState();
     //Resets values
     state.out = state.ctxt = "";
-    state[InfoOutput] = " ";
+    state.seenOutput = false;
+    state[InfoOutput] = "";
     let modifiedText = text,
         textCopy = text;
 
@@ -368,7 +369,6 @@ export const modifier = (text: string): { text: string; stop?: boolean } => {
 
         //Matches the command and forwards arguments to them
         modifiedText = RunCommand(textCopy, globalMatch, currIndices);
-        if (state.ctxt.length <= 1) state.ctxt = " \n";
     }
     //#endregion globalCommand
     state.in = modifiedText;

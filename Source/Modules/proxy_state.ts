@@ -17,6 +17,7 @@ export const state: {
     items: { [key: string]: Item };
     characters: { [key: string]: Character };
     effects: { [key: string]: Effect };
+    seenOutput: boolean;
 
     //Used in modifiers other than Input
     in: string;
@@ -46,6 +47,7 @@ export const state: {
     skillpointsOnLevelUp: 5,
     items: {},
     effects: {},
+    seenOutput: false,
     inventory: [],
     in: "",
     ctxt: "",
