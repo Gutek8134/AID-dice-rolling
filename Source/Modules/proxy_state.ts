@@ -10,6 +10,7 @@ export const state: {
     startingHP: number;
     punishment: number;
     skillpointsOnLevelUp: number;
+    runEffectsOutsideBattle: boolean;
 
     //Data
     inventory: string[];
@@ -39,6 +40,7 @@ export const state: {
     dice: 20,
     startingLevel: 1,
     startingHP: 100,
+    runEffectsOutsideBattle: false,
     characters: {},
     punishment: 5,
     skillpointsOnLevelUp: 5,

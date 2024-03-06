@@ -2,6 +2,7 @@ import { Character } from "../../Shared Library/Character";
 import { Effect, InstanceEffect } from "../../Shared Library/Effect";
 import { CharacterToString, ElementInArray } from "../../Shared Library/Utils";
 import { state } from "../../proxy_state";
+import { InfoOutput } from "../modifier";
 import { CutCommandFromContext } from "./commandutils";
 
 const applyEffect = (
@@ -18,7 +19,7 @@ const applyEffect = (
 
     //Error checking
     if (!match || !match.groups) {
-        state.message =
+        state[InfoOutput] =
             "Apply Effect: Arguments were not given in proper format.";
         return modifiedText;
     }
@@ -28,12 +29,25 @@ const applyEffect = (
     const overriddenDurationAsString: string = match.groups.overriddenDuration;
 
     if (!ElementInArray(effectName, Object.keys(state.effects))) {
-        state.message = `Apply Effect: Effect ${effectName} does not exist.`;
+        state[
+            InfoOutput
+        ] = `Apply Effect: Effect ${effectName} does not exist.`;
         return modifiedText;
     }
 
     if (!ElementInArray(characterName, Object.keys(state.characters))) {
-        state.message = `Apply Effect: Character ${characterName} does not exist.`;
+        state[
+            InfoOutput
+        ] = `Apply Effect: Character ${characterName} does not exist.`;
+        return modifiedText;
+    }
+
+    if (
+        overriddenDurationAsString &&
+        !Number.isInteger(overriddenDurationAsString)
+    ) {
+        state[InfoOutput] =
+            "Apply Effect: Overridden duration is not a whole number.";
         return modifiedText;
     }
 
@@ -48,7 +62,9 @@ const applyEffect = (
                 character.activeEffects.map((effect) => effect.name)
             )
         ) {
-            state.message = `Apply Effect: Effect ${effect.name} was not applied to ${characterName}. Reason: unique effect already applied.`;
+            state[
+                InfoOutput
+            ] = `Apply Effect: Effect ${effect.name} was not applied to ${characterName}. Reason: unique effect already applied.`;
             return modifiedText;
         }
 

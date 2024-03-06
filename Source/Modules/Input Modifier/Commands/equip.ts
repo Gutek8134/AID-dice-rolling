@@ -1,6 +1,6 @@
 import { ElementInArray, _equip } from "../../Shared Library/Utils";
 import { state } from "../../proxy_state";
-import { DEBUG } from "../modifier";
+import { DEBUG, InfoOutput } from "../modifier";
 import { CutCommandFromContext } from "./commandutils";
 
 const equip = (
@@ -11,7 +11,7 @@ const equip = (
     CutCommandFromContext(modifiedText, currIndices);
     //Error checking
     if (!commandArguments) {
-        state.message = "Equip Item: No arguments found.";
+        state[InfoOutput] = "Equip Item: No arguments found.";
         return DEBUG ? "error" : modifiedText;
     }
 
@@ -21,7 +21,7 @@ const equip = (
 
     //Error checking
     if (!match || !match?.groups) {
-        state.message =
+        state[InfoOutput] =
             "Equip Item: Arguments were not given in proper format.";
         return DEBUG ? "error" : modifiedText;
     }
@@ -34,17 +34,21 @@ const equip = (
             .map((x) => x.trim());
 
     if (!ElementInArray(characterName, Object.keys(state.characters))) {
-        state.message = `Equip Item: Character ${characterName} doesn't exist.`;
+        state[
+            InfoOutput
+        ] = `Equip Item: Character ${characterName} doesn't exist.`;
         return DEBUG ? "error" : modifiedText;
     }
     for (const name of itemNames) {
         if (!ElementInArray(name, Object.keys(state.items))) {
-            state.message = `Equip Item: Item ${name} doesn't exist.`;
+            state[InfoOutput] = `Equip Item: Item ${name} doesn't exist.`;
             return DEBUG ? "error" : modifiedText;
         }
 
         if (!ElementInArray(name, state.inventory)) {
-            state.message = `Equip Item: You don't have item ${name} in your inventory.`;
+            state[
+                InfoOutput
+            ] = `Equip Item: You don't have item ${name} in your inventory.`;
             return DEBUG ? "error" : modifiedText;
         }
     }

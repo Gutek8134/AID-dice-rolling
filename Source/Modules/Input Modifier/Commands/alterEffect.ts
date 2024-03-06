@@ -6,6 +6,7 @@ import {
 } from "../../Shared Library/Utils";
 import { state } from "../../proxy_state";
 import { restrictedStatNames } from "../constants";
+import { InfoOutput } from "../modifier";
 import { CutCommandFromContext } from "./commandutils";
 
 const alterEffect = (
@@ -17,19 +18,21 @@ const alterEffect = (
 
     //Looks for pattern name, stat=value, duration, unique?, appliedOn?, appliedTo?, impact?W
     const exp: RegExp =
-        /^(?<name>[\w ']+), (?<duration>\d+)(?<modifiers>(?:, [\w ']+ *= *-?\d+)+)(?:, (?<unique>unique|u))?(?:, (?<appliedOn>a|attack|d|defense|b|battle start|n|not applied))?(?:, (?<appliedTo>self|enemy))?(?:, (?<impact>on end|e|every turn|t|continuous|c))?$/i;
+        /^(?<name>[\w ']+)(?<duration>, \d+)?(?<modifiers>(?:, [\w ']+ *= *-?\d+)+)(?:, (?<unique>unique|u))?(?:, (?<appliedOn>a|attack|d|defense|b|battle start|n|not applied))?(?:, (?<appliedTo>self|enemy))?(?:, (?<impact>on end|e|every turn|t|continuous|c))?$/i;
     const match: RegExpMatchArray | null = commandArguments.match(exp);
 
     //Error checking
     if (!match || !match.groups) {
-        state.message =
+        state[InfoOutput] =
             "Alter Effect: Arguments were not given in proper format.";
         return modifiedText;
     }
 
     if (!state.effects) state.effects = {};
     if (!ElementInArray(match.groups.name, Object.keys(state.effects))) {
-        state.message = `Alter Effect: Effect ${match.groups.name} doesn't exist.`;
+        state[
+            InfoOutput
+        ] = `Alter Effect: Effect ${match.groups.name} doesn't exist.`;
         return modifiedText;
     }
 
@@ -54,18 +57,24 @@ const alterEffect = (
                 ElementInArray(modifier[0], restrictedStatNames) &&
                 modifier[0] !== "hp"
             ) {
-                state.message += `\nAlter Effect: ${modifier[0]} cannot be set.`;
+                state[
+                    InfoOutput
+                ] += `\nAlter Effect: ${modifier[0]} cannot be set.`;
                 error = true;
                 continue;
             }
             //Stats must exist prior
             if (!isInStats(modifier[0]) && modifier[0] !== "hp") {
-                state.message += `\nAlter Effect: Stat ${modifier[0]} does not exist.`;
+                state[
+                    InfoOutput
+                ] += `\nAlter Effect: Stat ${modifier[0]} does not exist.`;
                 error = true;
             }
 
             if (ElementInArray(modifier[0], existingModifiers)) {
-                state.message += `\nAlter Effect: Stat ${modifier[0]} appears more than once.`;
+                state[
+                    InfoOutput
+                ] += `\nAlter Effect: Stat ${modifier[0]} appears more than once.`;
                 error = true;
             } else existingModifiers.push(modifier[0]);
         }
@@ -79,10 +88,18 @@ const alterEffect = (
         effect.modifiers = overriddenModifiers;
     }
 
-    if (match.groups.duration)
+    if (match.groups.duration) {
+        match.groups.duration = match.groups.duration.substring(2);
+        if (!Number.isInteger(Number(match.groups.duration))) {
+            state[InfoOutput] =
+                "Create Effect: Duration is not a whole number.";
+            return modifiedText;
+        }
+
         effect.durationLeft = effect.baseDuration = Number(
             match.groups.duration
         );
+    }
 
     if (match.groups.unique)
         switch (match.groups.unique) {

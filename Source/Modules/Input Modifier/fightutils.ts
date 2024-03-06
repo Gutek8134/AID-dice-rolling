@@ -8,6 +8,7 @@ import {
     defendingCharacterLevels,
     ignoreZeroDiv,
 } from "./constants";
+import { InfoOutput } from "./modifier";
 
 export const CustomDamageOutput = (
     damage: number,
@@ -118,7 +119,9 @@ export const DealDamage = (
         state.characters[attackingCharacterName] = new Character();
         attackingCharacter = state.characters[attackingCharacterName];
     } else if (attackingCharacter.hp <= 0) {
-        state.message = `${debugPrefix}: Character ${attackingCharacterName} cannot attack, because they are dead.`;
+        state[
+            InfoOutput
+        ] = `${debugPrefix}: Character ${attackingCharacterName} cannot attack, because they are dead.`;
         return { attackOutput: "", levelOutput: "", contextOutput: "" };
     }
 
@@ -126,7 +129,9 @@ export const DealDamage = (
         state.characters[defendingCharacterName] = new Character();
         defendingCharacter = state.characters[defendingCharacterName];
     } else if (defendingCharacter.hp <= 0) {
-        state.message = `${debugPrefix}: Character ${defendingCharacterName} cannot be attacked, because they are dead.`;
+        state[
+            InfoOutput
+        ] = `${debugPrefix}: Character ${defendingCharacterName} cannot be attacked, because they are dead.`;
         return { attackOutput: "", levelOutput: "", contextOutput: "" };
     }
 
@@ -166,10 +171,13 @@ export const DealDamage = (
     //Damaging
     state.characters[defendingCharacterName].hp -= damageInflicted;
 
-    const effectsText: string = ApplyEffectsOnAttack(
-        attackingCharacterName,
-        defendingCharacterName
-    );
+    let effectsText: string = "";
+    if (state.inBattle) {
+        effectsText = ApplyEffectsOnAttack(
+            attackingCharacterName,
+            defendingCharacterName
+        );
+    }
     //Gives the player necessary info.
     const attackOutput = `${attackingCharacterName} (${attackStatName}: ${attackingCharacterStatLevelWithMods}${
         attackModifier === 0
@@ -257,7 +265,9 @@ export const DealDamageIfNotDodged = (
         state.characters[attackingCharacterName] = new Character();
         attackingCharacter = state.characters[attackingCharacterName];
     } else if (attackingCharacter.hp <= 0) {
-        state.message = `${debugPrefix}: Character ${attackingCharacterName} cannot attack, because they are dead.`;
+        state[
+            InfoOutput
+        ] = `${debugPrefix}: Character ${attackingCharacterName} cannot attack, because they are dead.`;
         return { attackOutput: "", levelOutput: "", contextOutput: "" };
     }
 
@@ -265,7 +275,9 @@ export const DealDamageIfNotDodged = (
         state.characters[defendingCharacterName] = new Character();
         defendingCharacter = state.characters[defendingCharacterName];
     } else if (defendingCharacter.hp <= 0) {
-        state.message = `${debugPrefix}: Character ${defendingCharacterName} cannot be attacked, because they are dead.`;
+        state[
+            InfoOutput
+        ] = `${debugPrefix}: Character ${defendingCharacterName} cannot be attacked, because they are dead.`;
         return { attackOutput: "", levelOutput: "", contextOutput: "" };
     }
 

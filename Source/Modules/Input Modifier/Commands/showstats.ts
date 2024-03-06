@@ -1,5 +1,6 @@
 import { CharacterToString, ElementInArray } from "../../Shared Library/Utils";
 import { state } from "../../proxy_state";
+import { InfoOutput } from "../modifier";
 import { CutCommandFromContext } from "./commandutils";
 
 const showStats = (
@@ -15,7 +16,7 @@ const showStats = (
 
     //Null check
     if (!match || !match.groups) {
-        state.message =
+        state[InfoOutput] =
             "Show Stats: Arguments were not given in proper format.";
         return modifiedText;
     }
@@ -23,7 +24,9 @@ const showStats = (
     //Grabbing info
     const characterName = match.groups.character;
     if (!ElementInArray(characterName, Object.keys(state.characters))) {
-        state.message = `Show Stats: Character ${characterName} doesn't exist.`;
+        state[
+            InfoOutput
+        ] = `Show Stats: Character ${characterName} doesn't exist.`;
         return modifiedText;
     }
     const character = state.characters[characterName];

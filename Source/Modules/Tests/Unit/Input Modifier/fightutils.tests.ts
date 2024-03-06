@@ -156,6 +156,7 @@ Miguel Booble has retreated.`
                 "continuous"
             ),
         };
+        state.inBattle = true;
         state.characters["Zuibroldun Jodem"].items["weapon"] = new Item(
             "staff of zalos",
             [["effect", "bleeding"]]
@@ -181,6 +182,7 @@ Miguel Booble is now under influence of protection.`);
             .toEqual(`Zuibroldun Jodem attacked Miguel Booble dealing light damage.
 Miguel Booble is now under influence of bleeding.
 Miguel Booble is now under influence of protection.`);
+        state.inBattle = false;
     });
 
     it("Deal Damage if not Dodged", () => {

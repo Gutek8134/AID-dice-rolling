@@ -3,6 +3,7 @@ import { Character } from "./Character";
 import { ElementInArray, experienceCalculation } from "./Utils";
 import { GetStatWithMods } from "../Input Modifier/characterutils";
 import { levellingToOblivion } from "../Input Modifier/constants";
+import { InfoOutput } from "../Input Modifier/modifier";
 
 /**
  * Data Class
@@ -61,7 +62,9 @@ export const InstanceEffect = (
                 character.activeEffects.map((effect) => effect.name)
             )
         ) {
-            state.message += `Effect ${effect.name} was not applied to ${characterName}, because it is already applied.`;
+            state[
+                InfoOutput
+            ] += `\nEffect ${effect.name} was not applied to ${characterName}, because it is already applied.`;
             return "";
         }
 
@@ -115,7 +118,7 @@ export const RunEffect = (characterName: string, effect: Effect) => {
                         );
             }
         }
-        state.message += `\n${characterName} ${
+        state[InfoOutput] += `\n${characterName} ${
             effect.modifiers[modifier] < 0 ? "lost" : "gained"
         } ${Math.abs(effect.modifiers[modifier])} ${modifier}, currently has ${
             modifier === "hp" || modifier === "experience"
@@ -123,5 +126,7 @@ export const RunEffect = (characterName: string, effect: Effect) => {
                 : character.stats[modifier].level
         }.`;
     }
-    state.message += `\nDuration left of effect ${effect.name} on ${characterName}: ${effect.durationLeft}.`;
+    state[
+        InfoOutput
+    ] += `\nDuration left of effect ${effect.name} on ${characterName}: ${effect.durationLeft}.`;
 };

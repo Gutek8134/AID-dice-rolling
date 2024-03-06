@@ -16,6 +16,10 @@ const SetupState = (): void => {
             ? 5
             : state.skillpointsOnLevelUp;
     state.inBattle = state.inBattle === undefined ? false : state.inBattle;
+    state.runEffectsOutsideBattle =
+        state.runEffectsOutsideBattle === undefined
+            ? false
+            : state.runEffectsOutsideBattle;
 };
 
 export default SetupState;

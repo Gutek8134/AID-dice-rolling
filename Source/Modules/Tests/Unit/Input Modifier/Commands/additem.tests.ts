@@ -136,10 +136,11 @@ describe("Command add item", () => {
         expect(
             addItem(
                 "Staff of Zalos, artifact, wizardry = 3, strength = -1, bleeding",
-                [0, 0],
+                [4, 77],
                 "aaa !addItem(Staff of Zalos, artifact, wizardry = 3, strength = -1, bleeding) bbb"
             )
-        ).toEqual(
+        ).toEqual("aaa  bbb");
+        expect(state.out).toEqual(
             `Item Staff of Zalos created with attributes:
 ${ItemToString(testItem)}.`
         );
@@ -159,13 +160,12 @@ ${ItemToString(testItem)}.`
             ["strength", -1],
         ]);
 
-        expect(
-            addItem(
-                "Staff of Zalos, artifact, wizardry = 3, strength = -1, inventory",
-                [0, 0],
-                "aaa !addItem(Staff of Zalos, artifact, wizardry = 3, strength = -1, inventory) bbb"
-            )
-        ).toEqual(
+        addItem(
+            "Staff of Zalos, artifact, wizardry = 3, strength = -1, inventory",
+            [0, 0],
+            "aaa !addItem(Staff of Zalos, artifact, wizardry = 3, strength = -1, inventory) bbb"
+        );
+        expect(state.out).toEqual(
             `Item Staff of Zalos created with attributes:
 ${ItemToString(testItem)}.
 Item Staff of Zalos was put into inventory.`
@@ -187,13 +187,12 @@ Item Staff of Zalos was put into inventory.`
             ["strength", -1],
         ]);
 
-        expect(
-            addItem(
-                "Staff of Zalos, artifact, wizardry = 3, strength = -1, equip, Zuibroldun Jodem",
-                [0, 0],
-                "aaa !addItem(Staff of Zalos, artifact, wizardry = 3, strength = -1, equip, Zuibroldun Jodem) bbb"
-            )
-        ).toEqual(
+        addItem(
+            "Staff of Zalos, artifact, wizardry = 3, strength = -1, equip, Zuibroldun Jodem",
+            [0, 0],
+            "aaa !addItem(Staff of Zalos, artifact, wizardry = 3, strength = -1, equip, Zuibroldun Jodem) bbb"
+        );
+        expect(state.out).toEqual(
             `Item Staff of Zalos created with attributes:
 ${ItemToString(testItem)}.
 Character Zuibroldun Jodem equipped Staff of Zalos.`

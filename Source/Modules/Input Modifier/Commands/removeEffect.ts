@@ -2,6 +2,7 @@ import { Character } from "../../Shared Library/Character";
 import { RemoveEffect } from "../../Shared Library/Effect";
 import { CharacterToString, ElementInArray } from "../../Shared Library/Utils";
 import { state } from "../../proxy_state";
+import { InfoOutput } from "../modifier";
 import { CutCommandFromContext } from "./commandutils";
 
 const removeEffect = (
@@ -17,7 +18,7 @@ const removeEffect = (
 
     //Error checking
     if (!match || !match.groups) {
-        state.message =
+        state[InfoOutput] =
             "Remove Effect: Arguments were not given in proper format.";
         return modifiedText;
     }
@@ -29,12 +30,16 @@ const removeEffect = (
         !ElementInArray(effectName, Object.keys(state.effects)) &&
         effectName !== "all"
     ) {
-        state.message = `Remove Effect: Effect ${effectName} does not exist.`;
+        state[
+            InfoOutput
+        ] = `Remove Effect: Effect ${effectName} does not exist.`;
         return modifiedText;
     }
 
     if (!ElementInArray(characterName, Object.keys(state.characters))) {
-        state.message = `Remove Effect: Character ${characterName} does not exist.`;
+        state[
+            InfoOutput
+        ] = `Remove Effect: Character ${characterName} does not exist.`;
         return modifiedText;
     }
 
@@ -55,7 +60,9 @@ ${CharacterToString(character)}`;
             character.activeEffects.map((effect) => effect.name)
         )
     ) {
-        state.message += `Remove Effect: Character ${characterName} is not under influence of effect ${effectName}.`;
+        state[
+            InfoOutput
+        ] += `Remove Effect: Character ${characterName} is not under influence of effect ${effectName}.`;
         return modifiedText;
     }
 

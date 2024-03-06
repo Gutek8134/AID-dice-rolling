@@ -1,7 +1,7 @@
 import { Character } from "../../Shared Library/Character";
 import { ElementInArray } from "../../Shared Library/Utils";
 import { state } from "../../proxy_state";
-import { DEBUG } from "../modifier";
+import { DEBUG, InfoOutput } from "../modifier";
 import { CutCommandFromContext } from "./commandutils";
 
 const unequip = (
@@ -17,7 +17,8 @@ const unequip = (
 
     //Error checking
     if (!match || !match.groups) {
-        state.message = "Unequip: Arguments were not given in proper format.";
+        state[InfoOutput] =
+            "Unequip: Arguments were not given in proper format.";
         return modifiedText;
     }
 
@@ -26,7 +27,9 @@ const unequip = (
 
     //Checks if character exists
     if (!ElementInArray(characterName, Object.keys(state.characters))) {
-        state.message = `Unequip: Character ${characterName} doesn't exist.`;
+        state[
+            InfoOutput
+        ] = `Unequip: Character ${characterName} doesn't exist.`;
         return DEBUG ? "error" : modifiedText;
     }
 

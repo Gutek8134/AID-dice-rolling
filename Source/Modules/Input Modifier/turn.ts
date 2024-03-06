@@ -16,6 +16,7 @@ import {
 } from "./constants";
 import { ApplyEffectsOnAttack, CustomDamageOutput } from "./fightutils";
 import { RemoveEffect, RunEffect } from "../Shared Library/Effect";
+import { InfoOutput } from "./modifier";
 // import { DEBUG } from "./modifier";
 
 /**
@@ -40,7 +41,7 @@ export const turn = (textCopy: string): void => {
     //Attacking character set and is not an NPC
     if (!state.activeCharacter.isNpc) {
         if (!state.activeCharacterName) {
-            state.message = "Battle turn: active character name not found.";
+            state[InfoOutput] = "Battle turn: active character name not found.";
             return;
         }
 
@@ -51,7 +52,7 @@ export const turn = (textCopy: string): void => {
 
         // Player written something wrong
         if (!match || !match?.groups) {
-            state.message =
+            state[InfoOutput] =
                 "Battle turn: In battle you can only retreat or attack.\nFor further information read !battle section of README.";
             return;
         }
@@ -118,7 +119,7 @@ export const turn = (textCopy: string): void => {
             state.activeCharacterName;
 
         if (!attackingCharacterName) {
-            state.message =
+            state[InfoOutput] =
                 "Battle turn: ERROR active character name is undefined";
             return;
         }
@@ -171,7 +172,9 @@ const takeTurn = (
         );
 
     if (!ElementInArray(defendingCharacterName, attackedSideCharactersNames)) {
-        state.message = `Battle turn: character ${defendingCharacterName} doesn't belong to the other side of the battle.`;
+        state[
+            InfoOutput
+        ] = `Battle turn: character ${defendingCharacterName} doesn't belong to the other side of the battle.`;
         return;
     }
 
@@ -307,7 +310,7 @@ const takeTurn = (
 
     //Checks if the battle should end after every attack
     if (!state.side1?.length) {
-        state.message =
+        state[InfoOutput] =
             "HP of all party members dropped to 0. Party retreated.";
         state.out += "\nThe adventurers retreated, overwhelmed by the enemy.";
         ExitBattle();
@@ -315,7 +318,7 @@ const takeTurn = (
     } else if (!state.side2?.length) {
         state.out += "\nThe adventurers have won the battle.";
         ExitBattle();
-        state.message = "You have won the battle!";
+        state[InfoOutput] = "You have won the battle!";
         return;
     }
 
@@ -340,22 +343,34 @@ const EndTurn = (): void => {
     const activeCharacterName = state.active?.[nextActiveCharacterIndex];
 
     if (!activeCharacterName) {
-        state.message = "Battle turn: ERROR active character is undefined.";
+        state[InfoOutput] = "Battle turn: ERROR active character is undefined.";
         return;
     }
 
     state.activeCharacterName = activeCharacterName;
     state.activeCharacter = state.characters[state.activeCharacterName];
-    if (state.message && typeof state.message == "string") {
-        state.message = state.message.replace(/\nCurrent turn: \w+/, "");
-        state.message += `\nCurrent turn: ${state.activeCharacterName}`;
-    } else state.message = `Current turn: ${state.activeCharacterName}`;
+    if (state[InfoOutput] && typeof state[InfoOutput] == "string") {
+        state[InfoOutput] = state[InfoOutput].replace(
+            /\nCurrent turn: \w+/,
+            ""
+        );
+        state[InfoOutput] += `\nCurrent turn: ${state.activeCharacterName}`;
+    } else state[InfoOutput] = `Current turn: ${state.activeCharacterName}`;
 };
 
 const ExitBattle = (): void => {
     state.inBattle = false;
+    state.side1 = state.side1 ?? [];
+    state.side2 = state.side2 ?? [];
+    for (const characterName of state.side1.concat(state.side2)) {
+        const character = state.characters[characterName];
+        character.activeEffects ??= [];
+        for (const effect of character.activeEffects) {
+            state.out += RemoveEffect(characterName, effect.name);
+        }
+    }
     delete state.activeCharacter, state.activeCharacterName, state.active;
     delete state.side1, state.side2;
     delete state.currentSide;
-    state.message = "";
+    state[InfoOutput] = "";
 };

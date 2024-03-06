@@ -6,6 +6,7 @@ import {
 } from "../../Shared Library/Utils";
 import { state } from "../../proxy_state";
 import { restrictedStatNames } from "../constants";
+import { InfoOutput } from "../modifier";
 import { CutCommandFromContext } from "./commandutils";
 
 const createEffect = (
@@ -22,14 +23,16 @@ const createEffect = (
 
     //Error checking
     if (!match || !match.groups) {
-        state.message =
+        state[InfoOutput] =
             "Create Effect: Arguments were not given in proper format.";
         return modifiedText;
     }
 
     if (!state.effects) state.effects = {};
     if (ElementInArray(match.groups.name, Object.keys(state.effects))) {
-        state.message = `Create Effect: Effect ${match.groups.name} already exists.`;
+        state[
+            InfoOutput
+        ] = `Create Effect: Effect ${match.groups.name} already exists.`;
         return modifiedText;
     }
 
@@ -48,22 +51,33 @@ const createEffect = (
             ElementInArray(modifier[0], restrictedStatNames) &&
             modifier[0] !== "hp"
         ) {
-            state.message += `\nCreate Effect: ${modifier[0]} cannot be set.`;
+            state[
+                InfoOutput
+            ] += `\nCreate Effect: ${modifier[0]} cannot be set.`;
             error = true;
             continue;
         }
         //Stats must exist prior
         if (!isInStats(modifier[0]) && modifier[0] !== "hp") {
-            state.message += `\nCreate Effect: Stat ${modifier[0]} does not exist.`;
+            state[
+                InfoOutput
+            ] += `\nCreate Effect: Stat ${modifier[0]} does not exist.`;
             error = true;
         }
 
         if (ElementInArray(modifier[0], existingModifiers)) {
-            state.message += `\nCreate Effect: Stat ${modifier[0]} appears more than once.`;
+            state[
+                InfoOutput
+            ] += `\nCreate Effect: Stat ${modifier[0]} appears more than once.`;
             error = true;
         } else existingModifiers.push(modifier[0]);
     }
     if (error) return modifiedText;
+
+    if (!Number.isInteger(Number(match.groups.duration))) {
+        state[InfoOutput] = "Create Effect: Duration is not a whole number.";
+        return modifiedText;
+    }
 
     let appliedOn: "attack" | "defense" | "battle start" | "not applied";
     switch (match.groups.appliedOn.toLowerCase()) {

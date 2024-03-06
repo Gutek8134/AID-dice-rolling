@@ -2,6 +2,7 @@ import { Character } from "../../Shared Library/Character";
 import { Effect, InstanceEffect } from "../../Shared Library/Effect";
 import { ElementInArray, diceRoll } from "../../Shared Library/Utils";
 import { state } from "../../proxy_state";
+import { InfoOutput } from "../modifier";
 import { turn } from "../turn";
 
 const battle = (commandArguments: string, modifiedText: string): string => {
@@ -11,7 +12,7 @@ const battle = (commandArguments: string, modifiedText: string): string => {
         commandArguments === null ||
         commandArguments === ""
     ) {
-        state.message = "Battle: No arguments found.";
+        state[InfoOutput] = "Battle: No arguments found.";
         return modifiedText;
     }
 
@@ -22,7 +23,13 @@ const battle = (commandArguments: string, modifiedText: string): string => {
 
     //Error checking
     if (match === null || !match.groups) {
-        state.message = "Battle: Arguments were not given in proper format.";
+        state[InfoOutput] =
+            "Battle: Arguments were not given in proper format.";
+        return modifiedText;
+    }
+
+    if (state.inBattle) {
+        state[InfoOutput] = "Battle: You are already in a battle.";
         return modifiedText;
     }
 
@@ -53,25 +60,35 @@ const battle = (commandArguments: string, modifiedText: string): string => {
     for (const characterName of side1CharactersNames) {
         if (ElementInArray(characterName, Object.keys(state.characters))) {
             if (state.characters[characterName].hp <= 0) {
-                state.message = `Battle: Character ${characterName} is dead and cannot participate in battle.`;
+                state[
+                    InfoOutput
+                ] = `Battle: Character ${characterName} is dead and cannot participate in battle.`;
                 return modifiedText;
             }
             if (ElementInArray(characterName, side2CharactersNames)) {
-                state.message = `Battle: Character ${characterName} cannot belong to both sides of the battle.`;
+                state[
+                    InfoOutput
+                ] = `Battle: Character ${characterName} cannot belong to both sides of the battle.`;
                 return modifiedText;
             }
         } else {
             //console.log(`${el}\n\n${state.characters}`);
-            state.message = `Battle: Character ${characterName} doesn't exist.`;
+            state[
+                InfoOutput
+            ] = `Battle: Character ${characterName} doesn't exist.`;
             return modifiedText;
         }
     }
     for (const characterName of side2CharactersNames) {
         if (!ElementInArray(characterName, Object.keys(state.characters))) {
-            state.message = `Battle: Character ${characterName} doesn't exist.`;
+            state[
+                InfoOutput
+            ] = `Battle: Character ${characterName} doesn't exist.`;
             return modifiedText;
         } else if (state.characters[characterName].hp <= 0) {
-            state.message = `Battle: Character ${characterName} is dead and cannot participate in battle.`;
+            state[
+                InfoOutput
+            ] = `Battle: Character ${characterName} is dead and cannot participate in battle.`;
             return modifiedText;
         }
     }

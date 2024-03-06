@@ -19,6 +19,7 @@ describe("State setup", () => {
             in: "",
             message: "",
             out: "",
+            runEffectsOutsideBattle: false,
         };
         SetupState();
 

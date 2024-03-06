@@ -1,6 +1,7 @@
 import { Character } from "../../Shared Library/Character";
 import { ElementInArray, diceRoll } from "../../Shared Library/Utils";
 import { state } from "../../proxy_state";
+import { InfoOutput } from "../modifier";
 import { CutCommandFromContext } from "./commandutils";
 
 const heal = (
@@ -16,7 +17,7 @@ const heal = (
 
     //Null check
     if (!match || !match.groups) {
-        state.message = "Heal: Arguments were not given in proper format.";
+        state[InfoOutput] = "Heal: Arguments were not given in proper format.";
         return modifiedText;
     }
 
@@ -24,7 +25,7 @@ const heal = (
     const characterName: string = match.groups.character;
     //Checks if character exists
     if (!ElementInArray(characterName, Object.keys(state.characters))) {
-        state.message = `Heal: Character ${characterName} does not exist.`;
+        state[InfoOutput] = `Heal: Character ${characterName} does not exist.`;
         return modifiedText;
     }
 
@@ -32,7 +33,8 @@ const heal = (
     const character: Character = state.characters[characterName];
     //Checks if character is dead
     if (character.hp < 1) {
-        state.message = "Heal: Dead characters must be revived before healing.";
+        state[InfoOutput] =
+            "Heal: Dead characters must be revived before healing.";
         return modifiedText;
     }
 

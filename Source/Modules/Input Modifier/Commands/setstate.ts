@@ -1,4 +1,5 @@
 import { state } from "../../proxy_state";
+import { InfoOutput } from "../modifier";
 import { CutCommandFromContext } from "./commandutils";
 
 const setState = (
@@ -14,7 +15,7 @@ const setState = (
 
     //Null check
     if (!match || !match.groups) {
-        state.message =
+        state[InfoOutput] =
             "Set State: You need to enter a parameter to setState command.";
         return modifiedText;
     }
@@ -26,7 +27,7 @@ const setState = (
         cache = JSON.parse(match.groups.json);
     } catch (SyntaxError) {
         cache = state;
-        state.message = "Set State: Invalid JSON state.";
+        state[InfoOutput] = "Set State: Invalid JSON state.";
         return modifiedText;
     }
 

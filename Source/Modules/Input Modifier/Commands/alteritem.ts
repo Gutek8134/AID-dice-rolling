@@ -5,7 +5,7 @@ import {
 } from "../../Shared Library/Utils";
 import { state } from "../../proxy_state";
 import { restrictedStatNames } from "../constants";
-import { DEBUG } from "../modifier";
+import { DEBUG, InfoOutput } from "../modifier";
 import { CutCommandFromContext } from "./commandutils";
 
 const alterItem = (
@@ -22,16 +22,18 @@ const alterItem = (
 
     //Error checking
     if (!match || !match.groups) {
-        state.message =
+        state[InfoOutput] =
             "Alter Item: Arguments were not given in proper format.";
         return modifiedText;
     }
 
     if (!ElementInArray(match.groups.name, Object.keys(state.items))) {
-        state.message = `Alter Item: Item ${match.groups.name} does not exist.`;
+        state[
+            InfoOutput
+        ] = `Alter Item: Item ${match.groups.name} does not exist.`;
         if (DEBUG) {
-            state.message += "\n";
-            for (const key in state.items) state.message += ", " + key;
+            state[InfoOutput] += "\n";
+            for (const key in state.items) state[InfoOutput] += ", " + key;
         }
         return modifiedText;
     }
@@ -58,19 +60,23 @@ const alterItem = (
     let error: boolean = false;
     for (const modifier of initValues) {
         if (ElementInArray(modifier[0], restrictedStatNames)) {
-            state.message += `\nAlter Item: ${modifier[0]} cannot be altered.`;
+            state[
+                InfoOutput
+            ] += `\nAlter Item: ${modifier[0]} cannot be altered.`;
             error = true;
             continue;
         }
         if (!isInStats(modifier[0])) {
-            state.message = `Alter Item: Stat ${modifier[0]} does not exist.`;
+            state[
+                InfoOutput
+            ] = `Alter Item: Stat ${modifier[0]} does not exist.`;
             error = true;
         }
     }
 
     for (const name of effectNames) {
         if (!ElementInArray(name, Object.keys(state.effects))) {
-            state.message += `\nAlter Item: Effect ${name} does not exist.`;
+            state[InfoOutput] += `\nAlter Item: Effect ${name} does not exist.`;
             error = true;
         }
     }
