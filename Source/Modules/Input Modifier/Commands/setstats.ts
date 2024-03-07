@@ -3,6 +3,7 @@ import { Stat } from "../../Shared Library/Stat";
 import { CharacterToString, ElementInArray } from "../../Shared Library/Utils";
 import { state } from "../../proxy_state";
 import { restrictedStatNames } from "../constants";
+import { InfoOutput } from "../modifier";
 import { CutCommandFromContext } from "./commandutils";
 
 const setStats = (
@@ -20,14 +21,17 @@ const setStats = (
 
     //Null check
     if (!match || !match.groups) {
-        state.message = "Set Stats: Arguments were not given in proper format.";
+        state[InfoOutput] =
+            "Set Stats: Arguments were not given in proper format.";
         return modifiedText;
     }
 
     //Grabbing info
     const characterName = match.groups.character;
     if (!ElementInArray(characterName, Object.keys(state.characters))) {
-        state.message = `Set Stats: Character ${characterName} doesn't exist.`;
+        state[
+            InfoOutput
+        ] = `Set Stats: Character ${characterName} doesn't exist.`;
         return modifiedText;
     }
 

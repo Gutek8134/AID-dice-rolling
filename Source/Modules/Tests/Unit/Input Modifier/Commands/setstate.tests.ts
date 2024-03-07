@@ -1,5 +1,5 @@
-import setState from "../../../../Input Modifier/Commands/setstate";
-import { state } from "../../../proxy_state";
+import setState from "../../../../Input Modifier/Commands/setState";
+import { state } from "../../../../proxy_state";
 
 describe("Command set state", () => {
     it("Should return nothing and override given value", () => {

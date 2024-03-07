@@ -3,6 +3,7 @@ import { Character } from "./Character";
 import { Item } from "./Item";
 import { levellingToOblivion } from "../Input Modifier/constants";
 import { Stat } from "./Stat";
+import { Effect } from "./Effect";
 
 //!Function for calculating damage. Adjust it to your heart's content.
 //!Just make sure it won't divide by 0 (finally putting all the hours spent on learning math in high school to good use).
@@ -121,12 +122,23 @@ isNPC: ${character.isNpc},\n`;
     }
 
     temp += "\nItems:";
-    if (Object.keys(character.items).length > 0)
+    if (Object.keys(character.items).length > 0) {
         for (const el of Object.keys(character.items)) {
             const item: Item = character.items[el];
             temp += `\n${ItemToString(item)},\n`;
         }
+        temp = temp.substring(0, temp.length - 2) + "\n";
+    } else temp += "\nnone\n";
+
+    if (!character.activeEffects) character.activeEffects = [];
+
+    temp += "\nApplied effects:";
+    if (character.activeEffects.length > 0)
+        for (const el of character.activeEffects) {
+            temp += `\n${EffectToString(el)},\n`;
+        }
     else temp += "\nnone  ";
+
     return temp.substring(0, temp.length - 2) == ""
         ? "none"
         : temp.substring(0, temp.length - 2);
@@ -138,8 +150,31 @@ export const ItemToString = (item: Item): string => {
     let temp = `${item.name}:\nslot: ${item.slot}\n`;
     for (const key of Object.keys(item.modifiers))
         temp += `${key}: ${item.modifiers[key]}\n`;
+    temp += "Effects:\n";
+    if (item.effects.length === 0) temp += "none ";
+    else
+        for (const key of item.effects)
+            temp += `${EffectToString(state.effects[key])}\n`;
 
     return temp.substring(0, temp.length - 1);
+};
+
+export const EffectToString = (effect: Effect): string => {
+    if (!effect) return "none";
+    let temp = `${effect.name}:
+duration left: ${effect.durationLeft} (base ${effect.baseDuration}),
+unique per entity: ${effect.applyUnique},
+applied when: ${effect.appliedOn},
+applied to: ${effect.appliedTo},
+activates when: ${effect.impact},
+activation consequences:
+`;
+    if (Object.keys(effect.modifiers).length > 0)
+        for (const key of Object.keys(effect.modifiers))
+            temp += `${key}: ${effect.modifiers[key]},\n`;
+    else temp += "none  ";
+
+    return temp.substring(0, temp.length - 2);
 };
 
 //Returns whether character exists and has more than 0 HP

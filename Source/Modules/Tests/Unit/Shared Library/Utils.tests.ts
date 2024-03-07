@@ -1,14 +1,16 @@
 import { SetLevellingToOblivion } from "../../../Input Modifier/constants";
 import { Character } from "../../../Shared Library/Character";
+import { Effect } from "../../../Shared Library/Effect";
 import { Item } from "../../../Shared Library/Item";
 import {
     CharacterToString,
+    EffectToString,
     ElementInArray,
     ItemToString,
     _equip,
     experienceCalculation,
 } from "../../../Shared Library/Utils";
-import { state } from "../../proxy_state";
+import { state } from "../../../proxy_state";
 
 describe("Utilities", () => {
     it("Element In Array", () => {
@@ -20,7 +22,41 @@ describe("Utilities", () => {
         expect(ElementInArray("a", ["c", 3, "d"])).toStrictEqual(false);
     });
 
+    it("Effect To String", () => {
+        expect(
+            EffectToString(
+                new Effect(
+                    "bleeding",
+                    [["hp", -5]],
+                    3,
+                    "attack",
+                    "enemy",
+                    "every turn",
+                    false
+                )
+            )
+        ).toEqual(`bleeding:
+duration left: 3 (base 3),
+unique per entity: false,
+applied when: attack,
+applied to: enemy,
+activates when: every turn,
+activation consequences:
+hp: -5`);
+    });
+
     it("Item To String", () => {
+        state.effects = {
+            bleeding: new Effect(
+                "bleeding",
+                [["hp", -5]],
+                3,
+                "attack",
+                "enemy",
+                "every turn",
+                false
+            ),
+        };
         let values: [string, string | number][] = [
             ["slot", "head"],
             ["dexterity", -5],
@@ -31,7 +67,9 @@ describe("Utilities", () => {
             `Staff of Zalos:
 slot: head
 dexterity: -5
-nano machines: 3`
+nano machines: 3
+Effects:
+${EffectToString(state.effects["bleeding"])}`
         );
     });
 
@@ -50,6 +88,9 @@ to level up: ${experienceCalculation(1)}(need ${experienceCalculation(1)} more),
 isNPC: false,
 
 Items:
+none
+
+Applied effects:
 none`
         );
         SetLevellingToOblivion(true);
@@ -62,6 +103,9 @@ none`
 isNPC: false,
 
 Items:
+none
+
+Applied effects:
 none`
         );
     });
@@ -86,6 +130,9 @@ dexterity: 5,
 strength: 2,
 
 Items:
+none
+
+Applied effects:
 none`
         );
 
@@ -108,6 +155,9 @@ strength: level=2, exp=0, to lvl up=${experienceCalculation(
             )}(need ${experienceCalculation(2)} more),
 
 Items:
+none
+
+Applied effects:
 none`
         );
     });
@@ -137,7 +187,12 @@ Items:
 Staff of Zalos:
 slot: head
 dexterity: -5
-nano machines: 3`
+nano machines: 3
+Effects:
+none
+
+Applied effects:
+none`
         );
 
         SetLevellingToOblivion(true);
@@ -153,7 +208,40 @@ Items:
 Staff of Zalos:
 slot: head
 dexterity: -5
-nano machines: 3`
+nano machines: 3
+Effects:
+none
+
+Applied effects:
+none`
+        );
+
+        character = new Character([], ["Staff of Zalos"]);
+        character.activeEffects = [
+            new Effect(
+                "bleeding",
+                [["hp", -5]],
+                3,
+                "attack",
+                "enemy",
+                "every turn",
+                false
+            ),
+        ];
+        expect(CharacterToString(character)).toEqual(
+            `hp: 100,
+isNPC: false,
+
+Items:
+Staff of Zalos:
+slot: head
+dexterity: -5
+nano machines: 3
+Effects:
+none
+
+Applied effects:
+${EffectToString(character.activeEffects[0])}`
         );
         state.items = {};
     });

@@ -5,8 +5,11 @@ import {
 } from "../../../Input Modifier/characterutils";
 import { SetLevellingToOblivion } from "../../../Input Modifier/constants";
 import { Character } from "../../../Shared Library/Character";
+import { Effect } from "../../../Shared Library/Effect";
 import { Item } from "../../../Shared Library/Item";
-import { state } from "../../proxy_state";
+import { state } from "../../../proxy_state";
+
+//TODO: GSWM - update for effects
 
 describe("Character Utilities", () => {
     it("Best stat", () => {
@@ -65,6 +68,19 @@ describe("Character Utilities", () => {
         );
         expect(GetStatWithMods(character, "strength")).toEqual(4);
         expect(BestStat(character)).toEqual("strength");
+
+        if (!character.activeEffects) character.activeEffects = [];
+        character.activeEffects.push(
+            new Effect(
+                "",
+                [["strength", -1]],
+                1,
+                "not applied",
+                "self",
+                "continuous"
+            )
+        );
+        expect(GetStatWithMods(character, "strength")).toEqual(3);
     });
 
     it("Increment XP", () => {

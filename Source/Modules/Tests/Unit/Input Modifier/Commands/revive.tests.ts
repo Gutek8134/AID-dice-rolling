@@ -1,6 +1,6 @@
 import revive from "../../../../Input Modifier/Commands/revive";
 import { Character } from "../../../../Shared Library/Character";
-import { state } from "../../../proxy_state";
+import { state } from "../../../../proxy_state";
 
 describe("Command revive", () => {
     it("Invalid args error", () => {

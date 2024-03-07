@@ -1,5 +1,6 @@
 import { ElementInArray, _equip } from "../../Shared Library/Utils";
 import { state } from "../../proxy_state";
+import { InfoOutput } from "../modifier";
 import { CutCommandFromContext } from "./commandutils";
 
 const gainItem = (
@@ -14,7 +15,7 @@ const gainItem = (
         commandArguments === null ||
         commandArguments === ""
     ) {
-        state.message = "Gain Item: No arguments found.";
+        state[InfoOutput] = "Gain Item: No arguments found.";
         return modifiedText;
     }
 
@@ -23,7 +24,8 @@ const gainItem = (
 
     //Error checking
     if (!match || !match.groups) {
-        state.message = "Gain Item: Arguments were not given in proper format.";
+        state[InfoOutput] =
+            "Gain Item: Arguments were not given in proper format.";
         return modifiedText;
     }
 
@@ -31,7 +33,7 @@ const gainItem = (
         itemName: string = match.groups.name;
 
     if (!ElementInArray(itemName, Object.keys(state.items))) {
-        state.message = `Gain Item: Item ${itemName} doesn't exist.`;
+        state[InfoOutput] = `Gain Item: Item ${itemName} doesn't exist.`;
         return modifiedText;
     }
 
@@ -40,7 +42,9 @@ const gainItem = (
         characterName !== undefined &&
         !ElementInArray(characterName, Object.keys(state.characters))
     ) {
-        state.message = `Gain Item: Character ${characterName} doesn't exist.`;
+        state[
+            InfoOutput
+        ] = `Gain Item: Character ${characterName} doesn't exist.`;
         return modifiedText;
     }
 

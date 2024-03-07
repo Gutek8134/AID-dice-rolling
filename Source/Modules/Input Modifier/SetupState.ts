@@ -8,6 +8,7 @@ const SetupState = (): void => {
     state.startingHP = state.startingHP === undefined ? 100 : state.startingHP;
     state.characters = state.characters === undefined ? {} : state.characters;
     state.items = state.items === undefined ? {} : state.items;
+    state.effects = state.effects === undefined ? {} : state.effects;
     state.inventory = state.inventory === undefined ? [] : state.inventory;
     state.punishment = state.punishment === undefined ? 5 : state.punishment;
     state.skillpointsOnLevelUp =
@@ -15,6 +16,10 @@ const SetupState = (): void => {
             ? 5
             : state.skillpointsOnLevelUp;
     state.inBattle = state.inBattle === undefined ? false : state.inBattle;
+    state.runEffectsOutsideBattle =
+        state.runEffectsOutsideBattle === undefined
+            ? false
+            : state.runEffectsOutsideBattle;
 };
 
 export default SetupState;

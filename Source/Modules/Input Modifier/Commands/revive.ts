@@ -1,6 +1,7 @@
 import { Character } from "../../Shared Library/Character";
 import { ElementInArray } from "../../Shared Library/Utils";
 import { state } from "../../proxy_state";
+import { InfoOutput } from "../modifier";
 import { CutCommandFromContext } from "./commandutils";
 
 const revive = (
@@ -16,7 +17,8 @@ const revive = (
 
     //Null check
     if (!match || !match.groups) {
-        state.message = "Revive: Arguments were not given in proper format.";
+        state[InfoOutput] =
+            "Revive: Arguments were not given in proper format.";
         return modifiedText;
     }
 
@@ -27,7 +29,7 @@ const revive = (
 
     //Checks for reviving char
     if (!ElementInArray(revivingCharacterName, Object.keys(state.characters))) {
-        state.message = "Revive: Reviving character doesn't exist.";
+        state[InfoOutput] = "Revive: Reviving character doesn't exist.";
         return modifiedText;
     }
 
@@ -35,14 +37,14 @@ const revive = (
         state.characters[revivingCharacterName];
 
     if (revivingCharacter.hp <= value) {
-        state.message =
+        state[InfoOutput] =
             "Revive: Reviving character would die if this action would be performed. Their hp is too low.\nRevive was not performed.";
         return modifiedText;
     }
 
     //Check for revived char
     if (!ElementInArray(revivedCharacterName, Object.keys(state.characters))) {
-        state.message = "Revive: Revived character doesn't exist.";
+        state[InfoOutput] = "Revive: Revived character doesn't exist.";
         return modifiedText;
     }
     const revivedCharacter: Character = state.characters[revivedCharacterName];

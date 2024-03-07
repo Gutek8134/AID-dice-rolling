@@ -3,7 +3,7 @@ import {
     DealDamage,
     DealDamageIfNotDodged,
 } from "../../../Input Modifier/fightutils";
-import { state } from "../../proxy_state";
+import { state } from "../../../proxy_state";
 import { Character } from "../../../Shared Library/Character";
 import {
     SetDisableDodge,
@@ -14,6 +14,8 @@ import {
     SetLevellingToOblivion,
 } from "../../../Input Modifier/constants";
 import { IncrementExp } from "../../../Input Modifier/characterutils";
+import { Item } from "../../../Shared Library/Item";
+import { Effect } from "../../../Shared Library/Effect";
 
 describe("Fight Utilities", () => {
     it("Custom Damage Output", () => {
@@ -131,6 +133,56 @@ Miguel Booble has retreated.`
             `Zuibroldun Jodem attacked Miguel Booble dealing light damage.
 Miguel Booble has retreated.`
         );
+
+        state.characters = {
+            "Zuibroldun Jodem": new Character(),
+            "Miguel Booble": new Character(),
+        };
+        state.effects = {
+            bleeding: new Effect(
+                "bleeding",
+                [["hp", -10]],
+                5,
+                "attack",
+                "enemy",
+                "every turn"
+            ),
+            protection: new Effect(
+                "protection",
+                [["defense", 5]],
+                3,
+                "defense",
+                "self",
+                "continuous"
+            ),
+        };
+        state.inBattle = true;
+        state.characters["Zuibroldun Jodem"].items["weapon"] = new Item(
+            "staff of zalos",
+            [["effect", "bleeding"]]
+        );
+        state.characters["Miguel Booble"].items["helmet"] = new Item(
+            "helmet of zalos",
+            [["effect", "protection"]]
+        );
+        ({ attackOutput, levelOutput, contextOutput } = DealDamage(
+            "Zuibroldun Jodem",
+            "explosion",
+            "Miguel Booble",
+            "fireproof",
+            "Debug"
+        ));
+
+        expect(attackOutput)
+            .toEqual(`Zuibroldun Jodem (explosion: 1) attacked Miguel Booble (fireproof: 1) dealing light damage (1).
+Miguel Booble now has 99 hp.
+Miguel Booble is now under influence of bleeding.
+Miguel Booble is now under influence of protection.`);
+        expect(contextOutput)
+            .toEqual(`Zuibroldun Jodem attacked Miguel Booble dealing light damage.
+Miguel Booble is now under influence of bleeding.
+Miguel Booble is now under influence of protection.`);
+        state.inBattle = false;
     });
 
     it("Deal Damage if not Dodged", () => {

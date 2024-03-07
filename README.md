@@ -46,6 +46,8 @@ There can be additional whitespace around "=" sign, but nowhere else.
 
 Outputs stat changes.
 
+Works during battle.
+
 ## !showStats
 
 Syntax: `!showStats(character)`
@@ -53,12 +55,16 @@ Syntax: `!showStats(character)`
 Shows stats of a specified character.
 Works only on created characters.
 
+Works during battle
+
 ## !levelStats
 
 Syntax: `!levelStats(character, stat + value, stat2+value, stat3 +value, ..., statN+value)`
 
 Uses acquired skillpoints to increase stats.<br>
 Works only when not levelling to oblivion.
+
+Works during battle.
 
 ## !skillcheck
 
@@ -79,9 +85,11 @@ Can be also turned off in the code.
 
 ## !addItem
 
-Syntax: `!addItem(name, slot, stat = value, stat2=value, stat3 = value, ..., statN=value[, target, character])`
+Syntax: `!addItem(name, slot, stat = value, stat2=value, stat3 = value, ..., statN=value, effect 1 name, effect 2 name, ..., effect N name[, target, character])`
 
 Creates an item with given modifiers.
+
+Effects (optional) - effects the item should apply.
 
 Target (optional) - can be either `inventory` or `equip`. When unspecified item will be simply created, `inventory` will put it into party's inventory, and `equip` will instantly equip it on specified character.
 
@@ -89,11 +97,15 @@ Character (must be given when target is set to `equip`) - specifies which charac
 
 If a character has something in the slot, the item will be unequipped to inventory.
 
+Works during battle.
+
 ## !alterItem
 
-Syntax: `!alterItem(name, slot, stat = value, stat2=value, stat3 = value, ..., statN=value)`
+Syntax: `!alterItem(name, slot, stat = value, stat2=value, stat3 = value, ..., statN=value, effect 1 name, effect 2 name, ..., effect N name)`
 
-Alters slot and modifiers of previously created item.
+Alters slot, modifiers, and applied effects of previously created item.
+
+Works during battle.
 
 ## !gainItem
 
@@ -103,6 +115,81 @@ Puts a previously created item in inventory, or a character equips it when `char
 
 If a character has something in the slot, the item will be unequipped to inventory.
 
+Works during battle.
+
+## !createEffect
+
+Syntax: `!createEffect(name, duration, stat = value, stat2=value, stat3 = value, ..., statN= value[, u(nique)][, a(ttack)/d(efense)/b(attle start)/n(ot applied)][, self/enemy][, (on )e(nd)/(every )t(urn)/c(ontinuous)])`
+
+Order of options is important. If not followed, you will get `Create Effect: Arguments were not given in proper format.` error.
+
+Creates an effect that can be later added to an item or applied manually.
+
+This is currently the only type that counts character's hp as modifier. To change it, use `hp = -x` or `hp = x`, just like with any normal stat.
+
+Duration (whole number) - duration of the effect in turns. Duration left will only decrease during battle. Ending the battle ends all effects.
+
+Stats need to be created beforehand, by setting them on at least one character or using `!setstate({"stats":["every","stat","you","need"]})`.
+
+You can use bolded letters as shortcuts for the options below.
+
+**U**nique (optional) - unique effects can only have one instance per character. Applying the effect again will do nothing.
+
+Application trigger (not applied by default):
+
+-   **a**ttack - effect will be applied when character attacks.
+-   **d**efense - effect will be applied when character is attacked.
+-   **b**attle start - effect will be applied when battle starts. If target is enemy, it will be applied to a random enemy.
+-   **n**ot applied - effect will not be automatically applied. Use `!applyEffect` to apply it manually.
+
+Effect target (self by default) - whether the effect should be applied to item's wielder or target of their attack. If trigger is battle start, it will be a random enemy.
+
+Impact time (continuous by default):
+
+-   On **e**nd - effect will be applied once, when its duration ends. Best for permanent buffs/debuffs or some curses.
+-   Every **t**urn - effect will be applied at the end of every character's turn. Best for damage and heal over time.
+-   **C**ontinuous - effect has no permanent effects, instead its modifiers are added when checking character's stats. Best for temporary buffs and debuffs.
+
+Works during battle.
+
+### My examples:
+
+-   `!createEffect(bleeding, 5, hp = -5, a, enemy, t)` - once hit, the enemy will lose 5 hp per turn for 5 turns. Bleeding can stack.
+-   `!createEffect(battle rage, 8, strength = 3, dexterity = 2, defense = -1, u, b, self, c)` - for the first 8 turns of battle, wearing character gains 3 strength, 2 dexterity, but loses some defense. Cannot stack or be extended by applying again.
+-   `!createEffect(poison, 6, hp = -35, dexterity = -2, u, d, enemy, e)` - when hit, applies poison to the enemy. If it is not cured or battle does not end in 6 turns, enemy suffers big damage and **permanent** dexterity loss.
+
+### Some more info about effects
+
+If you need to check which effects influence your character, use `!showStats`.
+
+Effects that have impact time set to every turn will activate **at the end** of the character's turn, **after** the attack.
+
+## !alterEffect
+
+Syntax: `!alterEffect(name, duration, stat = value, stat2=value, stat3 = value, ..., statN= value[, u(nique)][, a(ttack)/d(efense)/b(attle start)/n(ot applied)][, self/enemy][, (on )e(nd)/(every )t(urn)/c(ontinuous)])`
+
+Overwrites parts of the effect.
+
+Works during battle.
+
+## !applyEffect
+
+Syntax: `!applyEffect(effect name, character name[, overridden duration])`
+
+Applies effect to the character.
+
+Overridden duration (optional, whole number) - if specified, sets duration of newly applied effect to this value.
+
+Works during battle.
+
+## !removeEffect
+
+Syntax: `!removeEffect(effect name, character name)`
+
+Removes effect from the character without triggering it.
+
+Works during battle.
+
 ## !equip
 
 Syntax: `!equip(character, items)`
@@ -111,17 +198,23 @@ Character equips items from inventory.
 
 If a character has something in the slot, the item will be unequipped to inventory.
 
+Works during battle.
+
 ## !unequip
 
 Syntax: `!unequip(character, slots)`
 
 Puts items from slots into inventory.
 
+Works during battle.
+
 ## !showInventory
 
 Syntax: `!showInventory()`
 
 Shows inventory's contents.
+
+Works during battle.
 
 ## !attack
 
@@ -174,6 +267,8 @@ Examples:<br>
 `!heal(Zuibroldun Jodem, d100)` - will heal Zuibroldun Jodem by 1 to 100 hp<br>
 `!heal(Zuibroldun Jodem, 50:100)` - wil heal Zuibroldun by 50 to 100 hp
 
+Works during battle.
+
 ## !revive
 
 Syntax: `!revive(reviving character, revived character, value)`
@@ -186,11 +281,15 @@ Outputs both characters' resulting hp.
 Reviving character must exist and have at least value+1 hp to perform this action.<br>
 Revived character must exist.
 
+Works during battle.
+
 ## !getState
 
 Syntax: `!getState()`
 Outputs current state.
 You can use this alongside with setState as saves, but currently there is no way to do it differently than by manually copying it to a file on non-volatile storage, like your hard drive, and then setting it back. This also allows for making your custom state to use in all adventures.
+
+Works during battle.
 
 ## !setState
 
@@ -205,6 +304,8 @@ Guide to creating custom states is below.
 
 Note: all commands are case-insensitive.<br>
 Thanks to refactor the newest version will throw errors and cut commands from what the AI sees even when something goes wrong.
+
+Works during battle.
 
 ---
 
@@ -250,5 +351,5 @@ You can vote on what do you want me to do next [here](https://forms.gle/SqfzW5hZ
 1. Create a scenario.
 2. Get into Scripts menu. (You need to use browser for this.)
 3. Copy files contents to corresponding fragments: sharedLibrary.js to Shared Library, inputModifier.js to Input Modifier and so on.
-4. Adjust the in-script settings. They are: damageOutputs, ignoreZeroDiv, shouldPunish, levellingToOblivion, defendingCharacterLevels in Input Modifier and damage, dodge, and experienceCalculation functions in Shared Library.
+4. Adjust the in-script settings. They are: damageOutputs, ignoreZeroDiv, shouldPunish, defaultDodge, levellingToOblivion, defendingCharacterLevels in Input Modifier and damage, dodge, and experienceCalculation functions in Shared Library.
 5. Play the created scenario. You should now be able to use the commands.

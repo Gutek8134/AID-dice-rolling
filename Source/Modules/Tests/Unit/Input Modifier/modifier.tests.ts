@@ -1,6 +1,6 @@
 import { modifier } from "../../../Input Modifier/modifier";
 import { Character } from "../../../Shared Library/Character";
-import { state } from "../../proxy_state";
+import { state } from "../../../proxy_state";
 
 describe("Input Modifier", () => {
     it("In Battle", () => {
@@ -19,5 +19,15 @@ describe("Input Modifier", () => {
         const cache = modifier("aaa !addcharacter(Zuibroldun)").text;
 
         expect(cache).toEqual(state.in);
+    });
+
+    it("Run Command", () => {
+        expect(
+            modifier(
+                " !addcharacter(Zuibroldun Jodem, dexterity=3, nano machines = 5)"
+            ).text
+        ).toEqual(
+            " !addcharacter(Zuibroldun Jodem, dexterity=3, nano machines = 5)"
+        );
     });
 });

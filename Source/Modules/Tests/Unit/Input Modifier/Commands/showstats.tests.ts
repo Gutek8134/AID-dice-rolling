@@ -1,7 +1,7 @@
-import showStats from "../../../../Input Modifier/Commands/showstats";
+import showStats from "../../../../Input Modifier/Commands/showStats";
 import { Character } from "../../../../Shared Library/Character";
 import { CharacterToString } from "../../../../Shared Library/Utils";
-import { state } from "../../../proxy_state";
+import { state } from "../../../../proxy_state";
 
 describe("Command show stats", () => {
     it("Invalid args error", () => {

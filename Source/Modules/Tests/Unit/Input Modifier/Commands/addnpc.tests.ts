@@ -1,11 +1,11 @@
-import addNPC from "../../../../Input Modifier/Commands/addnpc";
+import addNPC from "../../../../Input Modifier/Commands/addNPC";
 import { Item } from "../../../../Shared Library/Item";
 import { Stat } from "../../../../Shared Library/Stat";
 import {
     CharacterToString,
     experienceCalculation,
 } from "../../../../Shared Library/Utils";
-import { state } from "../../../proxy_state";
+import { state } from "../../../../proxy_state";
 
 describe("Command add npc", () => {
     it("Invalid args error", () => {

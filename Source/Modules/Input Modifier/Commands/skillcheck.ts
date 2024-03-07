@@ -3,7 +3,7 @@ import { ElementInArray, diceRoll } from "../../Shared Library/Utils";
 import { state } from "../../proxy_state";
 import { GetStatWithMods, IncrementExp } from "../characterutils";
 import { shouldPunish } from "../constants";
-import { DEBUG } from "../modifier";
+import { DEBUG, InfoOutput } from "../modifier";
 import { CutCommandFromContext } from "./commandutils";
 
 const skillcheck = (
@@ -28,7 +28,7 @@ const skillcheck = (
 
     //Firstly, checks if something matched
     if (match === null || !match.groups) {
-        state.message =
+        state[InfoOutput] =
             "Skillcheck: Arguments were not given in proper format.";
         return modifiedText;
     }
@@ -42,7 +42,7 @@ const skillcheck = (
 
     //Testing if stat exists, throwing error otherwise
     if (!ElementInArray(statName, state.stats)) {
-        state.message = `Skillcheck: Stat ${statName} does not exist.`;
+        state[InfoOutput] = `Skillcheck: Stat ${statName} does not exist.`;
         return modifiedText;
     }
 
@@ -50,7 +50,9 @@ const skillcheck = (
     let character: Character | undefined = state.characters[characterName];
 
     if (!character) {
-        state.message = `Skillcheck: Character ${characterName} doesn't exist.`;
+        state[
+            InfoOutput
+        ] = `Skillcheck: Character ${characterName} doesn't exist.`;
         return modifiedText;
     }
 
@@ -63,7 +65,9 @@ const skillcheck = (
 
     //Punishing
     if (character.hp < 1 && shouldPunish) {
-        state.message = `Skillcheck: Testing against dead character. Punishment: -${state.punishment} (temporary).`;
+        state[
+            InfoOutput
+        ] = `Skillcheck: Testing against dead character. Punishment: -${state.punishment} (temporary).`;
         effectiveCharacterStatLevel -= state.punishment;
     }
 
@@ -72,7 +76,7 @@ const skillcheck = (
     //Grabs thresholds
     const thresholds = commandArguments.match(thresholdCheck);
     if (!thresholds || !thresholds.groups) {
-        state.message = "Skillcheck: Thresholds are not in proper format.";
+        state[InfoOutput] = "Skillcheck: Thresholds are not in proper format.";
         return DEBUG ? "Threshold fail" : modifiedText;
     }
     //console.log(thresholds);
@@ -198,7 +202,7 @@ const skillcheck = (
             //Read message
             default:
                 console.error("WTF is this?!");
-                state.message =
+                state[InfoOutput] =
                     "Skillcheck: no group has been matched.\nIDK how did you make it, but think about creating an issue.";
                 return modifiedText;
         }

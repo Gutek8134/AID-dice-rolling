@@ -1,6 +1,7 @@
 import { ElementInArray } from "../../Shared Library/Utils";
 import { state } from "../../proxy_state";
 import { DealDamageIfNotDodged } from "../fightutils";
+import { InfoOutput } from "../modifier";
 import { CutCommandFromContext } from "./commandutils";
 
 const sattack = (
@@ -17,7 +18,8 @@ const sattack = (
         commandArguments === null ||
         commandArguments === ""
     ) {
-        state.message = "Attack: Arguments were not given in proper format.";
+        state[InfoOutput] =
+            "Attack: Arguments were not given in proper format.";
         return modifiedText;
     }
 
@@ -29,17 +31,21 @@ const sattack = (
 
     //Error checking
     if (match === null || !match.groups) {
-        state.message = "Attack: No matching arguments found.";
+        state[InfoOutput] = "Attack: No matching arguments found.";
         return modifiedText;
     }
 
     //Checks if stats exist
     if (!ElementInArray(match.groups.attackStat, state.stats)) {
-        state.message = `Attack: Stat ${match.groups.attackStat} was not created.`;
+        state[
+            InfoOutput
+        ] = `Attack: Stat ${match.groups.attackStat} was not created.`;
         return modifiedText;
     }
     if (!ElementInArray(match.groups.defenseStat, state.stats)) {
-        state.message = `Attack: Stat ${match.groups.defenseStat} was not created.`;
+        state[
+            InfoOutput
+        ] = `Attack: Stat ${match.groups.defenseStat} was not created.`;
         return modifiedText;
     }
 
@@ -52,14 +58,18 @@ const sattack = (
     if (
         !ElementInArray(attackingCharacterName, Object.keys(state.characters))
     ) {
-        state.message = `Attack: Character ${attackingCharacterName} does not exist.`;
+        state[
+            InfoOutput
+        ] = `Attack: Character ${attackingCharacterName} does not exist.`;
         return modifiedText;
     }
 
     if (
         !ElementInArray(defendingCharacterName, Object.keys(state.characters))
     ) {
-        state.message = `Attack: Character ${defendingCharacterName} does not exist.`;
+        state[
+            InfoOutput
+        ] = `Attack: Character ${defendingCharacterName} does not exist.`;
         return modifiedText;
     }
 

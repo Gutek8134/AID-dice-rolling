@@ -2,7 +2,7 @@ import levelStats from "../../../../Input Modifier/Commands/levelStats";
 import { SetLevellingToOblivion } from "../../../../Input Modifier/constants";
 import { Character } from "../../../../Shared Library/Character";
 import { CharacterToString } from "../../../../Shared Library/Utils";
-import { state } from "../../../proxy_state";
+import { state } from "../../../../proxy_state";
 
 describe("Command level stats", () => {
     it("Leveling to oblivion error", () => {

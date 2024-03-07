@@ -2,7 +2,7 @@ import { Character } from "../../../Shared Library/Character";
 import { Item } from "../../../Shared Library/Item";
 import { Stat } from "../../../Shared Library/Stat";
 import { experienceCalculation } from "../../../Shared Library/Utils";
-import { state } from "../../proxy_state";
+import { state } from "../../../proxy_state";
 
 describe("Character creation", () => {
     it("Should create default character", () => {
@@ -15,6 +15,7 @@ describe("Character creation", () => {
             expToNextLvl: experienceCalculation(1),
             skillpoints: 0,
             items: {},
+            activeEffects: [],
             type: "character",
             isNpc: false,
             stats: {},
@@ -34,6 +35,7 @@ describe("Character creation", () => {
             expToNextLvl: experienceCalculation(1),
             skillpoints: 0,
             items: {},
+            activeEffects: [],
             type: "character",
             isNpc: false,
             stats: {
@@ -61,6 +63,7 @@ describe("Character creation", () => {
             expToNextLvl: experienceCalculation(1),
             skillpoints: 0,
             items: {},
+            activeEffects: [],
             type: "character",
             isNpc: false,
             stats: {
@@ -87,6 +90,7 @@ describe("Character creation", () => {
             expToNextLvl: experienceCalculation(1),
             skillpoints: 0,
             items: {},
+            activeEffects: [],
             type: "character",
             isNpc: false,
             stats: {
@@ -119,6 +123,7 @@ describe("Character creation", () => {
             expToNextLvl: experienceCalculation(1),
             skillpoints: 0,
             items: {},
+            activeEffects: [],
             type: "character",
             isNpc: false,
             stats: {

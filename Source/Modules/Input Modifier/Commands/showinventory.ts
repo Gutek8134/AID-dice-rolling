@@ -1,11 +1,13 @@
 import { state } from "../../proxy_state";
+import { InfoOutput } from "../modifier";
 
 const showInventory = (
     commandArguments: string,
     modifiedText: string
 ): string => {
     if (commandArguments !== "") {
-        state.message = "Show Inventory: Command doesn't take any arguments.";
+        state[InfoOutput] =
+            "Show Inventory: Command doesn't take any arguments.";
         return modifiedText;
     }
     //console.log(state.inventory);

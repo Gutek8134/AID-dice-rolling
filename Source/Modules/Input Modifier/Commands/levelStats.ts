@@ -3,6 +3,7 @@ import { Stat } from "../../Shared Library/Stat";
 import { CharacterToString, ElementInArray } from "../../Shared Library/Utils";
 import { state } from "../../proxy_state";
 import { restrictedStatNames, levellingToOblivion } from "../constants";
+import { InfoOutput } from "../modifier";
 import { CutCommandFromContext } from "./commandutils";
 
 const levelStats = (
@@ -12,7 +13,7 @@ const levelStats = (
 ): string => {
     CutCommandFromContext(modifiedText, currIndices);
     if (levellingToOblivion) {
-        state.message =
+        state[InfoOutput] =
             "Level Stats: This command will work only when you are levelling your characters.\nIn current mode stats are levelling by themselves when you are using them.";
         return modifiedText;
     }
@@ -23,14 +24,15 @@ const levelStats = (
     const match: RegExpMatchArray | null = commandArguments.match(exp);
 
     if (!match || !match.groups) {
-        state.message =
+        state[InfoOutput] =
             "Level Stats: Arguments were not given in proper format.";
         return modifiedText;
     }
 
     const characterName: string = match.groups.character;
     if (!ElementInArray(characterName, Object.keys(state.characters))) {
-        state.message = "Level Stats: Nonexistent characters can't level up.";
+        state[InfoOutput] =
+            "Level Stats: Nonexistent characters can't level up.";
         return modifiedText;
     }
     const character: Character = state.characters[characterName];
@@ -48,11 +50,14 @@ const levelStats = (
         });
 
     if (usedSkillpoints === 0) {
-        state.message = "Level Stats: You need to use at least one skillpoint.";
+        state[InfoOutput] =
+            "Level Stats: You need to use at least one skillpoint.";
         return modifiedText;
     }
     if (character.skillpoints < usedSkillpoints) {
-        state.message = `Level Stats: ${characterName} doesn't have enough skillpoints (${character.skillpoints}/${usedSkillpoints}).`;
+        state[
+            InfoOutput
+        ] = `Level Stats: ${characterName} doesn't have enough skillpoints (${character.skillpoints}/${usedSkillpoints}).`;
         return modifiedText;
     }
 
@@ -62,7 +67,9 @@ const levelStats = (
     //Changes stats
     for (const el of values) {
         if (ElementInArray(el[0], restrictedStatNames)) {
-            state.message += `\nLevel Stats: ${el[0]} cannot be levelled up.`;
+            state[
+                InfoOutput
+            ] += `\nLevel Stats: ${el[0]} cannot be levelled up.`;
             continue;
         }
         //If stat doesn't exits on the character, creates it

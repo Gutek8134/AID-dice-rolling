@@ -1,7 +1,7 @@
-import gainItem from "../../../../Input Modifier/Commands/gainitem";
+import gainItem from "../../../../Input Modifier/Commands/gainItem";
 import { Character } from "../../../../Shared Library/Character";
 import { Item } from "../../../../Shared Library/Item";
-import { state } from "../../../proxy_state";
+import { state } from "../../../../proxy_state";
 
 describe("Command gain item", () => {
     it("Invalid args error", () => {

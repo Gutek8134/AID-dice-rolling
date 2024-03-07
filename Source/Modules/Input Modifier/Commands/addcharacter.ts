@@ -1,5 +1,6 @@
 import { Character } from "../../Shared Library/Character";
 import { state } from "../../proxy_state";
+import { InfoOutput } from "../modifier";
 import { CutCommandFromContext } from "./commandutils";
 
 const addCharacter = (
@@ -18,7 +19,7 @@ const addCharacter = (
 
     //Null check
     if (!match || !match.groups) {
-        state.message =
+        state[InfoOutput] =
             "Add Character: Arguments were not given in proper format.";
         return modifiedText;
     }

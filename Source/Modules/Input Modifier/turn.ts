@@ -14,7 +14,9 @@ import {
     defendingCharacterLevels,
     defaultDodge,
 } from "./constants";
-import { CustomDamageOutput } from "./fightutils";
+import { ApplyEffectsOnAttack, CustomDamageOutput } from "./fightutils";
+import { RemoveEffect, RunEffect } from "../Shared Library/Effect";
+import { InfoOutput } from "./modifier";
 // import { DEBUG } from "./modifier";
 
 /**
@@ -39,7 +41,7 @@ export const turn = (textCopy: string): void => {
     //Attacking character set and is not an NPC
     if (!state.activeCharacter.isNpc) {
         if (!state.activeCharacterName) {
-            state.message = "Battle turn: active character name not found.";
+            state[InfoOutput] = "Battle turn: active character name not found.";
             return;
         }
 
@@ -50,7 +52,7 @@ export const turn = (textCopy: string): void => {
 
         // Player written something wrong
         if (!match || !match?.groups) {
-            state.message =
+            state[InfoOutput] =
                 "Battle turn: In battle you can only retreat or attack.\nFor further information read !battle section of README.";
             return;
         }
@@ -117,7 +119,7 @@ export const turn = (textCopy: string): void => {
             state.activeCharacterName;
 
         if (!attackingCharacterName) {
-            state.message =
+            state[InfoOutput] =
                 "Battle turn: ERROR active character name is undefined";
             return;
         }
@@ -170,7 +172,9 @@ const takeTurn = (
         );
 
     if (!ElementInArray(defendingCharacterName, attackedSideCharactersNames)) {
-        state.message = `Battle turn: character ${defendingCharacterName} doesn't belong to the other side of the battle.`;
+        state[
+            InfoOutput
+        ] = `Battle turn: character ${defendingCharacterName} doesn't belong to the other side of the battle.`;
         return;
     }
 
@@ -241,6 +245,10 @@ const takeTurn = (
     //Damaging
     state.characters[defendingCharacterName].hp -= damageInflicted;
 
+    const effectsText: string = ApplyEffectsOnAttack(
+        attackingCharacterName,
+        defendingCharacterName
+    );
     //Gives the player necessary info.
     state.out += `\n${attackingCharacterName} (${attackStat}: ${attackingCharacterStatLevelWithMods}${
         attackModifier === 0
@@ -267,13 +275,27 @@ const takeTurn = (
               " now has " +
               state.characters[defendingCharacterName].hp +
               " hp."
-    }`;
+    }${effectsText}`;
 
     //Always grants 1 Exp to attacking character, for defending it's up to user
     state.out += IncrementExp(attackingCharacterName, attackStat);
 
     if (defendingCharacterLevels) {
         state.out += IncrementExp(defendingCharacterName, defenseStat);
+    }
+    if (!attackingCharacter.activeEffects)
+        attackingCharacter.activeEffects = [];
+
+    for (const effect of attackingCharacter.activeEffects) {
+        if (effect.impact === "every turn") {
+            RunEffect(attackingCharacterName, effect);
+        }
+        if (--effect.durationLeft === 0) {
+            if (effect.impact === "on end") {
+                RunEffect(attackingCharacterName, effect);
+            }
+            state.out += RemoveEffect(attackingCharacterName, effect.name);
+        }
     }
 
     //If character's hp falls below 0, they are removed from the battle
@@ -288,7 +310,7 @@ const takeTurn = (
 
     //Checks if the battle should end after every attack
     if (!state.side1?.length) {
-        state.message =
+        state[InfoOutput] =
             "HP of all party members dropped to 0. Party retreated.";
         state.out += "\nThe adventurers retreated, overwhelmed by the enemy.";
         ExitBattle();
@@ -296,7 +318,7 @@ const takeTurn = (
     } else if (!state.side2?.length) {
         state.out += "\nThe adventurers have won the battle.";
         ExitBattle();
-        state.message = "You have won the battle!";
+        state[InfoOutput] = "You have won the battle!";
         return;
     }
 
@@ -321,19 +343,34 @@ const EndTurn = (): void => {
     const activeCharacterName = state.active?.[nextActiveCharacterIndex];
 
     if (!activeCharacterName) {
-        state.message = "Battle turn: ERROR active character is undefined.";
+        state[InfoOutput] = "Battle turn: ERROR active character is undefined.";
         return;
     }
 
     state.activeCharacterName = activeCharacterName;
     state.activeCharacter = state.characters[state.activeCharacterName];
-    state.message = `Current turn: ${state.activeCharacterName}`;
+    if (state[InfoOutput] && typeof state[InfoOutput] == "string") {
+        state[InfoOutput] = state[InfoOutput].replace(
+            /\nCurrent turn: \w+/,
+            ""
+        );
+        state[InfoOutput] += `\nCurrent turn: ${state.activeCharacterName}`;
+    } else state[InfoOutput] = `Current turn: ${state.activeCharacterName}`;
 };
 
 const ExitBattle = (): void => {
     state.inBattle = false;
+    state.side1 = state.side1 ?? [];
+    state.side2 = state.side2 ?? [];
+    for (const characterName of state.side1.concat(state.side2)) {
+        const character = state.characters[characterName];
+        character.activeEffects ??= [];
+        for (const effect of character.activeEffects) {
+            state.out += RemoveEffect(characterName, effect.name);
+        }
+    }
     delete state.activeCharacter, state.activeCharacterName, state.active;
     delete state.side1, state.side2;
     delete state.currentSide;
-    state.message = "";
+    state[InfoOutput] = "";
 };

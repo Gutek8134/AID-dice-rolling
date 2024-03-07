@@ -1,5 +1,5 @@
 import { Stat } from "../../../Shared Library/Stat";
-import { state } from "../../proxy_state";
+import { state } from "../../../proxy_state";
 import { SetLevellingToOblivion } from "../../../Input Modifier/constants";
 import { experienceCalculation } from "../../../Shared Library/Utils";
 

@@ -1,5 +1,5 @@
 import { CutCommandFromContext } from "../../../../Input Modifier/Commands/commandutils";
-import { state } from "../../../proxy_state";
+import { state } from "../../../../proxy_state";
 
 describe("Command Utilities", () => {
     it("Should cut command from context", () => {

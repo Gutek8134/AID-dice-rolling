@@ -1,5 +1,6 @@
 import { NPC } from "../../Shared Library/Character";
 import { state } from "../../proxy_state";
+import { InfoOutput } from "../modifier";
 import { CutCommandFromContext } from "./commandutils";
 
 const addNPC = (
@@ -16,7 +17,8 @@ const addNPC = (
 
     //Null check
     if (!match || !match.groups) {
-        state.message = "Add NPC: Arguments were not given in proper format.";
+        state[InfoOutput] =
+            "Add NPC: Arguments were not given in proper format.";
         return modifiedText;
     }
 
@@ -34,12 +36,12 @@ const addNPC = (
               })
         : [];
 
-    console.log(
-        match.groups.startingItems
-            .split(",")
-            .map((el) => el.trim().substring(1))
-            .slice(1)
-    );
+    // console.log(
+    //     match.groups.startingItems
+    //         .split(",")
+    //         .map((el) => el.trim().substring(1))
+    //         .slice(1)
+    // );
     //Creates the character with stats. If none were given, every created stat is at state.startingLevel
     state.characters[characterName] = new NPC(
         values,

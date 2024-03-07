@@ -1,15 +1,3 @@
-//You can edit this list to edit what will be displayed when dealing x damage.
-//Format is [minimum damage, "displayed message"].
-//Note that it is used in sentence like
-//Miguel attacked Zuibroldun Jodem dealing {value from here} (x).
-damageOutputs = [
-    [1, "light damage"],
-    [15, "medium damage"],
-    [30, "significant damage"],
-    [60, "heavy damage"],
-    [100, "a killing blow"],
-];
-
 //!Does not check whether stats are equal to 0 when attacking. Change only if your damage function does not contain division or you've checked it properly.
 ignoreZeroDiv = false;
 //!Sets whether dead characters should be punished upon skillchecking
@@ -20,19 +8,6 @@ defaultDodge = false;
 levellingToOblivion = false;
 //!Should defending character also gain XP when !attack is used?
 defendingCharacterLevels = false;
-
-restrictedStatNames = [
-    "hp",
-    "level",
-    "experience",
-    "expToNextLvl",
-    "skillpoints",
-    "isNpc",
-    "items",
-    "type",
-    "name",
-];
-
 const addCharacter = (commandArguments, currIndices, modifiedText) => {
     (0, CutCommandFromContext)(modifiedText, currIndices);
     //Looks for pattern !addCharacter(name) or !addCharacter(name, stat1=value, stat2=value, ..., statN=value)
@@ -43,7 +18,7 @@ const addCharacter = (commandArguments, currIndices, modifiedText) => {
     const match = commandArguments.match(exp);
     //Null check
     if (!match || !match.groups) {
-        state.message =
+        state[InfoOutput] =
             "Add Character: Arguments were not given in proper format.";
         return modifiedText;
     }
@@ -72,32 +47,34 @@ const addCharacter = (commandArguments, currIndices, modifiedText) => {
 };
 
 const addItem = (commandArguments, currIndices, modifiedText) => {
-    (0, CutCommandFromContext)(modifiedText, currIndices);
     //Error checking
     if (
         commandArguments === undefined ||
         commandArguments === null ||
         commandArguments === ""
     ) {
-        state.message = "Add Item: No arguments found.";
+        state[InfoOutput] = "Add Item: No arguments found.";
         return modifiedText;
     }
     //Looks for pattern name, slot, stat=value, target place (none by default) and character
     const exp =
-        /(?<name>[\w ']+), (?<slot>[\w\s]+)(?<modifiers>(?:, [\w ']+ *= *-?\d+)+)(?:, *(?<target>inventory|equip)(?:, *(?<character>[\w\s']+))?)?/i;
+        /(?<name>[\w ']+), (?<slot>[\w\s]+)(?<modifiers>(?:, [\w ']+ *= *-?\d+)+)(?<effectNames>(?:, (?!equip|inventory|[^\w '])[\w ']*)*)?(?:, *(?<target>inventory|equip)(?:, *(?<character>[\w\s']+))?)?/i;
     const match = commandArguments.match(exp);
     //Error checking
     if (!match || !match.groups) {
-        state.message = "Add Item: Arguments were not given in proper format.";
+        state[InfoOutput] =
+            "Add Item: Arguments were not given in proper format.";
         return modifiedText;
     }
     if ((0, ElementInArray)(match.groups.name, Object.keys(state.items))) {
-        state.message = `Add Item: Item ${match.groups.name} already exists. Maybe you should use gainItem or equip instead?`;
+        state[
+            InfoOutput
+        ] = `Add Item: Item ${match.groups.name} already exists. Maybe you should use gainItem or equip instead?`;
         return modifiedText;
     }
     if (match.groups.target === "equip") {
         if (match.groups.character === undefined) {
-            state.message =
+            state[InfoOutput] =
                 "Add Item: You must specify who will equip the item when you choose so.";
             return modifiedText;
         }
@@ -107,7 +84,9 @@ const addItem = (commandArguments, currIndices, modifiedText) => {
                 Object.keys(state.characters)
             )
         ) {
-            state.message = `Add Item: Character ${match.groups.character} doesn't exist.`;
+            state[
+                InfoOutput
+            ] = `Add Item: Character ${match.groups.character} doesn't exist.`;
             return modifiedText;
         }
     }
@@ -120,32 +99,53 @@ const addItem = (commandArguments, currIndices, modifiedText) => {
             const temp = el.trim().split("=");
             return [temp[0].trim(), Number(temp[1].trim())];
         });
+    const effectNames = match.groups.effectNames
+        ? match.groups.effectNames
+              .substring(2)
+              .split(", ")
+              .map((el) => ["effect", el.trim()])
+        : [];
+    //Sanitizing
     let error = false;
     for (const modifier of initValues) {
         if ((0, ElementInArray)(modifier[0], restrictedStatNames)) {
-            state.message += `\nAdd Item: ${modifier[0]} cannot be set.`;
+            state[InfoOutput] += `\nAdd Item: ${modifier[0]} cannot be set.`;
             error = true;
             continue;
         }
         //Stats must exist prior
         if (!(0, isInStats)(modifier[0])) {
-            state.message += `\nAdd Item: Stat ${modifier[0]} does not exist.`;
+            state[
+                InfoOutput
+            ] += `\nAdd Item: Stat ${modifier[0]} does not exist.`;
+            error = true;
+        }
+    }
+    for (const [_, name] of effectNames) {
+        if (!(0, ElementInArray)(name, Object.keys(state.effects))) {
+            state[InfoOutput] += `\nAdd Item: Effect ${name} does not exist.`;
             error = true;
         }
     }
     if (error) return modifiedText;
+    initValues.push(...effectNames);
     //Adds slot
     initValues.push(["slot", match.groups.slot]);
     //Passes to constructor and adds received item to the state
     const item = new Item(itemName, initValues);
     state.items[itemName] = item;
-    modifiedText = `Item ${itemName} created with attributes:\n${(0,
-    ItemToString)(item)}.`;
+    //Gives the player necessary info.
+    modifiedText =
+        modifiedText.substring(0, currIndices[0]) +
+        modifiedText.substring(currIndices[1]);
+    state.out = `Item ${itemName} created with attributes:\n${(0, ItemToString)(
+        item
+    )}.`;
     if (match.groups.target === "equip")
-        modifiedText = (0, _equip)(match.groups.character, item, modifiedText);
+        state.out += (0, _equip)(match.groups.character, item, "");
     else if (match.groups.target === "inventory") {
         state.inventory.push(itemName);
-        modifiedText += `\nItem ${itemName} was put into inventory.`;
+        state.out += `\nItem ${itemName} was put into inventory.`;
     }
     return modifiedText;
 };
@@ -158,7 +158,8 @@ const addNPC = (commandArguments, currIndices, modifiedText) => {
     const match = commandArguments.match(exp);
     //Null check
     if (!match || !match.groups) {
-        state.message = "Add NPC: Arguments were not given in proper format.";
+        state[InfoOutput] =
+            "Add NPC: Arguments were not given in proper format.";
         return modifiedText;
     }
     //Grabbing info
@@ -173,12 +174,12 @@ const addNPC = (commandArguments, currIndices, modifiedText) => {
                   return [temp[0].trim(), Number(temp[1].trim())];
               })
         : [];
-    console.log(
-        match.groups.startingItems
-            .split(",")
-            .map((el) => el.trim().substring(1))
-            .slice(1)
-    );
+    // console.log(
+    //     match.groups.startingItems
+    //         .split(",")
+    //         .map((el) => el.trim().substring(1))
+    //         .slice(1)
+    // );
     //Creates the character with stats. If none were given, every created stat is at state.startingLevel
     state.characters[characterName] = new NPC(
         values,
@@ -192,23 +193,164 @@ const addNPC = (commandArguments, currIndices, modifiedText) => {
     return modifiedText;
 };
 
+const alterEffect = (commandArguments, currIndices, modifiedText) => {
+    (0, CutCommandFromContext)(modifiedText, currIndices);
+    //Looks for pattern name, stat=value, duration, unique?, appliedOn?, appliedTo?, impact?W
+    const exp =
+        /^\s*(?<name>[\w ']+)(?<duration>, \d+)?(?<modifiers>(?:, [\w ']+ *= *-?\d+)+)?(?:, (?<unique>unique|u))?(?:, (?<appliedOn>a|attack|d|defense|b|battle start|n|not applied))?(?:, (?<appliedTo>self|enemy))?(?:, (?<impact>on end|e|every turn|t|continuous|c))?\s*$/i;
+    const match = commandArguments.match(exp);
+    //Error checking
+    if (!match || !match.groups) {
+        state[InfoOutput] =
+            "Alter Effect: Arguments were not given in proper format.";
+        return modifiedText;
+    }
+    if (!state.effects) state.effects = {};
+    if (!(0, ElementInArray)(match.groups.name, Object.keys(state.effects))) {
+        state[
+            InfoOutput
+        ] = `Alter Effect: Effect ${match.groups.name} doesn't exist.`;
+        return modifiedText;
+    }
+    const effect = state.effects[match.groups.name];
+    const oldAttributes = (0, EffectToString)(effect);
+    let modifiers = [];
+    if (match.groups.modifiers) {
+        modifiers = match.groups.modifiers
+            .substring(2)
+            .split(", ")
+            .map((el) => {
+                const temp = el.trim().split("=");
+                return [temp[0].trim(), Number(temp[1].trim())];
+            });
+        let error = false;
+        const existingModifiers = [];
+        for (const modifier of modifiers) {
+            if (
+                (0, ElementInArray)(modifier[0], restrictedStatNames) &&
+                modifier[0] !== "hp"
+            ) {
+                state[
+                    InfoOutput
+                ] += `\nAlter Effect: ${modifier[0]} cannot be set.`;
+                error = true;
+                continue;
+            }
+            //Stats must exist prior
+            if (!(0, isInStats)(modifier[0]) && modifier[0] !== "hp") {
+                state[
+                    InfoOutput
+                ] += `\nAlter Effect: Stat ${modifier[0]} does not exist.`;
+                error = true;
+            }
+            if ((0, ElementInArray)(modifier[0], existingModifiers)) {
+                state[
+                    InfoOutput
+                ] += `\nAlter Effect: Stat ${modifier[0]} appears more than once.`;
+                error = true;
+            } else existingModifiers.push(modifier[0]);
+        }
+        if (error) return modifiedText;
+        let overriddenModifiers = {};
+        for (const [stat, value] of modifiers) {
+            overriddenModifiers[stat] = value;
+        }
+        effect.modifiers = overriddenModifiers;
+    }
+    if (match.groups.duration) {
+        match.groups.duration = match.groups.duration.substring(2);
+        if (!Number.isInteger(Number(match.groups.duration))) {
+            state[InfoOutput] =
+                "Create Effect: Duration is not a whole number.";
+            return modifiedText;
+        }
+        effect.durationLeft = effect.baseDuration = Number(
+            match.groups.duration
+        );
+    }
+    if (match.groups.unique)
+        switch (match.groups.unique) {
+            case "u":
+            case "unique":
+                effect.applyUnique = true;
+                break;
+            case "i":
+            case "not unique":
+                effect.applyUnique = false;
+                break;
+        }
+    if (match.groups.appliedOn)
+        switch (match.groups.appliedOn.toLowerCase()) {
+            case "a":
+            case "attack":
+                effect.appliedOn = "attack";
+                break;
+            case "b":
+            case "battle start":
+                effect.appliedOn = "battle start";
+                break;
+            case "d":
+            case "defense":
+                effect.appliedOn = "defense";
+                break;
+            case "n":
+            case "not applied":
+            default:
+                effect.appliedOn = "not applied";
+                break;
+        }
+    if (match.groups.appliedTo)
+        switch (match.groups.appliedTo.toLowerCase()) {
+            default:
+            case "self":
+                effect.appliedTo = "self";
+                break;
+            case "enemy":
+                effect.appliedTo = "enemy";
+                break;
+        }
+    if (match.groups.impact)
+        switch (match.groups.impact.toLowerCase()) {
+            default:
+            case "c":
+            case "continuous":
+                effect.impact = "continuous";
+                break;
+            case "e":
+            case "on end":
+                effect.impact = "on end";
+                break;
+            case "t":
+            case "every turn":
+                effect.impact = "every turn";
+                break;
+        }
+    modifiedText = `\n${
+        match.groups.name
+    }'s attributes has been altered\nfrom\n${oldAttributes}\nto\n${(0,
+    EffectToString)(effect)}.`;
+    return modifiedText;
+};
+
 const alterItem = (commandArguments, currIndices, modifiedText) => {
     (0, CutCommandFromContext)(modifiedText, currIndices);
     //Looks for pattern name, slot, stat=value
     const exp =
-        /(?<name>[\w ']+)(?<slot>, [\w\s]+)?(?<modifiers>(?:, [\w ']+ *= *-?\d+)+)/i;
+        /(?<name>[\w ']+)(?<slot>, [\w\s]+)?(?<modifiers>(?:, [\w ']+ *= *-?\d+)+)(?<effectNames>(?:, [\w ']+)*)/i;
     const match = commandArguments.match(exp);
     //Error checking
     if (!match || !match.groups) {
-        state.message =
+        state[InfoOutput] =
             "Alter Item: Arguments were not given in proper format.";
         return modifiedText;
     }
     if (!(0, ElementInArray)(match.groups.name, Object.keys(state.items))) {
-        state.message = `Alter Item: Item ${match.groups.name} doesn't exist.`;
+        state[
+            InfoOutput
+        ] = `Alter Item: Item ${match.groups.name} does not exist.`;
         if (DEBUG) {
-            state.message += "\n";
-            for (const key in state.items) state.message += ", " + key;
+            state[InfoOutput] += "\n";
+            for (const key in state.items) state[InfoOutput] += ", " + key;
         }
         return modifiedText;
     }
@@ -221,18 +363,36 @@ const alterItem = (commandArguments, currIndices, modifiedText) => {
             const temp = el.trim().split("=");
             return [temp[0].trim(), Number(temp[1].trim())];
         });
+    const effectNames = match.groups.effectNames
+        ? match.groups.effectNames
+              .substring(2)
+              .split(", ")
+              .map((el) => el.trim())
+        : [];
     //Stats must exist prior
+    let error = false;
     for (const modifier of initValues) {
         if ((0, ElementInArray)(modifier[0], restrictedStatNames)) {
-            state.message += `\nAlter Item: ${modifier[0]} cannot be altered.`;
+            state[
+                InfoOutput
+            ] += `\nAlter Item: ${modifier[0]} cannot be altered.`;
+            error = true;
             continue;
         }
         if (!(0, isInStats)(modifier[0])) {
-            state.message = `Alter Item: Stat ${modifier[0]} does not exist.`;
-            return modifiedText;
+            state[
+                InfoOutput
+            ] = `Alter Item: Stat ${modifier[0]} does not exist.`;
+            error = true;
         }
     }
-    //Passes to constructor and adds received item to the state
+    for (const name of effectNames) {
+        if (!(0, ElementInArray)(name, Object.keys(state.effects))) {
+            state[InfoOutput] += `\nAlter Item: Effect ${name} does not exist.`;
+            error = true;
+        }
+    }
+    if (error) return modifiedText;
     const item = state.items[itemName];
     const oldAttributes = (0, ItemToString)(item);
     item.slot = match.groups.slot.substring(2);
@@ -240,8 +400,74 @@ const alterItem = (commandArguments, currIndices, modifiedText) => {
         if (modifier[1] === 0) delete item.modifiers[modifier[0]];
         else item.modifiers[modifier[0]] = modifier[1];
     }
+    if (effectNames.length > 0) {
+        item.effects = effectNames;
+    }
     state.out = `\n${itemName}'s attributes has been altered\nfrom\n${oldAttributes}\nto\n${(0,
     ItemToString)(item)}.`;
+    return modifiedText;
+};
+
+const applyEffect = (commandArguments, currIndices, modifiedText) => {
+    (0, CutCommandFromContext)(modifiedText, currIndices);
+    //Looks for pattern name, character, override duration?
+    const exp =
+        /^(?<effectName>[\w ']+), (?<characterName>[\w ']+)(?:, (?<overriddenDuration>\d+))?$/i;
+    const match = commandArguments.match(exp);
+    //Error checking
+    if (!match || !match.groups) {
+        state[InfoOutput] =
+            "Apply Effect: Arguments were not given in proper format.";
+        return modifiedText;
+    }
+    const effectName = match.groups.effectName;
+    const characterName = match.groups.characterName;
+    const overriddenDurationAsString = match.groups.overriddenDuration;
+    if (!(0, ElementInArray)(effectName, Object.keys(state.effects))) {
+        state[
+            InfoOutput
+        ] = `Apply Effect: Effect ${effectName} does not exist.`;
+        return modifiedText;
+    }
+    if (!(0, ElementInArray)(characterName, Object.keys(state.characters))) {
+        state[
+            InfoOutput
+        ] = `Apply Effect: Character ${characterName} does not exist.`;
+        return modifiedText;
+    }
+    if (
+        overriddenDurationAsString &&
+        !Number.isInteger(overriddenDurationAsString)
+    ) {
+        state[InfoOutput] =
+            "Apply Effect: Overridden duration is not a whole number.";
+        return modifiedText;
+    }
+    const effect = state.effects[effectName];
+    const character = state.characters[characterName];
+    if (!character.activeEffects) character.activeEffects = [];
+    if (effect.applyUnique)
+        if (
+            (0, ElementInArray)(
+                effect.name,
+                character.activeEffects.map((effect) => effect.name)
+            )
+        ) {
+            state[
+                InfoOutput
+            ] = `Apply Effect: Effect ${effect.name} was not applied to ${characterName}. Reason: unique effect already applied.`;
+            return modifiedText;
+        }
+    (0, InstanceEffect)(
+        characterName,
+        effect,
+        overriddenDurationAsString
+            ? Number(overriddenDurationAsString)
+            : undefined
+    );
+    state.out = `Effect ${effectName} applied to ${characterName}.
+Current ${characterName} state:
+${(0, CharacterToString)(character)}`;
     return modifiedText;
 };
 
@@ -253,7 +479,8 @@ const attack = (commandArguments, currIndices, textCopy, modifiedText) => {
         commandArguments === null ||
         commandArguments === ""
     ) {
-        state.message = "Attack: Arguments were not given in proper format.";
+        state[InfoOutput] =
+            "Attack: Arguments were not given in proper format.";
         return modifiedText;
     }
     //Checks for format stat, character, stat, character
@@ -262,16 +489,20 @@ const attack = (commandArguments, currIndices, textCopy, modifiedText) => {
     const match = commandArguments.match(exp);
     //Error checking
     if (match === null || !match.groups) {
-        state.message = "Attack: No matching arguments found.";
+        state[InfoOutput] = "Attack: No matching arguments found.";
         return modifiedText;
     }
     //Checks if stats exist
     if (!(0, ElementInArray)(match.groups.attackStat, state.stats)) {
-        state.message = `Attack: Stat ${match.groups.attackStat} was not created.`;
+        state[
+            InfoOutput
+        ] = `Attack: Stat ${match.groups.attackStat} was not created.`;
         return modifiedText;
     }
     if (!(0, ElementInArray)(match.groups.defenseStat, state.stats)) {
-        state.message = `Attack: Stat ${match.groups.defenseStat} was not created.`;
+        state[
+            InfoOutput
+        ] = `Attack: Stat ${match.groups.defenseStat} was not created.`;
         return modifiedText;
     }
     //Creates shortcuts to names and stats
@@ -285,7 +516,9 @@ const attack = (commandArguments, currIndices, textCopy, modifiedText) => {
             Object.keys(state.characters)
         )
     ) {
-        state.message = `Attack: Character ${attackingCharacterName} does not exist.`;
+        state[
+            InfoOutput
+        ] = `Attack: Character ${attackingCharacterName} does not exist.`;
         return modifiedText;
     }
     if (
@@ -294,7 +527,9 @@ const attack = (commandArguments, currIndices, textCopy, modifiedText) => {
             Object.keys(state.characters)
         )
     ) {
-        state.message = `Attack: Character ${defendingCharacterName} does not exist.`;
+        state[
+            InfoOutput
+        ] = `Attack: Character ${defendingCharacterName} does not exist.`;
         return modifiedText;
     }
     const { attackOutput, levelOutput, contextOutput } = (0, DealDamage)(
@@ -325,7 +560,7 @@ const battle = (commandArguments, modifiedText) => {
         commandArguments === null ||
         commandArguments === ""
     ) {
-        state.message = "Battle: No arguments found.";
+        state[InfoOutput] = "Battle: No arguments found.";
         return modifiedText;
     }
     //Looks for pattern (character1, character2, ...), (character3, character4, ...)
@@ -334,7 +569,12 @@ const battle = (commandArguments, modifiedText) => {
     const match = modifiedText.match(exp);
     //Error checking
     if (match === null || !match.groups) {
-        state.message = "Battle: Arguments were not given in proper format.";
+        state[InfoOutput] =
+            "Battle: Arguments were not given in proper format.";
+        return modifiedText;
+    }
+    if (state.inBattle) {
+        state[InfoOutput] = "Battle: You are already in a battle.";
         return modifiedText;
     }
     //Grabs the info
@@ -361,16 +601,22 @@ const battle = (commandArguments, modifiedText) => {
     for (const characterName of side1CharactersNames) {
         if ((0, ElementInArray)(characterName, Object.keys(state.characters))) {
             if (state.characters[characterName].hp <= 0) {
-                state.message = `Battle: Character ${characterName} is dead and cannot participate in battle.`;
+                state[
+                    InfoOutput
+                ] = `Battle: Character ${characterName} is dead and cannot participate in battle.`;
                 return modifiedText;
             }
             if ((0, ElementInArray)(characterName, side2CharactersNames)) {
-                state.message = `Battle: Character ${characterName} cannot belong to both sides of the battle.`;
+                state[
+                    InfoOutput
+                ] = `Battle: Character ${characterName} cannot belong to both sides of the battle.`;
                 return modifiedText;
             }
         } else {
             //console.log(`${el}\n\n${state.characters}`);
-            state.message = `Battle: Character ${characterName} doesn't exist.`;
+            state[
+                InfoOutput
+            ] = `Battle: Character ${characterName} doesn't exist.`;
             return modifiedText;
         }
     }
@@ -378,11 +624,53 @@ const battle = (commandArguments, modifiedText) => {
         if (
             !(0, ElementInArray)(characterName, Object.keys(state.characters))
         ) {
-            state.message = `Battle: Character ${characterName} doesn't exist.`;
+            state[
+                InfoOutput
+            ] = `Battle: Character ${characterName} doesn't exist.`;
             return modifiedText;
         } else if (state.characters[characterName].hp <= 0) {
-            state.message = `Battle: Character ${characterName} is dead and cannot participate in battle.`;
+            state[
+                InfoOutput
+            ] = `Battle: Character ${characterName} is dead and cannot participate in battle.`;
             return modifiedText;
+        }
+    }
+    state.out = "A battle has emerged between two groups!";
+    //On battle start effects are instanced (applied) to self or random enemy
+    for (const characterName of side1CharactersNames) {
+        const character = state.characters[characterName];
+        for (const item of Object.values(character.items)) {
+            for (const effectName of item.effects) {
+                const effect = state.effects[effectName];
+                if (effect.appliedOn === "battle start")
+                    if (effect.appliedTo === "self")
+                        state.out += (0, InstanceEffect)(characterName, effect);
+                    else if (effect.appliedTo === "enemy")
+                        state.out += (0, InstanceEffect)(
+                            side2CharactersNames[
+                                (0, diceRoll)(side2CharactersNames.length) - 1
+                            ],
+                            effect
+                        );
+            }
+        }
+    }
+    for (const characterName of side2CharactersNames) {
+        const character = state.characters[characterName];
+        for (const item of Object.values(character.items)) {
+            for (const effectName of item.effects) {
+                const effect = state.effects[effectName];
+                if (effect.appliedOn === "battle start")
+                    if (effect.appliedTo === "self")
+                        state.out += (0, InstanceEffect)(characterName, effect);
+                    else if (effect.appliedTo === "enemy")
+                        state.out += (0, InstanceEffect)(
+                            side1CharactersNames[
+                                (0, diceRoll)(side1CharactersNames.length) - 1
+                            ],
+                            effect
+                        );
+            }
         }
     }
     //Setting up values for automatic turns
@@ -391,10 +679,10 @@ const battle = (commandArguments, modifiedText) => {
     state.currentSide = `side${(0, diceRoll)(2)}`;
     state.active = [...state[state.currentSide]];
     state.inBattle = true;
-    state.out = "A battle has emerged between two groups!";
     const nextActiveCharacterIndex = (0, diceRoll)(state.active.length) - 1;
     state.activeCharacterName = state.active[nextActiveCharacterIndex];
     state.activeCharacter = state.characters[state.activeCharacterName];
+    state.out += state.activeCharacterName;
     if (state.activeCharacter.isNpc) (0, turn)("");
     return modifiedText;
 };
@@ -408,11 +696,141 @@ const CutCommandFromContext = (modifiedText, currIndices) => {
               modifiedText.substring(currIndices[1]);
 };
 
+const createEffect = (commandArguments, currIndices, modifiedText) => {
+    var _a, _b, _c;
+    (0, CutCommandFromContext)(modifiedText, currIndices);
+    //Looks for pattern name, stat=value, duration, unique?, appliedOn?, appliedTo?, impact?
+    const exp =
+        /^\s*(?<name>[\w ']+), (?<duration>\d+)(?<modifiers>(?:, [\w ']+ *= *-?\d+)+)(?:, (?<unique>unique|u))?(?:, (?<appliedOn>a|attack|d|defense|b|battle start|n|not applied))?(?:, (?<appliedTo>self|enemy))?(?:, (?<impact>on end|e|every turn|t|continuous|c))?\s*$/i;
+    const match = commandArguments.match(exp);
+    //Error checking
+    if (!match || !match.groups) {
+        state[InfoOutput] =
+            "Create Effect: Arguments were not given in proper format.";
+        return modifiedText;
+    }
+    if (!state.effects) state.effects = {};
+    if ((0, ElementInArray)(match.groups.name, Object.keys(state.effects))) {
+        state[
+            InfoOutput
+        ] = `Create Effect: Effect ${match.groups.name} already exists.`;
+        return modifiedText;
+    }
+    const initModifiers = match.groups.modifiers
+        .substring(2)
+        .split(", ")
+        .map((el) => {
+            const temp = el.trim().split("=");
+            return [temp[0].trim(), Number(temp[1].trim())];
+        });
+    let error = false;
+    const existingModifiers = [];
+    for (const modifier of initModifiers) {
+        if (
+            (0, ElementInArray)(modifier[0], restrictedStatNames) &&
+            modifier[0] !== "hp"
+        ) {
+            state[
+                InfoOutput
+            ] += `\nCreate Effect: ${modifier[0]} cannot be set.`;
+            error = true;
+            continue;
+        }
+        //Stats must exist prior
+        if (!(0, isInStats)(modifier[0]) && modifier[0] !== "hp") {
+            state[
+                InfoOutput
+            ] += `\nCreate Effect: Stat ${modifier[0]} does not exist.`;
+            error = true;
+        }
+        if ((0, ElementInArray)(modifier[0], existingModifiers)) {
+            state[
+                InfoOutput
+            ] += `\nCreate Effect: Stat ${modifier[0]} appears more than once.`;
+            error = true;
+        } else existingModifiers.push(modifier[0]);
+    }
+    if (error) return modifiedText;
+    if (!Number.isInteger(Number(match.groups.duration))) {
+        state[InfoOutput] = "Create Effect: Duration is not a whole number.";
+        return modifiedText;
+    }
+    let appliedOn;
+    switch (
+        (_a = match.groups.appliedOn) === null || _a === void 0
+            ? void 0
+            : _a.toLowerCase()
+    ) {
+        case "a":
+        case "attack":
+            appliedOn = "attack";
+            break;
+        case "b":
+        case "battle start":
+            appliedOn = "battle start";
+            break;
+        case "d":
+        case "defense":
+            appliedOn = "defense";
+            break;
+        default:
+            appliedOn = "not applied";
+            break;
+    }
+    let appliedTo;
+    switch (
+        (_b = match.groups.appliedTo) === null || _b === void 0
+            ? void 0
+            : _b.toLowerCase()
+    ) {
+        default:
+        case "self":
+            appliedTo = "self";
+            break;
+        case "enemy":
+            appliedTo = "enemy";
+            break;
+    }
+    let impact;
+    switch (
+        (_c = match.groups.impact) === null || _c === void 0
+            ? void 0
+            : _c.toLowerCase()
+    ) {
+        default:
+        case "c":
+        case "continuous":
+            impact = "continuous";
+            break;
+        case "e":
+        case "on end":
+            impact = "on end";
+            break;
+        case "t":
+        case "every turn":
+            impact = "every turn";
+            break;
+    }
+    const effect = new Effect(
+        match.groups.name.trim(),
+        initModifiers,
+        Number(match.groups.duration.trim()),
+        appliedOn,
+        appliedTo,
+        impact,
+        match.groups.unique !== undefined
+    );
+    state.effects[effect.name] = effect;
+    modifiedText = `\nEffect ${effect.name} created with attributes:\n${(0,
+    EffectToString)(effect)}.`;
+    return modifiedText;
+};
+
 const equip = (commandArguments, currIndices, modifiedText) => {
     (0, CutCommandFromContext)(modifiedText, currIndices);
     //Error checking
     if (!commandArguments) {
-        state.message = "Equip Item: No arguments found.";
+        state[InfoOutput] = "Equip Item: No arguments found.";
         return DEBUG ? "error" : modifiedText;
     }
     //Looks for character, item1, item2, ..., itemN
@@ -423,7 +841,7 @@ const equip = (commandArguments, currIndices, modifiedText) => {
         !match ||
         !(match === null || match === void 0 ? void 0 : match.groups)
     ) {
-        state.message =
+        state[InfoOutput] =
             "Equip Item: Arguments were not given in proper format.";
         return DEBUG ? "error" : modifiedText;
     }
@@ -434,16 +852,20 @@ const equip = (commandArguments, currIndices, modifiedText) => {
             .split(/, */)
             .map((x) => x.trim());
     if (!(0, ElementInArray)(characterName, Object.keys(state.characters))) {
-        state.message = `Equip Item: Character ${characterName} doesn't exist.`;
+        state[
+            InfoOutput
+        ] = `Equip Item: Character ${characterName} doesn't exist.`;
         return DEBUG ? "error" : modifiedText;
     }
     for (const name of itemNames) {
         if (!(0, ElementInArray)(name, Object.keys(state.items))) {
-            state.message = `Equip Item: Item ${name} doesn't exist.`;
+            state[InfoOutput] = `Equip Item: Item ${name} doesn't exist.`;
             return DEBUG ? "error" : modifiedText;
         }
         if (!(0, ElementInArray)(name, state.inventory)) {
-            state.message = `Equip Item: You don't have item ${name} in your inventory.`;
+            state[
+                InfoOutput
+            ] = `Equip Item: You don't have item ${name} in your inventory.`;
             return DEBUG ? "error" : modifiedText;
         }
     }
@@ -464,20 +886,21 @@ const gainItem = (commandArguments, currIndices, modifiedText) => {
         commandArguments === null ||
         commandArguments === ""
     ) {
-        state.message = "Gain Item: No arguments found.";
+        state[InfoOutput] = "Gain Item: No arguments found.";
         return modifiedText;
     }
     const exp = /(?<name>[\w ']+)(?:, *(?<character>[\w\s']+))?/i;
     const match = commandArguments.match(exp);
     //Error checking
     if (!match || !match.groups) {
-        state.message = "Gain Item: Arguments were not given in proper format.";
+        state[InfoOutput] =
+            "Gain Item: Arguments were not given in proper format.";
         return modifiedText;
     }
     const characterName = match.groups.character,
         itemName = match.groups.name;
     if (!(0, ElementInArray)(itemName, Object.keys(state.items))) {
-        state.message = `Gain Item: Item ${itemName} doesn't exist.`;
+        state[InfoOutput] = `Gain Item: Item ${itemName} doesn't exist.`;
         return modifiedText;
     }
     //If the character has been specified, it must exist
@@ -485,7 +908,9 @@ const gainItem = (commandArguments, currIndices, modifiedText) => {
         characterName !== undefined &&
         !(0, ElementInArray)(characterName, Object.keys(state.characters))
     ) {
-        state.message = `Gain Item: Character ${characterName} doesn't exist.`;
+        state[
+            InfoOutput
+        ] = `Gain Item: Character ${characterName} doesn't exist.`;
         return modifiedText;
     }
     state.inventory.push(itemName);
@@ -513,21 +938,22 @@ const heal = (commandArguments, currIndices, modifiedText) => {
     const match = commandArguments.match(exp);
     //Null check
     if (!match || !match.groups) {
-        state.message = "Heal: Arguments were not given in proper format.";
+        state[InfoOutput] = "Heal: Arguments were not given in proper format.";
         return modifiedText;
     }
     //Shortcut
     const characterName = match.groups.character;
     //Checks if character exists
     if (!(0, ElementInArray)(characterName, Object.keys(state.characters))) {
-        state.message = `Heal: Character ${characterName} does not exist.`;
+        state[InfoOutput] = `Heal: Character ${characterName} does not exist.`;
         return modifiedText;
     }
     //Another shortcut
     const character = state.characters[characterName];
     //Checks if character is dead
     if (character.hp < 1) {
-        state.message = "Heal: Dead characters must be revived before healing.";
+        state[InfoOutput] =
+            "Heal: Dead characters must be revived before healing.";
         return modifiedText;
     }
     //Initiates the value
@@ -560,7 +986,7 @@ const heal = (commandArguments, currIndices, modifiedText) => {
 const levelStats = (commandArguments, currIndices, modifiedText) => {
     (0, CutCommandFromContext)(modifiedText, currIndices);
     if (levellingToOblivion) {
-        state.message =
+        state[InfoOutput] =
             "Level Stats: This command will work only when you are levelling your characters.\nIn current mode stats are levelling by themselves when you are using them.";
         return modifiedText;
     }
@@ -568,13 +994,14 @@ const levelStats = (commandArguments, currIndices, modifiedText) => {
     const exp = /(?<character>[\w\s']+)(?<stats>(?:, [\w ']+ *\+ *\d+)+)/i;
     const match = commandArguments.match(exp);
     if (!match || !match.groups) {
-        state.message =
+        state[InfoOutput] =
             "Level Stats: Arguments were not given in proper format.";
         return modifiedText;
     }
     const characterName = match.groups.character;
     if (!(0, ElementInArray)(characterName, Object.keys(state.characters))) {
-        state.message = "Level Stats: Nonexistent characters can't level up.";
+        state[InfoOutput] =
+            "Level Stats: Nonexistent characters can't level up.";
         return modifiedText;
     }
     const character = state.characters[characterName];
@@ -589,11 +1016,14 @@ const levelStats = (commandArguments, currIndices, modifiedText) => {
             return [curr[0].trim(), Number(curr[1])];
         });
     if (usedSkillpoints === 0) {
-        state.message = "Level Stats: You need to use at least one skillpoint.";
+        state[InfoOutput] =
+            "Level Stats: You need to use at least one skillpoint.";
         return modifiedText;
     }
     if (character.skillpoints < usedSkillpoints) {
-        state.message = `Level Stats: ${characterName} doesn't have enough skillpoints (${character.skillpoints}/${usedSkillpoints}).`;
+        state[
+            InfoOutput
+        ] = `Level Stats: ${characterName} doesn't have enough skillpoints (${character.skillpoints}/${usedSkillpoints}).`;
         return modifiedText;
     }
     //Caches old stats to show
@@ -601,7 +1031,9 @@ const levelStats = (commandArguments, currIndices, modifiedText) => {
     //Changes stats
     for (const el of values) {
         if ((0, ElementInArray)(el[0], restrictedStatNames)) {
-            state.message += `\nLevel Stats: ${el[0]} cannot be levelled up.`;
+            state[
+                InfoOutput
+            ] += `\nLevel Stats: ${el[0]} cannot be levelled up.`;
             continue;
         }
         //If stat doesn't exits on the character, creates it
@@ -615,6 +1047,61 @@ const levelStats = (commandArguments, currIndices, modifiedText) => {
     return modifiedText;
 };
 
+const removeEffect = (commandArguments, currIndices, modifiedText) => {
+    (0, CutCommandFromContext)(modifiedText, currIndices);
+    //Looks for pattern name|all, character
+    const exp = /^(?<effectName>[\w ']+), (?<characterName>[\w ']+)$/i;
+    const match = commandArguments.match(exp);
+    //Error checking
+    if (!match || !match.groups) {
+        state[InfoOutput] =
+            "Remove Effect: Arguments were not given in proper format.";
+        return modifiedText;
+    }
+    const effectName = match.groups.effectName;
+    const characterName = match.groups.characterName;
+    if (
+        !(0, ElementInArray)(effectName, Object.keys(state.effects)) &&
+        effectName !== "all"
+    ) {
+        state[
+            InfoOutput
+        ] = `Remove Effect: Effect ${effectName} does not exist.`;
+        return modifiedText;
+    }
+    if (!(0, ElementInArray)(characterName, Object.keys(state.characters))) {
+        state[
+            InfoOutput
+        ] = `Remove Effect: Character ${characterName} does not exist.`;
+        return modifiedText;
+    }
+    const character = state.characters[characterName];
+    if (!character.activeEffects) character.activeEffects = [];
+    if (effectName === "all") {
+        character.activeEffects = [];
+        state.out = `All effects have been removed from ${characterName}.
+Current ${characterName} state:
+${(0, CharacterToString)(character)}`;
+        return modifiedText;
+    }
+    if (
+        !(0, ElementInArray)(
+            effectName,
+            character.activeEffects.map((effect) => effect.name)
+        )
+    ) {
+        state[
+            InfoOutput
+        ] += `Remove Effect: Character ${characterName} is not under influence of effect ${effectName}.`;
+        return modifiedText;
+    }
+    (0, RemoveEffect)(characterName, effectName);
+    state.out = `Effect ${effectName} removed from ${characterName}.
+Current ${characterName} state:
+${(0, CharacterToString)(character)}`;
+    return modifiedText;
+};
+
 const revive = (commandArguments, currIndices, modifiedText) => {
     (0, CutCommandFromContext)(modifiedText, currIndices);
     //Looks for pattern reviving character, revived character, revive value
@@ -623,7 +1110,8 @@ const revive = (commandArguments, currIndices, modifiedText) => {
     const match = commandArguments.match(exp);
     //Null check
     if (!match || !match.groups) {
-        state.message = "Revive: Arguments were not given in proper format.";
+        state[InfoOutput] =
+            "Revive: Arguments were not given in proper format.";
         return modifiedText;
     }
     //Shortcuts
@@ -637,12 +1125,12 @@ const revive = (commandArguments, currIndices, modifiedText) => {
             Object.keys(state.characters)
         )
     ) {
-        state.message = "Revive: Reviving character doesn't exist.";
+        state[InfoOutput] = "Revive: Reviving character doesn't exist.";
         return modifiedText;
     }
     const revivingCharacter = state.characters[revivingCharacterName];
     if (revivingCharacter.hp <= value) {
-        state.message =
+        state[InfoOutput] =
             "Revive: Reviving character would die if this action would be performed. Their hp is too low.\nRevive was not performed.";
         return modifiedText;
     }
@@ -653,7 +1141,7 @@ const revive = (commandArguments, currIndices, modifiedText) => {
             Object.keys(state.characters)
         )
     ) {
-        state.message = "Revive: Revived character doesn't exist.";
+        state[InfoOutput] = "Revive: Revived character doesn't exist.";
         return modifiedText;
     }
     const revivedCharacter = state.characters[revivedCharacterName];
@@ -679,7 +1167,8 @@ const sattack = (commandArguments, currIndices, textCopy, modifiedText) => {
         commandArguments === null ||
         commandArguments === ""
     ) {
-        state.message = "Attack: Arguments were not given in proper format.";
+        state[InfoOutput] =
+            "Attack: Arguments were not given in proper format.";
         return modifiedText;
     }
     //Checks for format stat, character, stat, character
@@ -688,16 +1177,20 @@ const sattack = (commandArguments, currIndices, textCopy, modifiedText) => {
     const match = commandArguments.match(exp);
     //Error checking
     if (match === null || !match.groups) {
-        state.message = "Attack: No matching arguments found.";
+        state[InfoOutput] = "Attack: No matching arguments found.";
         return modifiedText;
     }
     //Checks if stats exist
     if (!(0, ElementInArray)(match.groups.attackStat, state.stats)) {
-        state.message = `Attack: Stat ${match.groups.attackStat} was not created.`;
+        state[
+            InfoOutput
+        ] = `Attack: Stat ${match.groups.attackStat} was not created.`;
         return modifiedText;
     }
     if (!(0, ElementInArray)(match.groups.defenseStat, state.stats)) {
-        state.message = `Attack: Stat ${match.groups.defenseStat} was not created.`;
+        state[
+            InfoOutput
+        ] = `Attack: Stat ${match.groups.defenseStat} was not created.`;
         return modifiedText;
     }
     //Creates shortcuts to names and stats
@@ -711,7 +1204,9 @@ const sattack = (commandArguments, currIndices, textCopy, modifiedText) => {
             Object.keys(state.characters)
         )
     ) {
-        state.message = `Attack: Character ${attackingCharacterName} does not exist.`;
+        state[
+            InfoOutput
+        ] = `Attack: Character ${attackingCharacterName} does not exist.`;
         return modifiedText;
     }
     if (
@@ -720,7 +1215,9 @@ const sattack = (commandArguments, currIndices, textCopy, modifiedText) => {
             Object.keys(state.characters)
         )
     ) {
-        state.message = `Attack: Character ${defendingCharacterName} does not exist.`;
+        state[
+            InfoOutput
+        ] = `Attack: Character ${defendingCharacterName} does not exist.`;
         return modifiedText;
     }
     const { attackOutput, levelOutput, contextOutput } = (0,
@@ -752,7 +1249,7 @@ const setState = (commandArguments, currIndices, modifiedText) => {
     const match = commandArguments.match(exp);
     //Null check
     if (!match || !match.groups) {
-        state.message =
+        state[InfoOutput] =
             "Set State: You need to enter a parameter to setState command.";
         return modifiedText;
     }
@@ -763,7 +1260,7 @@ const setState = (commandArguments, currIndices, modifiedText) => {
         cache = JSON.parse(match.groups.json);
     } catch (SyntaxError) {
         cache = state;
-        state.message = "Set State: Invalid JSON state.";
+        state[InfoOutput] = "Set State: Invalid JSON state.";
         return modifiedText;
     }
     if (cache) {
@@ -783,13 +1280,16 @@ const setStats = (commandArguments, currIndices, modifiedText) => {
     const match = commandArguments.match(exp);
     //Null check
     if (!match || !match.groups) {
-        state.message = "Set Stats: Arguments were not given in proper format.";
+        state[InfoOutput] =
+            "Set Stats: Arguments were not given in proper format.";
         return modifiedText;
     }
     //Grabbing info
     const characterName = match.groups.character;
     if (!(0, ElementInArray)(characterName, Object.keys(state.characters))) {
-        state.message = `Set Stats: Character ${characterName} doesn't exist.`;
+        state[
+            InfoOutput
+        ] = `Set Stats: Character ${characterName} doesn't exist.`;
         return modifiedText;
     }
     const character = state.characters[characterName];
@@ -820,7 +1320,8 @@ const setStats = (commandArguments, currIndices, modifiedText) => {
 
 const showInventory = (commandArguments, modifiedText) => {
     if (commandArguments !== "") {
-        state.message = "Show Inventory: Command doesn't take any arguments.";
+        state[InfoOutput] =
+            "Show Inventory: Command doesn't take any arguments.";
         return modifiedText;
     }
     //console.log(state.inventory);
@@ -838,14 +1339,16 @@ const showStats = (commandArguments, currIndices, modifiedText) => {
     const match = commandArguments.match(exp);
     //Null check
     if (!match || !match.groups) {
-        state.message =
+        state[InfoOutput] =
             "Show Stats: Arguments were not given in proper format.";
         return modifiedText;
     }
     //Grabbing info
     const characterName = match.groups.character;
     if (!(0, ElementInArray)(characterName, Object.keys(state.characters))) {
-        state.message = `Show Stats: Character ${characterName} doesn't exist.`;
+        state[
+            InfoOutput
+        ] = `Show Stats: Character ${characterName} doesn't exist.`;
         return modifiedText;
     }
     const character = state.characters[characterName];
@@ -867,7 +1370,7 @@ const skillcheck = (commandArguments, currIndices, modifiedText) => {
     //console.log(match);
     //Firstly, checks if something matched
     if (match === null || !match.groups) {
-        state.message =
+        state[InfoOutput] =
             "Skillcheck: Arguments were not given in proper format.";
         return modifiedText;
     }
@@ -878,13 +1381,15 @@ const skillcheck = (commandArguments, currIndices, modifiedText) => {
     const characterName = match.groups.character;
     //Testing if stat exists, throwing error otherwise
     if (!(0, ElementInArray)(statName, state.stats)) {
-        state.message = `Skillcheck: Stat ${statName} does not exist.`;
+        state[InfoOutput] = `Skillcheck: Stat ${statName} does not exist.`;
         return modifiedText;
     }
     //Shortening access path to character object
     let character = state.characters[characterName];
     if (!character) {
-        state.message = `Skillcheck: Character ${characterName} doesn't exist.`;
+        state[
+            InfoOutput
+        ] = `Skillcheck: Character ${characterName} doesn't exist.`;
         return modifiedText;
     }
     //Don't have a stat? No problem! You'll have a 0 instead! That's even worse than the default starting value!
@@ -895,14 +1400,16 @@ const skillcheck = (commandArguments, currIndices, modifiedText) => {
     let effectiveCharacterStatLevel = characterStatLevelWithMods;
     //Punishing
     if (character.hp < 1 && shouldPunish) {
-        state.message = `Skillcheck: Testing against dead character. Punishment: -${state.punishment} (temporary).`;
+        state[
+            InfoOutput
+        ] = `Skillcheck: Testing against dead character. Punishment: -${state.punishment} (temporary).`;
         effectiveCharacterStatLevel -= state.punishment;
     }
     //console.log(char + ", " + stat + ": "+ charStat);
     //Grabs thresholds
     const thresholds = commandArguments.match(thresholdCheck);
     if (!thresholds || !thresholds.groups) {
-        state.message = "Skillcheck: Thresholds are not in proper format.";
+        state[InfoOutput] = "Skillcheck: Thresholds are not in proper format.";
         return DEBUG ? "Threshold fail" : modifiedText;
     }
     //console.log(thresholds);
@@ -1010,7 +1517,7 @@ const skillcheck = (commandArguments, currIndices, modifiedText) => {
             //Read message
             default:
                 console.error("WTF is this?!");
-                state.message =
+                state[InfoOutput] =
                     "Skillcheck: no group has been matched.\nIDK how did you make it, but think about creating an issue.";
                 return modifiedText;
         }
@@ -1064,14 +1571,17 @@ const unequip = (commandArguments, currIndices, modifiedText) => {
     const match = commandArguments.match(exp);
     //Error checking
     if (!match || !match.groups) {
-        state.message = "Unequip: Arguments were not given in proper format.";
+        state[InfoOutput] =
+            "Unequip: Arguments were not given in proper format.";
         return modifiedText;
     }
     //Grabs character name
     const characterName = match.groups.character;
     //Checks if character exists
     if (!(0, ElementInArray)(characterName, Object.keys(state.characters))) {
-        state.message = `Unequip: Character ${characterName} doesn't exist.`;
+        state[
+            InfoOutput
+        ] = `Unequip: Character ${characterName} doesn't exist.`;
         return DEBUG ? "error" : modifiedText;
     }
     const character = state.characters[characterName];
@@ -1113,12 +1623,18 @@ const BestStat = (character) => {
 };
 const GetStatWithMods = (character, stat) => {
     if (!character || !stat || character.stats[stat] === undefined) return 0;
+    if (!character.activeEffects) character.activeEffects = [];
+    let effectModifiersSum = 0;
+    for (const effect of character.activeEffects) {
+        if (effect.modifiers[stat] && effect.impact === "continuous")
+            effectModifiersSum += effect.modifiers[stat];
+    }
     let itemModifiersSum = 0;
     for (const itemName of Object.keys(character.items)) {
         const item = character.items[itemName];
         if (item.modifiers[stat]) itemModifiersSum += item.modifiers[stat];
     }
-    return character.stats[stat].level + itemModifiersSum;
+    return character.stats[stat].level + itemModifiersSum + effectModifiersSum;
 };
 const IncrementExp = (characterName, statName) => {
     if (state.characters[characterName].isNpc) return "";
@@ -1159,32 +1675,28 @@ const IncrementExpOnStat = (characterName, statName) => {
     return "";
 };
 
-//Debug purposes only
-const SetDamageOutputs = (inValue) => {
-    damageOutputs = inValue;
-};
-const SetEquipmentParts = (inValue) => {
-    equipmentParts = inValue;
-};
-const SetIgnoredValues = (inValue) => {
-    restrictedStatNames = inValue;
-};
-const SetIgnoreZeroDiv = (inValue) => {
-    ignoreZeroDiv = inValue;
-};
-const SetShouldPunish = (inValue) => {
-    shouldPunish = inValue;
-};
-const SetDefaultDodge = (inValue) => {
-    defaultDodge = inValue;
-};
-const SetLevellingToOblivion = (inValue) => {
-    levellingToOblivion = inValue;
-};
-const SetDefendingCharacterLevels = (inValue) => {
-    defendingCharacterLevels = inValue;
-};
-
+//You can edit this list to edit what will be displayed when dealing x damage.
+//Format is [minimum damage, "displayed message"].
+//Note that it is used in sentence like
+//Miguel attacked Zuibroldun Jodem dealing {value from here} (x).
+damageOutputs = [
+    [1, "light damage"],
+    [15, "medium damage"],
+    [30, "significant damage"],
+    [60, "heavy damage"],
+    [100, "a killing blow"],
+];
+restrictedStatNames = [
+    "hp",
+    "level",
+    "experience",
+    "expToNextLvl",
+    "skillpoints",
+    "isNpc",
+    "items",
+    "type",
+    "name",
+];
 const CustomDamageOutput = (damage, values) => {
     let i = 0;
     let out = "no damage";
@@ -1192,6 +1704,62 @@ const CustomDamageOutput = (damage, values) => {
         out = values[i++][1];
     }
     return out;
+};
+const ApplyEffectsOnAttack = (
+    attackingCharacterName,
+    defendingCharacterName
+) => {
+    //Grabs the info
+    let attackingCharacter = state.characters[attackingCharacterName];
+    let defendingCharacter = state.characters[defendingCharacterName];
+    //If you didn't create the characters earlier, they get all stats at starting level from state
+    if (attackingCharacter === undefined) {
+        state.characters[attackingCharacterName] = new Character();
+        attackingCharacter = state.characters[attackingCharacterName];
+    }
+    if (defendingCharacter === undefined) {
+        state.characters[defendingCharacterName] = new Character();
+        defendingCharacter = state.characters[defendingCharacterName];
+    }
+    let effectsToApplyOnAttacker = [];
+    let effectsToApplyOnDefender = [];
+    for (const item of Object.values(attackingCharacter.items)) {
+        for (const effectName of item.effects) {
+            const effect = state.effects[effectName];
+            if (!effect) continue;
+            if (effect.appliedOn === "attack") {
+                if (effect.appliedTo === "self")
+                    effectsToApplyOnAttacker.push(effect);
+                else if (effect.appliedTo === "enemy")
+                    effectsToApplyOnDefender.push(effect);
+            }
+        }
+    }
+    for (const item of Object.values(defendingCharacter.items)) {
+        for (const effectName of item.effects) {
+            const effect = state.effects[effectName];
+            if (!effect) continue;
+            if (effect.appliedOn === "defense") {
+                if (effect.appliedTo === "self")
+                    effectsToApplyOnDefender.push(effect);
+                else if (effect.appliedTo === "enemy")
+                    effectsToApplyOnAttacker.push(effect);
+            }
+        }
+    }
+    if (!attackingCharacter.activeEffects)
+        attackingCharacter.activeEffects = [];
+    if (!defendingCharacter.activeEffects)
+        defendingCharacter.activeEffects = [];
+    let output = "";
+    for (const effect of effectsToApplyOnAttacker) {
+        output += (0, InstanceEffect)(attackingCharacterName, effect);
+    }
+    if (defendingCharacter.hp >= 0 || !defendingCharacter.isNpc)
+        for (const effect of effectsToApplyOnDefender) {
+            output += (0, InstanceEffect)(defendingCharacterName, effect);
+        }
+    return output;
 };
 /**
  * state.ctxt is NOT modified by this function
@@ -1217,14 +1785,18 @@ const DealDamage = (
         state.characters[attackingCharacterName] = new Character();
         attackingCharacter = state.characters[attackingCharacterName];
     } else if (attackingCharacter.hp <= 0) {
-        state.message = `${debugPrefix}: Character ${attackingCharacterName} cannot attack, because they are dead.`;
+        state[
+            InfoOutput
+        ] = `${debugPrefix}: Character ${attackingCharacterName} cannot attack, because they are dead.`;
         return { attackOutput: "", levelOutput: "", contextOutput: "" };
     }
     if (defendingCharacter === undefined) {
         state.characters[defendingCharacterName] = new Character();
         defendingCharacter = state.characters[defendingCharacterName];
     } else if (defendingCharacter.hp <= 0) {
-        state.message = `${debugPrefix}: Character ${defendingCharacterName} cannot be attacked, because they are dead.`;
+        state[
+            InfoOutput
+        ] = `${debugPrefix}: Character ${defendingCharacterName} cannot be attacked, because they are dead.`;
         return { attackOutput: "", levelOutput: "", contextOutput: "" };
     }
     let attackingCharacterStatLevelWithMods = (0, GetStatWithMods)(
@@ -1259,6 +1831,13 @@ const DealDamage = (
     );
     //Damaging
     state.characters[defendingCharacterName].hp -= damageInflicted;
+    let effectsText = "";
+    if (state.inBattle) {
+        effectsText = (0, ApplyEffectsOnAttack)(
+            attackingCharacterName,
+            defendingCharacterName
+        );
+    }
     //Gives the player necessary info.
     const attackOutput = `${attackingCharacterName} (${attackStatName}: ${attackingCharacterStatLevelWithMods}${
         attackModifier === 0
@@ -1285,7 +1864,7 @@ const DealDamage = (
               " now has " +
               state.characters[defendingCharacterName].hp +
               " hp."
-    }`;
+    }${effectsText}`;
     let levelOutput = (0, IncrementExp)(
         attackingCharacterName,
         attackStatName
@@ -1307,7 +1886,7 @@ const DealDamage = (
                   ? "died."
                   : "retreated.")
             : ""
-    }`;
+    }${effectsText}`;
     if (state.characters[defendingCharacterName].hp <= 0)
         if (!defendingCharacter.isNpc)
             state.characters[defendingCharacterName].hp = 0;
@@ -1339,14 +1918,18 @@ const DealDamageIfNotDodged = (
         state.characters[attackingCharacterName] = new Character();
         attackingCharacter = state.characters[attackingCharacterName];
     } else if (attackingCharacter.hp <= 0) {
-        state.message = `${debugPrefix}: Character ${attackingCharacterName} cannot attack, because they are dead.`;
+        state[
+            InfoOutput
+        ] = `${debugPrefix}: Character ${attackingCharacterName} cannot attack, because they are dead.`;
         return { attackOutput: "", levelOutput: "", contextOutput: "" };
     }
     if (defendingCharacter === undefined) {
         state.characters[defendingCharacterName] = new Character();
         defendingCharacter = state.characters[defendingCharacterName];
     } else if (defendingCharacter.hp <= 0) {
-        state.message = `${debugPrefix}: Character ${defendingCharacterName} cannot be attacked, because they are dead.`;
+        state[
+            InfoOutput
+        ] = `${debugPrefix}: Character ${defendingCharacterName} cannot be attacked, because they are dead.`;
         return { attackOutput: "", levelOutput: "", contextOutput: "" };
     }
     let attackingCharacterStatLevelWithMods = (0, GetStatWithMods)(
@@ -1399,77 +1982,40 @@ const DealDamageIfNotDodged = (
 };
 
 DEBUG = false;
-const modifier = (text) => {
-    var _a, _b, _c;
-    //#region logs
-    const logs = () => {
-        //!Debug info, uncomment when you need
-        if (DEBUG) {
-            //console.log(`Og: ${textCopy}`);
-            console.log(`In: ${modifiedText}`);
-            console.log(`Context: ${state.ctxt}`);
-            console.log(`Out: ${state.out}`);
-            console.log(`Message: ${state.message}`);
-            //console.log(state.side1, state.side2);
-            //console.log(state.characters);
-            //console.log(state.inBattle);
-            /*for (key in state.characters) {
-          console.log(`\n\n${key}:\n${state.characters[key]}`);
-        }*/
-            console.log("------------");
-        }
-    };
-    //#endregion logs
-    (0, SetupState)();
-    //Resets values
-    state.out = state.ctxt = "";
-    state.message = " ";
-    let modifiedText = text,
-        textCopy = text;
-    //#region battle handling
-    if (state.inBattle) {
-        const battleMatch =
-            (_a = text.match(
-                /\((?:(?<attackStat>[\w ']+), *)?(?<defendingCharacter>[\w\s']+)(?:, *(?<defenseStat>[\w ']+))?\)/i
-            )) === null || _a === void 0
-                ? void 0
-                : _a[0];
-        if (battleMatch !== undefined)
-            modifiedText =
-                modifiedText.substring(0, text.indexOf(battleMatch)) +
-                modifiedText.substring(
-                    text.indexOf(battleMatch) + battleMatch.length
-                );
+InfoOutput = "out";
+const CommandsAccessibleInBattle = [
+    "heal",
+    "revive",
+    "additem",
+    "alteritem",
+    "gainitem",
+    "showinventory",
+    "altereffect",
+    "createeffect",
+    "applyeffect",
+    "removeeffect",
+    "equip",
+    "unequip",
+    "setstats",
+    "showstats",
+    "levelstats",
+    "setstate",
+    "getstate",
+];
+const RunCommand = (textCopy, globalMatch, currIndices) => {
+    let modifiedText = textCopy;
+    if (globalMatch.groups) {
         if (
-            !((_b = state.active) === null || _b === void 0
-                ? void 0
-                : _b.length)
+            state.inBattle &&
+            !CommandsAccessibleInBattle.includes(
+                globalMatch.groups.command.toLocaleLowerCase()
+            )
         ) {
-            const temp =
-                Number(
-                    (_c = state.currentSide) === null || _c === void 0
-                        ? void 0
-                        : _c.substring(4)
-                ) + 1;
-            state.currentSide = `side${temp >= 3 ? 1 : temp}`;
-            const side = state[state.currentSide];
-            state.active = [...side];
+            state[
+                InfoOutput
+            ] = `Command ${globalMatch.groups.command} is not accessible in battle.`;
+            return textCopy;
         }
-        (0, turn)(textCopy);
-        logs();
-        return { text: modifiedText };
-    }
-    //#endregion battle handling
-    //#region globalCommand
-    //Checks for pattern !command(args)
-    const globalExp = /!(?<command>[^\s()]+)\((?<arguments>.*)\)/i;
-    const globalMatch = text.match(globalExp);
-    //If something matched, calls functions with further work
-    if (globalMatch && globalMatch.groups) {
-        const temp = text.indexOf(globalMatch[0]);
-        //Creates indices, because d flag is not allowed
-        const currIndices = [temp, temp + globalMatch[0].length];
-        //Matches the command and forwards arguments to them
         switch (globalMatch.groups.command.toLowerCase()) {
             case "skillcheck":
                 modifiedText = (0, skillcheck)(
@@ -1485,7 +2031,7 @@ const modifier = (text) => {
                 );
                 break;
             case "attack":
-                modifiedText = !constantsDodge
+                modifiedText = !defaultDodge
                     ? (0, attack)(
                           globalMatch.groups.arguments,
                           currIndices,
@@ -1500,7 +2046,7 @@ const modifier = (text) => {
                       );
                 break;
             case "sattack":
-                modifiedText = constantsDodge
+                modifiedText = defaultDodge
                     ? (0, attack)(
                           globalMatch.groups.arguments,
                           currIndices,
@@ -1544,6 +2090,34 @@ const modifier = (text) => {
                 break;
             case "gainitem":
                 modifiedText = (0, gainItem)(
+                    globalMatch.groups.arguments,
+                    currIndices,
+                    modifiedText
+                );
+                break;
+            case "altereffect":
+                modifiedText = (0, alterEffect)(
+                    globalMatch.groups.arguments,
+                    currIndices,
+                    modifiedText
+                );
+                break;
+            case "createeffect":
+                modifiedText = (0, createEffect)(
+                    globalMatch.groups.arguments,
+                    currIndices,
+                    modifiedText
+                );
+                break;
+            case "applyeffect":
+                modifiedText = (0, applyEffect)(
+                    globalMatch.groups.arguments,
+                    currIndices,
+                    modifiedText
+                );
+                break;
+            case "removeeffect":
+                modifiedText = (0, removeEffect)(
                     globalMatch.groups.arguments,
                     currIndices,
                     modifiedText
@@ -1619,10 +2193,112 @@ const modifier = (text) => {
                 );
                 break;
             default:
-                state.message = "Command not found.";
+                state[InfoOutput] = "Command not found.";
                 break;
         }
-        if (state.ctxt.length <= 1) state.ctxt = " \n";
+    }
+    return modifiedText;
+};
+const modifier = (text) => {
+    var _a, _b;
+    //#region logs
+    const logs = () => {
+        //!Debug info, uncomment when you need
+        if (DEBUG) {
+            //console.log(`Og: ${textCopy}`);
+            console.log(`In: ${modifiedText}`);
+            console.log(`Context: ${state.ctxt}`);
+            console.log(`Out: ${state.out}`);
+            console.log(`Message: ${state[InfoOutput]}`);
+            //console.log(state.side1, state.side2);
+            //console.log(state.characters);
+            //console.log(state.inBattle);
+            /*for (key in state.characters) {
+          console.log(`\n\n${key}:\n${state.characters[key]}`);
+        }*/
+            console.log("------------");
+        }
+    };
+    //#endregion logs
+    (0, SetupState)();
+    //Resets values
+    state.out = state.ctxt = "";
+    state.seenOutput = false;
+    state[InfoOutput] = "";
+    let modifiedText = text,
+        textCopy = text;
+    //#region battle handling
+    if (state.inBattle) {
+        const battleMatch = text.match(
+            /!(?<command>[^\s()]+)\((?<arguments>.*)\)|\((?:(?<attackStat>[\w ']+), *)?(?<defendingCharacter>[\w\s']+)(?:, *(?<defenseStat>[\w ']+))?\)/i
+        );
+        if (battleMatch && battleMatch.groups) {
+            //Command overrides turn
+            if (battleMatch.groups.command) {
+                const temp = text.indexOf(battleMatch[0]);
+                //Creates indices, because d flag is not allowed
+                const currIndices = [temp, temp + battleMatch[0].length];
+                battleMatch.groups.arguments =
+                    battleMatch.groups.arguments.trim();
+                modifiedText = RunCommand(textCopy, battleMatch, currIndices);
+            } else {
+                modifiedText =
+                    modifiedText.substring(0, text.indexOf(battleMatch[0])) +
+                    modifiedText.substring(
+                        text.indexOf(battleMatch[0]) + battleMatch.length
+                    );
+                if (
+                    !((_a = state.active) === null || _a === void 0
+                        ? void 0
+                        : _a.length)
+                ) {
+                    const temp =
+                        Number(
+                            (_b = state.currentSide) === null || _b === void 0
+                                ? void 0
+                                : _b.substring(4)
+                        ) + 1;
+                    state.currentSide = `side${temp >= 3 ? 1 : temp}`;
+                    const side = state[state.currentSide];
+                    state.active = [...side];
+                }
+                (0, turn)(textCopy);
+            }
+        }
+        logs();
+        return { text: modifiedText };
+    }
+    //#endregion battle handling
+    if (state.runEffectsOutsideBattle)
+        for (const characterName of Object.keys(state.characters)) {
+            const character = state.characters[characterName];
+            if (!character.activeEffects) character.activeEffects = [];
+            for (const effect of character.activeEffects) {
+                if (effect.impact === "every turn")
+                    (0, RunEffect)(characterName, effect);
+                if (--effect.durationLeft === 0) {
+                    if (effect.impact === "on end") {
+                        (0, RunEffect)(characterName, effect);
+                    }
+                    modifiedText += (0, RemoveEffect)(
+                        characterName,
+                        effect.name
+                    );
+                }
+            }
+        }
+    //#region globalCommand
+    //Checks for pattern !command(args)
+    const globalExp = /!(?<command>[^\s()]+)\((?<arguments>.*)\)/i;
+    const globalMatch = text.match(globalExp);
+    //If something matched, calls functions with further work
+    if (globalMatch && globalMatch.groups) {
+        const temp = text.indexOf(globalMatch[0]);
+        //Creates indices, because d flag is not allowed
+        const currIndices = [temp, temp + globalMatch[0].length];
+        globalMatch.groups.arguments = globalMatch.groups.arguments.trim();
+        //Matches the command and forwards arguments to them
+        modifiedText = RunCommand(textCopy, globalMatch, currIndices);
     }
     //#endregion globalCommand
     state.in = modifiedText;
@@ -1639,6 +2315,7 @@ const SetupState = () => {
     state.startingHP = state.startingHP === undefined ? 100 : state.startingHP;
     state.characters = state.characters === undefined ? {} : state.characters;
     state.items = state.items === undefined ? {} : state.items;
+    state.effects = state.effects === undefined ? {} : state.effects;
     state.inventory = state.inventory === undefined ? [] : state.inventory;
     state.punishment = state.punishment === undefined ? 5 : state.punishment;
     state.skillpointsOnLevelUp =
@@ -1646,6 +2323,10 @@ const SetupState = () => {
             ? 5
             : state.skillpointsOnLevelUp;
     state.inBattle = state.inBattle === undefined ? false : state.inBattle;
+    state.runEffectsOutsideBattle =
+        state.runEffectsOutsideBattle === undefined
+            ? false
+            : state.runEffectsOutsideBattle;
 };
 
 // import { DEBUG } from "./modifier";
@@ -1678,7 +2359,7 @@ const turn = (textCopy) => {
     //Attacking character set and is not an NPC
     if (!state.activeCharacter.isNpc) {
         if (!state.activeCharacterName) {
-            state.message = "Battle turn: active character name not found.";
+            state[InfoOutput] = "Battle turn: active character name not found.";
             return;
         }
         const expression =
@@ -1689,7 +2370,7 @@ const turn = (textCopy) => {
             !match ||
             !(match === null || match === void 0 ? void 0 : match.groups)
         ) {
-            state.message =
+            state[InfoOutput] =
                 "Battle turn: In battle you can only retreat or attack.\nFor further information read !battle section of README.";
             return;
         }
@@ -1748,7 +2429,7 @@ const turn = (textCopy) => {
     ) {
         const attackingCharacterName = state.activeCharacterName;
         if (!attackingCharacterName) {
-            state.message =
+            state[InfoOutput] =
                 "Battle turn: ERROR active character name is undefined";
             return;
         }
@@ -1807,7 +2488,9 @@ const takeTurn = (
             attackedSideCharactersNames
         )
     ) {
-        state.message = `Battle turn: character ${defendingCharacterName} doesn't belong to the other side of the battle.`;
+        state[
+            InfoOutput
+        ] = `Battle turn: character ${defendingCharacterName} doesn't belong to the other side of the battle.`;
         return;
     }
     const defendingCharacter = state.characters[defendingCharacterName];
@@ -1836,7 +2519,7 @@ const takeTurn = (
     const defenseModifier =
         defendingCharacterStatLevelWithMods -
         defendingCharacter.stats[defenseStat].level;
-    if (constantsDodge) {
+    if (defaultDodge) {
         if (
             (0, dodge)(
                 attackingCharacterStatLevelWithMods,
@@ -1868,6 +2551,10 @@ const takeTurn = (
     );
     //Damaging
     state.characters[defendingCharacterName].hp -= damageInflicted;
+    const effectsText = (0, ApplyEffectsOnAttack)(
+        attackingCharacterName,
+        defendingCharacterName
+    );
     //Gives the player necessary info.
     state.out += `\n${attackingCharacterName} (${attackStat}: ${attackingCharacterStatLevelWithMods}${
         attackModifier === 0
@@ -1894,11 +2581,24 @@ const takeTurn = (
               " now has " +
               state.characters[defendingCharacterName].hp +
               " hp."
-    }`;
+    }${effectsText}`;
     //Always grants 1 Exp to attacking character, for defending it's up to user
     state.out += (0, IncrementExp)(attackingCharacterName, attackStat);
     if (defendingCharacterLevels) {
         state.out += (0, IncrementExp)(defendingCharacterName, defenseStat);
+    }
+    if (!attackingCharacter.activeEffects)
+        attackingCharacter.activeEffects = [];
+    for (const effect of attackingCharacter.activeEffects) {
+        if (effect.impact === "every turn") {
+            (0, RunEffect)(attackingCharacterName, effect);
+        }
+        if (--effect.durationLeft === 0) {
+            if (effect.impact === "on end") {
+                (0, RunEffect)(attackingCharacterName, effect);
+            }
+            state.out += (0, RemoveEffect)(attackingCharacterName, effect.name);
+        }
     }
     //If character's hp falls below 0, they are removed from the battle
     if (
@@ -1915,7 +2615,7 @@ const takeTurn = (
     }
     //Checks if the battle should end after every attack
     if (!((_d = state.side1) === null || _d === void 0 ? void 0 : _d.length)) {
-        state.message =
+        state[InfoOutput] =
             "HP of all party members dropped to 0. Party retreated.";
         state.out += "\nThe adventurers retreated, overwhelmed by the enemy.";
         ExitBattle();
@@ -1925,7 +2625,7 @@ const takeTurn = (
     ) {
         state.out += "\nThe adventurers have won the battle.";
         ExitBattle();
-        state.message = "You have won the battle!";
+        state[InfoOutput] = "You have won the battle!";
         return;
     }
     const attackingCharacterIndex =
@@ -1968,19 +2668,37 @@ const EndTurn = () => {
             ? void 0
             : _c[nextActiveCharacterIndex];
     if (!activeCharacterName) {
-        state.message = "Battle turn: ERROR active character is undefined.";
+        state[InfoOutput] = "Battle turn: ERROR active character is undefined.";
         return;
     }
     state.activeCharacterName = activeCharacterName;
     state.activeCharacter = state.characters[state.activeCharacterName];
-    state.message = `Current turn: ${state.activeCharacterName}`;
+    if (state[InfoOutput] && typeof state[InfoOutput] == "string") {
+        state[InfoOutput] = state[InfoOutput].replace(
+            /\nCurrent turn: \w+/,
+            ""
+        );
+        state[InfoOutput] += `\nCurrent turn: ${state.activeCharacterName}`;
+    } else state[InfoOutput] = `Current turn: ${state.activeCharacterName}`;
 };
 const ExitBattle = () => {
+    var _a, _b, _c;
     state.inBattle = false;
+    state.side1 = (_a = state.side1) !== null && _a !== void 0 ? _a : [];
+    state.side2 = (_b = state.side2) !== null && _b !== void 0 ? _b : [];
+    for (const characterName of state.side1.concat(state.side2)) {
+        const character = state.characters[characterName];
+        (_c = character.activeEffects) !== null && _c !== void 0
+            ? _c
+            : (character.activeEffects = []);
+        for (const effect of character.activeEffects) {
+            state.out += (0, RemoveEffect)(characterName, effect.name);
+        }
+    }
     delete state.activeCharacter, state.activeCharacterName, state.active;
     delete state.side1, state.side2;
     delete state.currentSide;
-    state.message = "";
+    state[InfoOutput] = "";
 };
 
 modifier(text);

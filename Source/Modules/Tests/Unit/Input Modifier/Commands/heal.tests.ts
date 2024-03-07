@@ -1,6 +1,6 @@
 import heal from "../../../../Input Modifier/Commands/heal";
 import { Character } from "../../../../Shared Library/Character";
-import { state } from "../../../proxy_state";
+import { state } from "../../../../proxy_state";
 
 describe("Command heal", () => {
     it("Invalid args error", () => {

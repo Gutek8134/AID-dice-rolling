@@ -1,5 +1,5 @@
-import getState from "../../../../Input Modifier/Commands/getstate";
-import { state } from "../../../proxy_state";
+import getState from "../../../../Input Modifier/Commands/getState";
+import { state } from "../../../../proxy_state";
 
 describe("Command get state", () => {
     it("Command doesn't take arguments error", () => {
