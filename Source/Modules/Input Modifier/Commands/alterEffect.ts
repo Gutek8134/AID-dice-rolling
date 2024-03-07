@@ -18,7 +18,7 @@ const alterEffect = (
 
     //Looks for pattern name, stat=value, duration, unique?, appliedOn?, appliedTo?, impact?W
     const exp: RegExp =
-        /^(?<name>[\w ']+)(?<duration>, \d+)?(?<modifiers>(?:, [\w ']+ *= *-?\d+)+)(?:, (?<unique>unique|u))?(?:, (?<appliedOn>a|attack|d|defense|b|battle start|n|not applied))?(?:, (?<appliedTo>self|enemy))?(?:, (?<impact>on end|e|every turn|t|continuous|c))?$/i;
+        /^\s*(?<name>[\w ']+)(?<duration>, \d+)?(?<modifiers>(?:, [\w ']+ *= *-?\d+)+)?(?:, (?<unique>unique|u))?(?:, (?<appliedOn>a|attack|d|defense|b|battle start|n|not applied))?(?:, (?<appliedTo>self|enemy))?(?:, (?<impact>on end|e|every turn|t|continuous|c))?\s*$/i;
     const match: RegExpMatchArray | null = commandArguments.match(exp);
 
     //Error checking

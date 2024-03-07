@@ -18,8 +18,7 @@ const damage = (attackStat, defenseStat) => {
     if (dam < 0) dam = 0;
     return dam;
 };
-
-const dodge = (attackStat, dodgeStat) => {
+let dodge = (attackStat, dodgeStat) => {
     if (disableDodge) return false;
     let dodged =
         /*You can edit from here*/
@@ -32,7 +31,6 @@ const dodge = (attackStat, dodgeStat) => {
     //You must write an equal (a == b) [yes, you have to use two "=" signs for it], more than (a > b), less than (a < b), more or equal to (a >= b), or less or equal to (a <= b) expression
     return dodged;
 };
-
 //!Function for calculating experience needed to level up. Adjust it to your heart's content
 const experienceCalculation = (level) => {
     //level is the current character/stat's level
@@ -44,6 +42,8 @@ const experienceCalculation = (level) => {
 class Character {
     constructor(initialStats = [], initialItemNames = []) {
         this.stats = {};
+        // Marked as possibly undefined for backwards compatibility
+        this.activeEffects = [];
         //Initializes every previously created stat
         state.stats.forEach((stat) => {
             this.stats[stat] = new Stat(stat, state.startingLevel);
@@ -79,6 +79,7 @@ class Character {
                 this.items[item.slot] = item;
             }
         }
+        this.activeEffects = [];
         //No overrides for these starting values
         this.experience = 0;
         this.expToNextLvl = (0, experienceCalculation)(this.level);
@@ -96,6 +97,105 @@ class NPC extends Character {
         this.isNpc = true;
     }
 }
+
+/**
+ * Data Class
+ * @field modifiers - modifiers applied when calling {@link GetStatWithMods}
+ * @field duration left
+ * @field base duration - both measured in actions
+ * @field applyUnique - when set to false, allows for applying the same effect over and over to the same entity
+ */
+class Effect {
+    constructor(
+        inName,
+        inModifiers,
+        inDuration,
+        inAppliedOn,
+        inAppliedTo,
+        inImpact,
+        inApplyUnique = true
+    ) {
+        this.name = inName;
+        this.modifiers = Object.fromEntries(inModifiers);
+        this.durationLeft = this.baseDuration = inDuration;
+        this.applyUnique = inApplyUnique;
+        this.appliedOn = inAppliedOn;
+        this.appliedTo = inAppliedTo;
+        this.impact = inImpact;
+        this.type = "effect";
+    }
+}
+/**
+ * Makes a copy of effect template and applies it to character
+ */
+const InstanceEffect = (characterName, effect, overriddenDuration) => {
+    const character = state.characters[characterName];
+    if (!character.activeEffects) character.activeEffects = [];
+    if (effect.applyUnique)
+        if (
+            (0, ElementInArray)(
+                effect.name,
+                character.activeEffects.map((effect) => effect.name)
+            )
+        ) {
+            state[
+                InfoOutput
+            ] += `\nEffect ${effect.name} was not applied to ${characterName}, because it is already applied.`;
+            return "";
+        }
+    const effectCopy = Object.assign({}, effect);
+    if (overriddenDuration !== undefined && overriddenDuration > 0)
+        effectCopy.durationLeft = overriddenDuration;
+    else effectCopy.durationLeft = effectCopy.baseDuration;
+    character.activeEffects.push(effectCopy);
+    return `\n${characterName} is now under influence of ${effect.name}.`;
+};
+const RemoveEffect = (characterName, effectName) => {
+    const character = state.characters[characterName];
+    if (!character.activeEffects) {
+        character.activeEffects = [];
+        return "";
+    }
+    const effect = character.activeEffects.find(
+        (_effect) => _effect.name === effectName
+    );
+    if (effect === undefined) return "";
+    character.activeEffects.splice(character.activeEffects.indexOf(effect), 1);
+    return `\n${characterName} is no longer under influence of ${effect.name}.`;
+};
+const RunEffect = (characterName, effect) => {
+    var _a;
+    const character = state.characters[characterName];
+    for (const modifier in effect.modifiers) {
+        if (modifier === "hp" || modifier === "experience") {
+            character[modifier] += effect.modifiers[modifier];
+        } else {
+            character.stats[modifier].level += effect.modifiers[modifier];
+            if (levellingToOblivion) {
+                character.stats[modifier].expToNextLvl = (0,
+                experienceCalculation)(character.stats[modifier].level);
+                while (
+                    (_a = character.stats[modifier].expToNextLvl) !== null &&
+                    _a !== void 0
+                        ? _a
+                        : Infinity <= character.stats[modifier].level
+                )
+                    character.stats[modifier].expToNextLvl = (0,
+                    experienceCalculation)(++character.stats[modifier].level);
+            }
+        }
+        state[InfoOutput] += `\n${characterName} ${
+            effect.modifiers[modifier] < 0 ? "lost" : "gained"
+        } ${Math.abs(effect.modifiers[modifier])} ${modifier}, currently has ${
+            modifier === "hp" || modifier === "experience"
+                ? character[modifier]
+                : character.stats[modifier].level
+        }.`;
+    }
+    state[
+        InfoOutput
+    ] += `\nDuration left of effect ${effect.name} on ${characterName}: ${effect.durationLeft}.`;
+};
 
 class Item {
     constructor(name, values) {
@@ -204,10 +304,18 @@ isNPC: ${character.isNpc},\n`;
         }
     }
     temp += "\nItems:";
-    if (Object.keys(character.items).length > 0)
+    if (Object.keys(character.items).length > 0) {
         for (const el of Object.keys(character.items)) {
             const item = character.items[el];
             temp += `\n${(0, ItemToString)(item)},\n`;
+        }
+        temp = temp.substring(0, temp.length - 2) + "\n";
+    } else temp += "\nnone\n";
+    if (!character.activeEffects) character.activeEffects = [];
+    temp += "\nApplied effects:";
+    if (character.activeEffects.length > 0)
+        for (const el of character.activeEffects) {
+            temp += `\n${(0, EffectToString)(el)},\n`;
         }
     else temp += "\nnone  ";
     return temp.substring(0, temp.length - 2) == ""
@@ -219,7 +327,28 @@ const ItemToString = (item) => {
     let temp = `${item.name}:\nslot: ${item.slot}\n`;
     for (const key of Object.keys(item.modifiers))
         temp += `${key}: ${item.modifiers[key]}\n`;
+    temp += "Effects:\n";
+    if (item.effects.length === 0) temp += "none ";
+    else
+        for (const key of item.effects)
+            temp += `${(0, EffectToString)(state.effects[key])}\n`;
     return temp.substring(0, temp.length - 1);
+};
+const EffectToString = (effect) => {
+    if (!effect) return "none";
+    let temp = `${effect.name}:
+duration left: ${effect.durationLeft} (base ${effect.baseDuration}),
+unique per entity: ${effect.applyUnique},
+applied when: ${effect.appliedOn},
+applied to: ${effect.appliedTo},
+activates when: ${effect.impact},
+activation consequences:
+`;
+    if (Object.keys(effect.modifiers).length > 0)
+        for (const key of Object.keys(effect.modifiers))
+            temp += `${key}: ${effect.modifiers[key]},\n`;
+    else temp += "none  ";
+    return temp.substring(0, temp.length - 2);
 };
 //Returns whether character exists and has more than 0 HP
 const CharLives = (character) => {

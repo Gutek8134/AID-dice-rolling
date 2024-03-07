@@ -144,6 +144,7 @@ const battle = (commandArguments: string, modifiedText: string): string => {
     const nextActiveCharacterIndex = diceRoll(state.active.length) - 1;
     state.activeCharacterName = state.active[nextActiveCharacterIndex];
     state.activeCharacter = state.characters[state.activeCharacterName];
+    state.out += state.activeCharacterName;
 
     if (state.activeCharacter.isNpc) turn("");
     return modifiedText;

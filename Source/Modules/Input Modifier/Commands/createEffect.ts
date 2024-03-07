@@ -18,7 +18,7 @@ const createEffect = (
 
     //Looks for pattern name, stat=value, duration, unique?, appliedOn?, appliedTo?, impact?
     const exp: RegExp =
-        /^(?<name>[\w ']+), (?<duration>\d+)(?<modifiers>(?:, [\w ']+ *= *-?\d+)+)(?:, (?<unique>unique|u))?(?:, (?<appliedOn>a|attack|d|defense|b|battle start|n|not applied))?(?:, (?<appliedTo>self|enemy))?(?:, (?<impact>on end|e|every turn|t|continuous|c))?$/i;
+        /^\s*(?<name>[\w ']+), (?<duration>\d+)(?<modifiers>(?:, [\w ']+ *= *-?\d+)+)(?:, (?<unique>unique|u))?(?:, (?<appliedOn>a|attack|d|defense|b|battle start|n|not applied))?(?:, (?<appliedTo>self|enemy))?(?:, (?<impact>on end|e|every turn|t|continuous|c))?\s*$/i;
     const match: RegExpMatchArray | null = commandArguments.match(exp);
 
     //Error checking
@@ -80,7 +80,7 @@ const createEffect = (
     }
 
     let appliedOn: "attack" | "defense" | "battle start" | "not applied";
-    switch (match.groups.appliedOn.toLowerCase()) {
+    switch (match.groups.appliedOn?.toLowerCase()) {
         case "a":
         case "attack":
             appliedOn = "attack";
@@ -99,7 +99,7 @@ const createEffect = (
     }
 
     let appliedTo: "self" | "enemy";
-    switch (match.groups.appliedTo.toLowerCase()) {
+    switch (match.groups.appliedTo?.toLowerCase()) {
         default:
         case "self":
             appliedTo = "self";
@@ -110,7 +110,7 @@ const createEffect = (
     }
 
     let impact: "on end" | "continuous" | "every turn";
-    switch (match.groups.impact.toLowerCase()) {
+    switch (match.groups.impact?.toLowerCase()) {
         default:
         case "c":
         case "continuous":

@@ -25,7 +25,7 @@ describe("Command create effect", () => {
                 "continuous"
             ),
         };
-        createEffect("bleeding, 5, hp=-2", [0, 0], "");
+        createEffect("bleeding, 5, hp=-2, a, t", [0, 0], "");
         expect(state.message).toEqual(
             "Create Effect: Effect bleeding already exists."
         );

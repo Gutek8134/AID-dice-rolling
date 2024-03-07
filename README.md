@@ -121,11 +121,15 @@ Works during battle.
 
 Syntax: `!createEffect(name, duration, stat = value, stat2=value, stat3 = value, ..., statN= value[, u(nique)][, a(ttack)/d(efense)/b(attle start)/n(ot applied)][, self/enemy][, (on )e(nd)/(every )t(urn)/c(ontinuous)])`
 
+Order of options is important. If not followed, you will get `Create Effect: Arguments were not given in proper format.` error.
+
 Creates an effect that can be later added to an item or applied manually.
 
 This is currently the only type that counts character's hp as modifier. To change it, use `hp = -x` or `hp = x`, just like with any normal stat.
 
 Duration (whole number) - duration of the effect in turns. Duration left will only decrease during battle. Ending the battle ends all effects.
+
+Stats need to be created beforehand, by setting them on at least one character or using `!setstate({"stats":["every","stat","you","need"]})`.
 
 You can use bolded letters as shortcuts for the options below.
 
@@ -149,6 +153,16 @@ Impact time (continuous by default):
 Works during battle.
 
 ### My examples:
+
+-   `!createEffect(bleeding, 5, hp = -5, a, enemy, t)` - once hit, the enemy will lose 5 hp per turn for 5 turns. Bleeding can stack.
+-   `!createEffect(battle rage, 8, strength = 3, dexterity = 2, defense = -1, u, b, self, c)` - for the first 8 turns of battle, wearing character gains 3 strength, 2 dexterity, but loses some defense. Cannot stack or be extended by applying again.
+-   `!createEffect(poison, 6, hp = -35, dexterity = -2, u, d, enemy, e)` - when hit, applies poison to the enemy. If it is not cured or battle does not end in 6 turns, enemy suffers big damage and **permanent** dexterity loss.
+
+### Some more info about effects
+
+If you need to check which effects influence your character, use `!showStats`.
+
+Effects that have impact time set to every turn will activate **at the end** of the character's turn, **after** the attack.
 
 ## !alterEffect
 
