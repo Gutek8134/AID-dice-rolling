@@ -6,7 +6,7 @@ This project gives you tools to play AI Dungeon like an RPG loosely based on Dun
 
 # COMMANDS
 
-The script will utilize only the first command in the input to avoid bugs.
+The script will utilize only the first command in the input to avoid bugs. See the [examples](/Examples.md) page for examples of using these commands.
 
 ## !addCharacter
 
