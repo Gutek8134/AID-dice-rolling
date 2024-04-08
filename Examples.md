@@ -9,7 +9,7 @@ Character with only basic stats and no items or effects:
 
 Command: 
 ```
-!addCharacter(John Doe, hp=100, level=1, strenght=1, dexterity=3, constitution=1, intelligence=0, wisdom=2, charisma=0)
+!addCharacter(John Doe, hp=100, level=1, strength=1, dexterity=3, constitution=1, intelligence=0, wisdom=2, charisma=0)
 ```
 
 Output:
@@ -21,7 +21,7 @@ skillpoints: 0,
 experience: 0,
 to level up: 2(need 2 more),
 isNPC: false,
-strenght: 1,
+strength: 1,
 dexterity: 3,
 constitution: 1,
 intelligence: 0,
@@ -41,7 +41,7 @@ Creates an NPC with given stats.
 Command:
 
 ```
-!addNPC(Zombie, hp=45, level=1, strenght=1, dexterity=1, constitution=1, intelligence=1, wisdom=1, charisma=0)
+!addNPC(Zombie, hp=45, level=1, strength=1, dexterity=1, constitution=1, intelligence=1, wisdom=1, charisma=0)
 ```
 
 Output:
@@ -53,7 +53,7 @@ skillpoints: 0,
 experience: 0,
 to level up: 2(need 2 more),
 isNPC: true,
-strenght: 1,
+strength: 1,
 dexterity: 1,
 constitution: 1,
 intelligence: 1,
