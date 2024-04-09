@@ -29,7 +29,9 @@ export const turn = (textCopy: string): void => {
     if (!state.activeCharacter) {
         if (!state.active?.length) {
             const temp = Number(state.currentSide?.substring(4)) + 1;
+            // console.log("Current side at 32: ", state.currentSide);
             state.currentSide = `side${temp >= 3 ? 1 : temp}`;
+            // console.log("Current side at 34: ", state.currentSide);
             state.active = [...state[state.currentSide]];
         }
 
@@ -103,12 +105,15 @@ export const turn = (textCopy: string): void => {
             match.groups.defenseStat ||
             BestStat(state.characters[defendingCharacterName]);
 
-        takeTurn(
-            attackingCharacterName,
-            defendingCharacterName,
-            attackStat,
-            defenseStat
-        );
+        if (
+            !takeTurn(
+                attackingCharacterName,
+                defendingCharacterName,
+                attackStat,
+                defenseStat
+            )
+        )
+            return;
     }
 
     while (
@@ -125,7 +130,9 @@ export const turn = (textCopy: string): void => {
         }
 
         //Gets names of possibly attacked characters
+
         const sideNumber: number = Number(state.currentSide?.substring(4)) + 1;
+        // console.log(state.currentSide, sideNumber);
         const attacked: "side1" | "side2" =
             sideNumber >= 3 || sideNumber == 1 ? "side1" : "side2";
         const attackedSideCharactersNames: string[] = state[attacked] ?? [];
@@ -141,12 +148,15 @@ export const turn = (textCopy: string): void => {
         const attackStat = BestStat(state.activeCharacter);
         const defenseStat = BestStat(defendingCharacter);
 
-        takeTurn(
-            attackingCharacterName,
-            defendingCharacterName,
-            attackStat,
-            defenseStat
-        );
+        if (
+            !takeTurn(
+                attackingCharacterName,
+                defendingCharacterName,
+                attackStat,
+                defenseStat
+            )
+        )
+            return;
     }
 };
 
@@ -155,7 +165,7 @@ const takeTurn = (
     defendingCharacterName: string,
     attackStat: string,
     defenseStat: string
-): void => {
+): boolean => {
     //Gets names of possibly attacked characters to check whether the target is one
     const sideNumber: number = Number(state.currentSide?.substring(4)) + 1;
     const attacked: "side1" | "side2" =
@@ -175,7 +185,7 @@ const takeTurn = (
         state[
             InfoOutput
         ] = `Battle turn: character ${defendingCharacterName} doesn't belong to the other side of the battle.`;
-        return;
+        return false;
     }
 
     const defendingCharacter: Character =
@@ -232,7 +242,7 @@ const takeTurn = (
 
             //End turn on miss
             EndTurn();
-            return;
+            return true;
         }
     }
 
@@ -313,13 +323,17 @@ const takeTurn = (
         state[InfoOutput] =
             "HP of all party members dropped to 0. Party retreated.";
         state.out += "\nThe adventurers retreated, overwhelmed by the enemy.";
+        // console.log("WTF1");
+
         ExitBattle();
-        return;
+        return false;
     } else if (!state.side2?.length) {
         state.out += "\nThe adventurers have won the battle.";
+        // console.log("WTF2");
+
         ExitBattle();
-        state[InfoOutput] = "You have won the battle!";
-        return;
+        state[InfoOutput] += "\nYou have won the battle!";
+        return false;
     }
 
     const attackingCharacterIndex: number =
@@ -330,11 +344,14 @@ const takeTurn = (
     state.active?.splice(attackingCharacterIndex, 1);
     if (!state.active?.length) {
         const temp = Number(state.currentSide?.substring(4)) + 1;
+        // console.log("Current side at 337: ", state.currentSide);
         state.currentSide = `side${temp >= 3 ? 1 : temp}`;
+        // console.log("Current side at 339: ", state.currentSide);
         state.active = [...state[state.currentSide]];
     }
 
     EndTurn();
+    return true;
 };
 
 const EndTurn = (): void => {
@@ -372,5 +389,7 @@ const ExitBattle = (): void => {
     delete state.activeCharacter, state.activeCharacterName, state.active;
     delete state.side1, state.side2;
     delete state.currentSide;
+    // console.log("Battle was quit?!");
+
     state[InfoOutput] = "";
 };
