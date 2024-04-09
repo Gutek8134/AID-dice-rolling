@@ -150,6 +150,15 @@ John Doe now has 75 hp.
 Current turn: John Doe
 ```
 
+When the enemy has no HP left and it's the last enemy, you see the following output:
+```
+John Doe (dexterity: 4 (base: 3)) attacked Zombie (wisdom: 1) dealing medium damage (20).
+Zombie has died.
+John Doe has levelled up to level 2 (free skillpoints: 5)!
+The adventurers have won the battle.
+You have won the battle!
+```
+
 
 ## !attack(attacking character, attacking stat, defending character, defending stat)
 The specified character attacks the defending character
@@ -157,4 +166,37 @@ The specified character attacks the defending character
 Command:
 ```
 !attack(John Doe, dexterity, Zombie, strength)
+```
+
+
+## !showInventory()
+Shows inventory's contents.
+
+Command:
+```
+!showInventory()
+```
+
+Output:
+```
+Currently your inventory holds: Flashlight.
+```
+
+## !getState()
+Outputs current state. 
+
+Command:
+```
+!getState()
+```
+
+Output:
+```
+
+----------
+
+{"in":" !addNPC(Zombie, hp=25, level=1, strength=1, dexterity=1, constitution=1, intelligence=1, wisdom=1, charisma=0)","out":"","ctxt":" ","dice":20,"items":{"Pistol":{"name":"Pistol","slot":"primary","type":"item","effects":[],"modifiers":{"dexterity":1}},"Flashlight":{"name":"Flashlight","slot":"secondary","type":"item","effects":[],"modifiers":{"dexterity":1}}},"stats":["strength","dexterity","constitution","intelligence","wisdom","charisma"],"memory":{"context":"Current goal: Reach a rumored safe zone"},"effects":{},"inBattle":false,"inventory":["Flashlight"],"characters":{"Zombie":{"hp":25,"type":"character","isNpc":true,"items":{},"level":1,"stats":{"wisdom":{"type":"stat","level":1},"charisma":{"type":"stat","level":0},"strength":{"type":"stat","level":1},"dexterity":{"type":"stat","level":1},"constitution":{"type":"stat","level":1},"intelligence":{"type":"stat","level":1}},"experience":0,"skillpoints":0,"expToNextLvl":2,"activeEffects":[]},"John Doe":{"hp":100,"type":"character","isNpc":false,"items":{"primary":{"name":"Pistol","slot":"primary","type":"item","effects":[],"modifiers":{"dexterity":1}}},"level":1,"stats":{"wisdom":{"type":"stat","level":2},"charisma":{"type":"stat","level":0},"strength":{"type":"stat","level":1},"dexterity":{"type":"stat","level":3},"constitution":{"type":"stat","level":1},"intelligence":{"type":"stat","level":0}},"experience":0,"skillpoints":0,"expToNextLvl":2,"activeEffects":[]}},"punishment":5,"seenOutput":false,"startingHP":100,"startingLevel":1,"skillpointsOnLevelUp":5,"runEffectsOutsideBattle":false}
+
+----------
+
 ```
