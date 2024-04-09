@@ -214,10 +214,10 @@ const takeTurn = (
 
     const attackModifier: number =
         attackingCharacterStatLevelWithMods -
-        attackingCharacter.stats[attackStat].level;
+        (attackingCharacter.stats[attackStat]?.level ?? 0);
     const defenseModifier: number =
         defendingCharacterStatLevelWithMods -
-        defendingCharacter.stats[defenseStat].level;
+        (defendingCharacter.stats[defenseStat]?.level ?? 0);
 
     if (defaultDodge) {
         if (
@@ -391,5 +391,5 @@ const ExitBattle = (): void => {
     delete state.currentSide;
     // console.log("Battle was quit?!");
 
-    state[InfoOutput] = "";
+    // state[InfoOutput] = "";
 };

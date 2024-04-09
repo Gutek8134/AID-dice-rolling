@@ -44,16 +44,20 @@ describe("Input Modifier", () => {
         });
 
         it("Death on after more turns", () => {
-            state.characters = {
-                "Zuibroldun Jodem": new Character([["hp", 50]]),
-                "Miguel Booble": new Character([["hp", 50]]),
-            };
-
+            state.characters = {};
+            state.stats = [];
+            modifier("!addnpc(Zuibroldun Jodem, hp=50)");
+            console.log(state.out);
+            modifier("!addnpc(Miguel Booble, hp=50)");
+            console.log(state.out);
             modifier("!battle((Zuibroldun Jodem), (Miguel Booble))");
+            console.log(state.out);
             let i = 0;
             while (
-                state.characters["Zuibroldun Jodem"].hp > 0 &&
-                state.characters["Miguel Booble"].hp > 0
+                state.characters["Zuibroldun Jodem"]?.hp > 0 &&
+                state.characters["Miguel Booble"]?.hp > 0 &&
+                state.characters["Zuibroldun Jodem"] &&
+                state.characters["Miguel Booble"]
             ) {
                 console.log(
                     `Turn ${i++} - Z ${

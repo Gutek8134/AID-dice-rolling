@@ -48,6 +48,8 @@ def removeImportNamespacesAndImports(fileContent: str) -> str:
             f"{namespace}.default", namespace[:-2])
         fileContent = fileContent.replace(namespace + ".", "")
 
+    # Mitigates damage from line 47
+    fileContent = fileContent.replace("constantsDodge", "defaultDodge")
     return fileContent
 
 

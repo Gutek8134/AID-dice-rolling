@@ -158,10 +158,10 @@ export const DealDamage = (
 
     const attackModifier: number =
         attackingCharacterStatLevelWithMods -
-        attackingCharacter.stats[attackStatName].level;
+        (attackingCharacter.stats[attackStatName]?.level ?? 0);
     const defenseModifier: number =
         defendingCharacterStatLevelWithMods -
-        defendingCharacter.stats[defenseStatName].level;
+        (defendingCharacter.stats[defenseStatName]?.level ?? 0);
 
     //Calculating damage
     const damageInflicted = damage(

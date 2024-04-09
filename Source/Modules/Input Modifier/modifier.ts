@@ -29,7 +29,7 @@ import applyEffect from "./Commands/applyEffect";
 import removeEffect from "./Commands/removeEffect";
 
 export const DEBUG: boolean = false;
-export const InfoOutput: "out" | "message" = "message";
+export const InfoOutput: "out" | "message" = "out";
 
 const CommandsAccessibleInBattle: string[] = [
     "heal",
