@@ -1,5 +1,5 @@
 import { modifier } from "../../../Input Modifier/modifier";
-import { Character } from "../../../Shared Library/Character";
+import { Character, NPC } from "../../../Shared Library/Character";
 import { state } from "../../../proxy_state";
 
 describe("Input Modifier", () => {
@@ -29,5 +29,44 @@ describe("Input Modifier", () => {
         ).toEqual(
             " !addcharacter(Zuibroldun Jodem, dexterity=3, nano machines = 5)"
         );
+    });
+
+    describe("Should not crash when the battle ends", () => {
+        it("Death on first turn", () => {
+            state.characters = {
+                "Zuibroldun Jodem": new NPC([["hp", 1]]),
+                "Miguel Booble": new NPC([["hp", 1]]),
+            };
+
+            modifier("!battle((Zuibroldun Jodem), (Miguel Booble))");
+            if (state.currentSide == "side1") modifier("(Miguel Booble)");
+            else modifier("(Zuibroldun Jodem)");
+        });
+
+        it("Death on after more turns", () => {
+            state.characters = {};
+            state.stats = [];
+            modifier("!addnpc(Zuibroldun Jodem, hp=50)");
+            console.log(state.out);
+            modifier("!addnpc(Miguel Booble, hp=50)");
+            console.log(state.out);
+            modifier("!battle((Zuibroldun Jodem), (Miguel Booble))");
+            console.log(state.out);
+            let i = 0;
+            while (
+                state.characters["Zuibroldun Jodem"]?.hp > 0 &&
+                state.characters["Miguel Booble"]?.hp > 0 &&
+                state.characters["Zuibroldun Jodem"] &&
+                state.characters["Miguel Booble"]
+            ) {
+                console.log(
+                    `Turn ${i++} - Z ${
+                        state.characters["Zuibroldun Jodem"].hp
+                    } M ${state.characters["Miguel Booble"].hp}`
+                );
+                if (state.currentSide == "side1") modifier("(Miguel Booble)");
+                else modifier("(Zuibroldun Jodem)");
+            }
+        });
     });
 });

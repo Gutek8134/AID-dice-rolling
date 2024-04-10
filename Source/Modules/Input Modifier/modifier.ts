@@ -327,13 +327,16 @@ export const modifier = (text: string): { text: string; stop?: boolean } => {
                     );
                 if (!state.active?.length) {
                     const temp = Number(state.currentSide?.substring(4)) + 1;
+                    // console.log("Current side at IM 330: ", state.currentSide);
                     state.currentSide = `side${temp >= 3 ? 1 : temp}`;
+                    // console.log("Current side at IM 332: ", state.currentSide);
                     const side: string[] = state[state.currentSide];
                     state.active = [...side];
                 }
                 turn(textCopy);
             }
         }
+        state.in = modifiedText;
         logs();
         return { text: modifiedText };
     }

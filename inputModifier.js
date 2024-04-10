@@ -1,3 +1,14 @@
+//You can edit this list to edit what will be displayed when dealing x damage.
+//Format is [minimum damage, "displayed message"].
+//Note that it is used in sentence like
+//Miguel attacked Zuibroldun Jodem dealing {value from here} (x).
+damageOutputs = [
+    [1, "light damage"],
+    [15, "medium damage"],
+    [30, "significant damage"],
+    [60, "heavy damage"],
+    [100, "a killing blow"],
+];
 //!Does not check whether stats are equal to 0 when attacking. Change only if your damage function does not contain division or you've checked it properly.
 ignoreZeroDiv = false;
 //!Sets whether dead characters should be punished upon skillchecking
@@ -8,6 +19,7 @@ defaultDodge = false;
 levellingToOblivion = false;
 //!Should defending character also gain XP when !attack is used?
 defendingCharacterLevels = false;
+
 const addCharacter = (commandArguments, currIndices, modifiedText) => {
     (0, CutCommandFromContext)(modifiedText, currIndices);
     //Looks for pattern !addCharacter(name) or !addCharacter(name, stat1=value, stat2=value, ..., statN=value)
@@ -682,7 +694,7 @@ const battle = (commandArguments, modifiedText) => {
     const nextActiveCharacterIndex = (0, diceRoll)(state.active.length) - 1;
     state.activeCharacterName = state.active[nextActiveCharacterIndex];
     state.activeCharacter = state.characters[state.activeCharacterName];
-    state.out += state.activeCharacterName;
+    state[InfoOutput] += `\nCurrent turn: ${state.activeCharacterName}`;
     if (state.activeCharacter.isNpc) (0, turn)("");
     return modifiedText;
 };
@@ -1619,7 +1631,7 @@ const BestStat = (character) => {
             bestStatValue = (0, GetStatWithMods)(character, stat);
         }
     }
-    return bestStat || state.stats[0];
+    return bestStat || state.stats[0] || "strength";
 };
 const GetStatWithMods = (character, stat) => {
     if (!character || !stat || character.stats[stat] === undefined) return 0;
@@ -1675,17 +1687,6 @@ const IncrementExpOnStat = (characterName, statName) => {
     return "";
 };
 
-//You can edit this list to edit what will be displayed when dealing x damage.
-//Format is [minimum damage, "displayed message"].
-//Note that it is used in sentence like
-//Miguel attacked Zuibroldun Jodem dealing {value from here} (x).
-damageOutputs = [
-    [1, "light damage"],
-    [15, "medium damage"],
-    [30, "significant damage"],
-    [60, "heavy damage"],
-    [100, "a killing blow"],
-];
 restrictedStatNames = [
     "hp",
     "level",
@@ -1777,6 +1778,7 @@ const DealDamage = (
     defenseStatName,
     debugPrefix
 ) => {
+    var _a, _b, _c, _d;
     //Grabs the info
     let attackingCharacter = state.characters[attackingCharacterName];
     let defendingCharacter = state.characters[defendingCharacterName];
@@ -1820,10 +1822,22 @@ const DealDamage = (
     }
     const attackModifier =
         attackingCharacterStatLevelWithMods -
-        attackingCharacter.stats[attackStatName].level;
+        ((_b =
+            (_a = attackingCharacter.stats[attackStatName]) === null ||
+            _a === void 0
+                ? void 0
+                : _a.level) !== null && _b !== void 0
+            ? _b
+            : 0);
     const defenseModifier =
         defendingCharacterStatLevelWithMods -
-        defendingCharacter.stats[defenseStatName].level;
+        ((_d =
+            (_c = defendingCharacter.stats[defenseStatName]) === null ||
+            _c === void 0
+                ? void 0
+                : _c.level) !== null && _d !== void 0
+            ? _d
+            : 0);
     //Calculating damage
     const damageInflicted = (0, damage)(
         attackingCharacterStatLevelWithMods,
@@ -2258,13 +2272,16 @@ const modifier = (text) => {
                                 ? void 0
                                 : _b.substring(4)
                         ) + 1;
+                    // console.log("Current side at IM 330: ", state.currentSide);
                     state.currentSide = `side${temp >= 3 ? 1 : temp}`;
+                    // console.log("Current side at IM 332: ", state.currentSide);
                     const side = state[state.currentSide];
                     state.active = [...side];
                 }
                 (0, turn)(textCopy);
             }
         }
+        state.in = modifiedText;
         logs();
         return { text: modifiedText };
     }
@@ -2349,7 +2366,9 @@ const turn = (textCopy) => {
                         ? void 0
                         : _b.substring(4)
                 ) + 1;
+            // console.log("Current side at 32: ", state.currentSide);
             state.currentSide = `side${temp >= 3 ? 1 : temp}`;
+            // console.log("Current side at 34: ", state.currentSide);
             state.active = [...state[state.currentSide]];
         }
         const nextActiveCharacterIndex = (0, diceRoll)(state.active.length) - 1;
@@ -2414,12 +2433,15 @@ const turn = (textCopy) => {
         const defenseStat =
             match.groups.defenseStat ||
             (0, BestStat)(state.characters[defendingCharacterName]);
-        takeTurn(
-            attackingCharacterName,
-            defendingCharacterName,
-            attackStat,
-            defenseStat
-        );
+        if (
+            !takeTurn(
+                attackingCharacterName,
+                defendingCharacterName,
+                attackStat,
+                defenseStat
+            )
+        )
+            return;
     }
     while (
         ((_c = state.activeCharacter) === null || _c === void 0
@@ -2440,6 +2462,7 @@ const turn = (textCopy) => {
                     ? void 0
                     : _d.substring(4)
             ) + 1;
+        // console.log(state.currentSide, sideNumber);
         const attacked = sideNumber >= 3 || sideNumber == 1 ? "side1" : "side2";
         const attackedSideCharactersNames =
             (_e = state[attacked]) !== null && _e !== void 0 ? _e : [];
@@ -2452,12 +2475,15 @@ const turn = (textCopy) => {
         //Gets necessary values
         const attackStat = (0, BestStat)(state.activeCharacter);
         const defenseStat = (0, BestStat)(defendingCharacter);
-        takeTurn(
-            attackingCharacterName,
-            defendingCharacterName,
-            attackStat,
-            defenseStat
-        );
+        if (
+            !takeTurn(
+                attackingCharacterName,
+                defendingCharacterName,
+                attackStat,
+                defenseStat
+            )
+        )
+            return;
     }
 };
 const takeTurn = (
@@ -2466,7 +2492,7 @@ const takeTurn = (
     attackStat,
     defenseStat
 ) => {
-    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k;
+    var _a, _b, _c, _d, _e, _f, _g, _h, _j, _k, _l, _m, _o, _p;
     //Gets names of possibly attacked characters to check whether the target is one
     const sideNumber =
         Number(
@@ -2491,7 +2517,7 @@ const takeTurn = (
         state[
             InfoOutput
         ] = `Battle turn: character ${defendingCharacterName} doesn't belong to the other side of the battle.`;
-        return;
+        return false;
     }
     const defendingCharacter = state.characters[defendingCharacterName];
     let attackingCharacterStatLevelWithMods = (0, GetStatWithMods)(
@@ -2515,10 +2541,22 @@ const takeTurn = (
     }
     const attackModifier =
         attackingCharacterStatLevelWithMods -
-        attackingCharacter.stats[attackStat].level;
+        ((_d =
+            (_c = attackingCharacter.stats[attackStat]) === null ||
+            _c === void 0
+                ? void 0
+                : _c.level) !== null && _d !== void 0
+            ? _d
+            : 0);
     const defenseModifier =
         defendingCharacterStatLevelWithMods -
-        defendingCharacter.stats[defenseStat].level;
+        ((_f =
+            (_e = defendingCharacter.stats[defenseStat]) === null ||
+            _e === void 0
+                ? void 0
+                : _e.level) !== null && _f !== void 0
+            ? _f
+            : 0);
     if (defaultDodge) {
         if (
             (0, dodge)(
@@ -2541,7 +2579,7 @@ const takeTurn = (
             }), but missed.`;
             //End turn on miss
             EndTurn();
-            return;
+            return true;
         }
     }
     //Calculating damage
@@ -2602,10 +2640,10 @@ const takeTurn = (
     }
     //If character's hp falls below 0, they are removed from the battle
     if (
-        ((_c = state.characters[defendingCharacterName]) === null ||
-        _c === void 0
+        ((_g = state.characters[defendingCharacterName]) === null ||
+        _g === void 0
             ? void 0
-            : _c.hp) <= 0
+            : _g.hp) <= 0
     ) {
         state.characters[defendingCharacterName].hp = 0;
         attackedSideCharactersNames.splice(defendingCharacterIndex, 1);
@@ -2614,43 +2652,48 @@ const takeTurn = (
             delete state.characters[defendingCharacterName];
     }
     //Checks if the battle should end after every attack
-    if (!((_d = state.side1) === null || _d === void 0 ? void 0 : _d.length)) {
+    if (!((_h = state.side1) === null || _h === void 0 ? void 0 : _h.length)) {
         state[InfoOutput] =
             "HP of all party members dropped to 0. Party retreated.";
         state.out += "\nThe adventurers retreated, overwhelmed by the enemy.";
+        // console.log("WTF1");
         ExitBattle();
-        return;
+        return false;
     } else if (
-        !((_e = state.side2) === null || _e === void 0 ? void 0 : _e.length)
+        !((_j = state.side2) === null || _j === void 0 ? void 0 : _j.length)
     ) {
         state.out += "\nThe adventurers have won the battle.";
+        // console.log("WTF2");
         ExitBattle();
-        state[InfoOutput] = "You have won the battle!";
-        return;
+        state[InfoOutput] += "\nYou have won the battle!";
+        return false;
     }
     const attackingCharacterIndex =
-        (_g =
-            (_f = state.active) === null || _f === void 0
+        (_l =
+            (_k = state.active) === null || _k === void 0
                 ? void 0
-                : _f.indexOf(attackingCharacterName)) !== null && _g !== void 0
-            ? _g
+                : _k.indexOf(attackingCharacterName)) !== null && _l !== void 0
+            ? _l
             : 0;
     //Removes current character from active ones and if the active array is empty,
     //populates is with characters from the other side of the battle
-    (_h = state.active) === null || _h === void 0
+    (_m = state.active) === null || _m === void 0
         ? void 0
-        : _h.splice(attackingCharacterIndex, 1);
-    if (!((_j = state.active) === null || _j === void 0 ? void 0 : _j.length)) {
+        : _m.splice(attackingCharacterIndex, 1);
+    if (!((_o = state.active) === null || _o === void 0 ? void 0 : _o.length)) {
         const temp =
             Number(
-                (_k = state.currentSide) === null || _k === void 0
+                (_p = state.currentSide) === null || _p === void 0
                     ? void 0
-                    : _k.substring(4)
+                    : _p.substring(4)
             ) + 1;
+        // console.log("Current side at 337: ", state.currentSide);
         state.currentSide = `side${temp >= 3 ? 1 : temp}`;
+        // console.log("Current side at 339: ", state.currentSide);
         state.active = [...state[state.currentSide]];
     }
     EndTurn();
+    return true;
 };
 const EndTurn = () => {
     var _a, _b, _c;
@@ -2698,7 +2741,8 @@ const ExitBattle = () => {
     delete state.activeCharacter, state.activeCharacterName, state.active;
     delete state.side1, state.side2;
     delete state.currentSide;
-    state[InfoOutput] = "";
+    // console.log("Battle was quit?!");
+    // state[InfoOutput] = "";
 };
 
 modifier(text);

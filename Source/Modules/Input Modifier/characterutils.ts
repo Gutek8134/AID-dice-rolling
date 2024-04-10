@@ -16,7 +16,7 @@ export const BestStat = (character: Character): string => {
         }
     }
 
-    return bestStat || state.stats[0];
+    return bestStat || state.stats[0] || "strength";
 };
 
 export const GetStatWithMods = (character: Character, stat: string): number => {
